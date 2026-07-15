@@ -39,112 +39,42 @@ Success means:
 
 # CURRENT TASK
 
-Task ID:
+SIG-001C — LangGraph Skeleton 
+**Tier:** 1 | **Owner:** Builder Agent | **Phase:** 1 | **Status:** TODO 
+**Depends on:**
+ SIG-001B 
+**Spec ref:** BUILD_SPEC.md Section 16.1 (structure only — no nodes wired yet) 
+ 
+**Files in Scope:** 
+- `agent/graph.py` 
+ 
+**Acceptance criteria:** 
+- `from agent.graph import graph` — no error 
+- `StateGraph(SignalState)` compiles with `MemorySaver` checkpointer 
+- `graph.invoke(initial_state, config={"configurable": {"thread_id": "test"}})` runs without error 
+- Graph is START → END with no intermediate nodes (placeholder — all nodes wired in SIG-010B) 
+ 
+**Stop conditions — escalate to human immediately if:** 
+- `from langgraph.graph import StateGraph, START, END` fails 
+- `from langgraph.checkpoint.memory import MemorySaver` fails 
+- `graph.compile()` raises any error 
+- LangGraph version in `requirements.txt` incompatible with import 
 
-SIG-001A
-
-Title:
-
-Repository Foundation
-
-Tier:
-
-Tier 1
-
-Status:
-
-READY
-
-# **ACCEPTANCE CRITERIA**
-
-Builder Agent may mark implementation complete only if:
-
-- Directory tree matches BUILD_SPEC.md Section 1.1 exactly
-- All **init**.py files present and empty in agent/, agent/nodes/, agent/prompts/, tests/, tests/fixtures/
-- requirements.txt contains all Phase 1 packages
-- .env is gitignored, .env.example is committed
-- tree signal/ output matches expected structure
-
-Do NOT:
-
-- Create SignalState
-- Create LangGraph graph structure
-- Implement application startup logic
-
-Those belong to later tasks.
-
-# **FILES IN SCOPE**
-
-Builder Agent may modify:
-
-agent/  
-agent/nodes/  
-agent/prompts/  
-tests/  
-tests/fixtures/  
-scripts/  
-.env.example  
-.gitignore  
-requirements.txt
-
-Builder Agent should avoid modifying files outside this scope unless absolutely required.
-
-# REQUIRED REFERENCES
-
-Read before implementation:
-
-- TASKS.md
-- CURSOR_RULES.md
-
-Read only if necessary:
-
-- ARCHITECTURE.md
-- BUILD_SPEC.md
-
-Do not load PRD.md unless blocked.
-
-# CURRENT DEPENDENCIES
-
-Completed:
-
-None
-
-Blocked:
-
-None
-
-Waiting On:
-
-None
-
-# SLICE-LEVEL HUMAN DEPENDENCIES
-
-Current Task:
-
-None
-
-Upcoming Human Dependencies:
-
-- Environment Variables
-- API Keys
-- External Service Configuration
-
-Do not assume these dependencies are complete unless explicitly confirmed by a human.
-
-# VALIDATION REQUIREMENTS
+### VALIDATION REQUIREMENTS
 
 Required:
 
-- Repository structure exists
-- Configuration framework exists
-- Directory structure matches task requirements
+- Graph imports successfully
+- Graph compiles successfully
+- Graph skeleton matches BUILD_SPEC
+- SIG-001C acceptance criteria pass
 
 Not Required:
 
-- SignalState validation
-- Graph compilation
+- Research node execution
+- End-to-end workflow
 - Full EVAL.md execution
-- End-to-end workflow execution
+- Production runtime
 
 # BUDGET GATE
 
@@ -162,8 +92,7 @@ Builder Agent may not advance across slices automatically.
 
 Do not:
 
-- Create SignalState (SIG-001B)
-- Create LangGraph skeleton (SIG-001C)
+
 - Modify architecture documents
 - Modify decision records
 - Introduce new architecture patterns
@@ -208,11 +137,11 @@ Upon successful completion:
 
 Task:
 
-SIG-001B
+SIG-001D
 
 Title:
 
-SignalState Schema
+Test Fixtures
 
 Builder Agent must wait for human approval before work begins.
 
@@ -224,7 +153,8 @@ None
 
 Last Updated:
 
-YYYY-MM-DD HH:MM
+
+2026-07-13 18:56
 
 Updated By:
 

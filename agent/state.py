@@ -1,90 +1,114 @@
-"""SignalState, TypedDicts, ErrorCode, and shared constants."""
+from typing import Annotated, Optional, TypedDict
 
-from __future__ import annotations
+import operator
 
-from enum import StrEnum
-from typing import Any, TypedDict
+ALLOWED_CATEGORIES = [
+    "funding",
+    "hiring",
+    "founder_move",
+    "accelerator",
+    "shutdown",
+    "pivot",
+    "ecosystem_trend",
+]
+
+SOURCE_TRUST = {
+    "yc": 1.0,
+    "techcrunch": 0.95,
+    "inc42": 0.90,
+    "yourstory": 0.90,
+    "economictimes": 0.85,
+    "mint": 0.85,
+    "hn": 0.70,
+    "google_news": 0.65,
+    "rss_other": 0.60,
+}
 
 
-class ErrorCode(StrEnum):
-    CONFIG_LOAD_FAILED = "config_load_failed"
-    SEARCH_FAILED = "search_failed"
-    FRESHNESS_FAILED = "freshness_failed"
-    ENTITY_EXTRACTION_FAILED = "entity_extraction_failed"
-    SYNTHESIS_FAILED = "synthesis_failed"
-    UNKNOWN = "unknown"
+class ErrorCode:
+    ENTITY_EXTRACTION_FAILED = "ENTITY_EXTRACTION_FAILED"
+    TAVILY_TIMEOUT = "TAVILY_TIMEOUT"
+    YC_API_UNAVAILABLE = "YC_API_UNAVAILABLE"
+    DEDUP_EMBEDDING_FAILED = "DEDUP_EMBEDDING_FAILED"
+    SYNTHESIS_FAILED = "SYNTHESIS_FAILED"
+    DELIVERY_FAILED = "DELIVERY_FAILED"
+    GMAIL_AUTH_FAILED = "GMAIL_AUTH_FAILED"
 
 
-class SearchQuery(TypedDict):
-    query: str
-    source: str
-    priority: int
-
-
-class RawFinding(TypedDict, total=False):
-    id: str
+class RawFinding(TypedDict):
     title: str
-    url: str
-    snippet: str
-    source: str
-    published_at: str
-    raw: dict[str, Any]
-
-
-class ValidatedFinding(TypedDict, total=False):
-    id: str
-    title: str
-    url: str
-    snippet: str
-    source: str
-    published_at: str
-    freshness_score: float
-    trust_score: float
-    entities: list[str]
-    in_scope: bool
-
-
-class EntityRecord(TypedDict, total=False):
-    name: str
-    type: str
-    confidence: float
-    source_finding_id: str
-
-
-class SynthesisOutput(TypedDict, total=False):
     summary: str
-    key_entities: list[str]
-    sources: list[str]
-    confidence: float
+    source_url: str
+    source_name: str
+    published_date: Optional[str]
 
 
-class SignalState(TypedDict, total=False):
-    """LangGraph state for the Signal agent."""
+class EntityData(TypedDict):
+    company_name: Optional[str]
+    company_name_normalized: Optional[str]
+    founder_name: Optional[str]
+    investor_names: Optional[list[str]]
+    investor_names_normalized: Optional[list[str]]
+    funding_amount_usd: Optional[int]
+    funding_stage: Optional[str]
+    sector: Optional[str]
+    location: Optional[str]
+    announced_date: Optional[str]
 
+
+class ScoredFinding(TypedDict):
+    title: str
+    summary: str
+    source_url: str
+    source_name: str
+    published_date: Optional[str]
+    entities: EntityData
+    category: str
+    source_trust_score: float
+    freshness_penalty_applied: bool
+    confidence_score: float
+    is_duplicate: bool
+    duplicate_reason: Optional[str]
+
+
+class BriefingItem(TypedDict):
+    id: str
+    title: str
+    summary: str
+    source_url: str
+    source_name: str
+    category: str
+    confidence_score: float
+    entities: EntityData
+
+
+class SignalState(TypedDict):
     run_id: str
-    config: dict[str, Any]
-    search_plan: list[SearchQuery]
-    raw_findings: list[RawFinding]
-    validated_findings: list[ValidatedFinding]
-    entities: list[EntityRecord]
-    deduped_findings: list[ValidatedFinding]
-    synthesis: SynthesisOutput
-    errors: list[dict[str, Any]]
-    metrics: dict[str, Any]
-
-
-# --- constants ---
-
-DEFAULT_MAX_RESULTS = 20
-DEFAULT_FRESHNESS_DAYS = 30
-TRUST_SCORE_THRESHOLD = 0.5
-DEDUP_SIMILARITY_THRESHOLD = 0.85
-
-SUPPORTED_SOURCES = (
-    "tavily",
-    "yc",
-    "hn_algolia",
-    "google_news_rss",
-)
-
-PROMPT_PATH_ENTITY_EXTRACTION = "agent/prompts/entity_extraction_v3.txt"
+    user_id: str
+    thread_id: str
+    run_type: str
+    graph_version: str
+    user_config: dict
+    semantic_memory: dict
+    procedural_memory: dict
+    query_plan: dict
+    raw_findings: Annotated[list[RawFinding], operator.add]
+    scored_findings: list[ScoredFinding]
+    new_findings: list[ScoredFinding]
+    briefing_draft: str
+    briefing_items: list[BriefingItem]
+    briefing_final: str
+    hitl_decision: Optional[str]
+    hitl_edits: Optional[dict]
+    delivery_status: Optional[str]
+    sources_queried: list[str]
+    findings_retrieved: int
+    findings_dropped_freshness: int
+    findings_dropped_dedup: int
+    findings_dropped_scope: int
+    tokens_used: int
+    estimated_cost_usd: float
+    run_duration_seconds: float
+    run_config_snapshot: dict
+    error: Optional[dict]
+    source_failures: dict
