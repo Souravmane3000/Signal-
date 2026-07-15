@@ -16,7 +16,7 @@ This file is the primary execution context for Builder Agent.
 
 Name:
 
-Vertical Slice 1 - Foundation
+Vertical Slice 2 - Research Pipeline
 
 Status:
 
@@ -24,57 +24,37 @@ IN_PROGRESS
 
 Goal:
 
-Build the research foundation required for Signal's intelligence pipeline.
+Build the research pipeline required for Signal'
 
-Current slice validates the research layer only.
+### Slice Exit criteria:**
+- All 4 source nodes individually testable without crashing
+- Combined `raw_findings` across all 4 nodes ≥5 items
+- ≥2 distinct `source_name` values in combined output
+- `source_failures` dict returned by every node
+- Retry logic present in all 4 node files (confirm by reading `_retry` calls)
+- No node raises unhandled exception on API timeout or empty result
 
-End-to-end Signal capability is achieved after completion of Vertical Slice 3.
-
-Success means:
-
-- Repository foundation exists
-- Configuration framework exists
-- Research pipeline foundation is established
-- Dependencies for downstream intelligence processing are in place
 
 # CURRENT TASK
+### SIG-008 — Reducer Node
+**Tier:** 1 | **Owner:** Builder Agent | **Phase:** 1 | **Status:** TODO
+**Depends on:** SIG-004, SIG-005, SIG-006, SIG-007
+**Spec ref:** BUILD_SPEC.md Section 7
 
-SIG-001C — LangGraph Skeleton 
-**Tier:** 1 | **Owner:** Builder Agent | **Phase:** 1 | **Status:** TODO 
-**Depends on:**
- SIG-001B 
-**Spec ref:** BUILD_SPEC.md Section 16.1 (structure only — no nodes wired yet) 
- 
-**Files in Scope:** 
-- `agent/graph.py` 
- 
-**Acceptance criteria:** 
-- `from agent.graph import graph` — no error 
-- `StateGraph(SignalState)` compiles with `MemorySaver` checkpointer 
-- `graph.invoke(initial_state, config={"configurable": {"thread_id": "test"}})` runs without error 
-- Graph is START → END with no intermediate nodes (placeholder — all nodes wired in SIG-010B) 
- 
-**Stop conditions — escalate to human immediately if:** 
-- `from langgraph.graph import StateGraph, START, END` fails 
-- `from langgraph.checkpoint.memory import MemorySaver` fails 
-- `graph.compile()` raises any error 
-- LangGraph version in `requirements.txt` incompatible with import 
+**Files in Scope:**
+- `agent/nodes/reducer.py`
 
-### VALIDATION REQUIREMENTS
+**Acceptance criteria:**
+- Returns `raw_findings` unchanged — no transformation, no filtering, no dedup
+- `len(output["raw_findings"]) == len(input["raw_findings"])`
+- Print statement `f"Reducer: {N} total findings merged from all research nodes"` visible in output
+- Node is confirmed pass-through by reading the code — single print + return only
 
-Required:
+**Stop conditions — escalate to human immediately if:**
+- `state["raw_findings"]` is not a list (Annotated reducer not working — state schema error in SIG-001B)
+- Output list shorter than input list (transformation occurred — not allowed in this node)
 
-- Graph imports successfully
-- Graph compiles successfully
-- Graph skeleton matches BUILD_SPEC
-- SIG-001C acceptance criteria pass
-
-Not Required:
-
-- Research node execution
-- End-to-end workflow
-- Full EVAL.md execution
-- Production runtime
+---
 
 # BUDGET GATE
 
@@ -137,11 +117,11 @@ Upon successful completion:
 
 Task:
 
-SIG-001D
+SIG-009
 
 Title:
 
-Test Fixtures
+Freshness Validation Node
 
 Builder Agent must wait for human approval before work begins.
 
@@ -154,7 +134,7 @@ None
 Last Updated:
 
 
-2026-07-13 18:56
+2026-07-15 11:32
 
 Updated By:
 
