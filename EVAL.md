@@ -106,7 +106,7 @@ Validation data is a source of truth.
 
 **Dataset A - Funding Articles**
 
-Purpose: Entity Extraction evaluation. Target: 25 real Indian startup articles. Sources: Inc42, YourStory, Economic Times, YC announcements.
+Purpose: Entity Extraction evaluation. Target: 20 real Indian startup articles. Sources: Inc42, YourStory, Economic Times, YC announcements.
 
 **Dataset B - Duplicate Story Groups**
 

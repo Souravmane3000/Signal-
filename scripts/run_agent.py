@@ -1,29 +1,31 @@
-"""Manual trigger for local Signal agent runs."""
+import time
 
-from __future__ import annotations
+from dotenv import load_dotenv
 
-import json
-import sys
-from pathlib import Path
+load_dotenv()
 
-ROOT = Path(__file__).resolve().parents[1]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
-
-from agent.graph import compile_graph  # noqa: E402
-
-
-def main() -> None:
-    graph = compile_graph()
-    initial_state = {
-        "config": {
-            "topic": "AI agent startups",
-            "scope_keywords": ["agent", "startup", "LLM"],
-        }
-    }
-    result = graph.invoke(initial_state)
-    print(json.dumps(result, indent=2, default=str))
-
+from agent.graph import run_graph  # noqa: E402
 
 if __name__ == "__main__":
-    main()
+    print("Starting Signal agent run...")
+    start = time.time()
+
+    final_state = run_graph()
+
+    duration = time.time() - start
+
+    print("\n" + "=" * 60)
+    print("SIGNAL WEEKLY BRIEFING")
+    print("=" * 60)
+    print(final_state.get("briefing_final", "No briefing generated"))
+    print("=" * 60)
+    print(f"\nRun complete in {duration:.1f}s")
+    print(f"Graph version: {final_state.get('graph_version', 'unknown')}")
+    print(f"Findings retrieved: {final_state.get('findings_retrieved', 0)}")
+    print(f"Dropped (freshness): {final_state.get('findings_dropped_freshness', 0)}")
+    print(f"Dropped (scope): {final_state.get('findings_dropped_scope', 0)}")
+    print(f"Dropped (dedup): {final_state.get('findings_dropped_dedup', 0)}")
+    print(f"In briefing: {len(final_state.get('new_findings', []))}")
+    print(f"Tokens used: {final_state.get('tokens_used', 0)}")
+    print(f"Estimated cost: ${final_state.get('estimated_cost_usd', 0.0):.4f}")
+    print(f"Source failures: {final_state.get('source_failures', {})}")

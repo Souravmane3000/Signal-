@@ -1,0 +1,576 @@
+[
+    {
+      "id": "A-001",
+      "notes": "funding · series_a · AI · Bengaluru · USD direct · 2 named investors · founder named",
+      "input": {
+        "title": "Bengaluru AI startup Sarvam raises $41M Series A led by Lightspeed",
+        "summary": "Sarvam AI, a Bengaluru-based startup building large language models for Indian languages, raised $41 million in a Series A round led by Lightspeed Venture Partners in March 2025. Peak XV Partners also participated. Co-founder Vivek Raghunathan said the round will accelerate model training and expand the engineering team to 300 people.",
+        "source_url": "https://inc42.com/buzz/sarvam-ai-series-a-41m",
+        "source_name": "inc42",
+        "published_date": "2025-03-15"
+      },
+      "ground_truth": {
+        "category": "funding",
+        "entities": {
+          "company_name": "Sarvam AI",
+          "company_name_normalized": "sarvam ai",
+          "founder_name": "Vivek Raghunathan",
+          "investor_names": [
+            "Lightspeed Venture Partners",
+            "Peak XV Partners"
+          ],
+          "investor_names_normalized": [
+            "lightspeed venture partners",
+            "peak xv partners"
+          ],
+          "funding_amount_usd": 41000000,
+          "funding_stage": "series_a",
+          "sector": "AI",
+          "location": "Bengaluru",
+          "announced_date": "2025-03-15"
+        }
+      }
+    },
+    {
+      "id": "A-002",
+      "notes": "funding · seed · fintech · Bengaluru · crore reporting → USD conversion required",
+      "input": {
+        "title": "Fintech startup Niro Credit raises Rs 25 crore seed round from Prime Ventures",
+        "summary": "Bengaluru-based credit-as-a-service startup Niro Credit has secured Rs 25 crore (approximately $3 million) in a seed funding round led by Prime Venture Partners, announced in February 2025. Niro embeds consumer credit products into digital platforms.",
+        "source_url": "https://yourstory.com/2025/02/niro-credit-seed-prime-ventures",
+        "source_name": "yourstory",
+        "published_date": "2025-02-20"
+      },
+      "ground_truth": {
+        "category": "funding",
+        "entities": {
+          "company_name": "Niro Credit",
+          "company_name_normalized": "niro credit",
+          "founder_name": null,
+          "investor_names": [
+            "Prime Venture Partners"
+          ],
+          "investor_names_normalized": [
+            "prime venture partners"
+          ],
+          "funding_amount_usd": 3000000,
+          "funding_stage": "seed",
+          "sector": "fintech",
+          "location": "Bengaluru",
+          "announced_date": "2025-02-20"
+        }
+      }
+    },
+    {
+      "id": "A-003",
+      "notes": "funding · series_a · healthtech · Mumbai · 2 named investors · no founder named",
+      "input": {
+        "title": "Plum raises $15M Series A to scale group health insurance platform",
+        "summary": "Mumbai-based insurtech startup Plum raised $15 million in a Series A round co-led by Sequoia Capital India and Tiger Global, announced in January 2025. The funding will expand Plum's group health insurance offering to SMEs and startups across India.",
+        "source_url": "https://economictimes.indiatimes.com/tech/startups/plum-series-a/articleshow/11111.cms",
+        "source_name": "economictimes",
+        "published_date": "2025-01-10"
+      },
+      "ground_truth": {
+        "category": "funding",
+        "entities": {
+          "company_name": "Plum",
+          "company_name_normalized": "plum",
+          "founder_name": null,
+          "investor_names": [
+            "Sequoia Capital India",
+            "Tiger Global"
+          ],
+          "investor_names_normalized": [
+            "sequoia capital india",
+            "tiger global"
+          ],
+          "funding_amount_usd": 15000000,
+          "funding_stage": "series_a",
+          "sector": "healthtech",
+          "location": "Mumbai",
+          "announced_date": "2025-01-10"
+        }
+      }
+    },
+    {
+      "id": "A-004",
+      "notes": "funding · series_b · fintech · Bengaluru · 2 investors · IPO context but primary event is funding",
+      "input": {
+        "title": "KreditBee secures $40M Series B as digital lender eyes profitability",
+        "summary": "Bengaluru-based digital lending platform KreditBee raised $40 million in a Series B round led by Premji Invest and Motilal Oswal Private Equity, announced in March 2025. KreditBee provides personal loans to salaried professionals and has disbursed over Rs 50,000 crore since its founding.",
+        "source_url": "https://inc42.com/buzz/kreditbee-40m-series-b",
+        "source_name": "inc42",
+        "published_date": "2025-03-01"
+      },
+      "ground_truth": {
+        "category": "funding",
+        "entities": {
+          "company_name": "KreditBee",
+          "company_name_normalized": "kreditbee",
+          "founder_name": null,
+          "investor_names": [
+            "Premji Invest",
+            "Motilal Oswal Private Equity"
+          ],
+          "investor_names_normalized": [
+            "premji invest",
+            "motilal oswal private equity"
+          ],
+          "funding_amount_usd": 40000000,
+          "funding_stage": "series_b",
+          "sector": "fintech",
+          "location": "Bengaluru",
+          "announced_date": "2025-03-01"
+        }
+      }
+    },
+    {
+      "id": "A-005",
+      "notes": "funding · series_a · consumer · Mumbai · AI hardware/robotics",
+      "input": {
+        "title": "Miko raises $20M Series A to grow AI-powered companion robots for children",
+        "summary": "Mumbai-based robotics startup Miko raised $20 million in a Series A round led by Fundamentum Partnership and Leo Capital, announced in February 2025. Miko makes AI-powered companion robots for children, using multimodal interaction to deliver personalised learning experiences.",
+        "source_url": "https://yourstory.com/2025/02/miko-20m-series-a",
+        "source_name": "yourstory",
+        "published_date": "2025-02-05"
+      },
+      "ground_truth": {
+        "category": "funding",
+        "entities": {
+          "company_name": "Miko",
+          "company_name_normalized": "miko",
+          "founder_name": null,
+          "investor_names": [
+            "Fundamentum Partnership",
+            "Leo Capital"
+          ],
+          "investor_names_normalized": [
+            "fundamentum partnership",
+            "leo capital"
+          ],
+          "funding_amount_usd": 20000000,
+          "funding_stage": "series_a",
+          "sector": "consumer",
+          "location": "Mumbai",
+          "announced_date": "2025-02-05"
+        }
+      }
+    },
+    {
+      "id": "A-006",
+      "notes": "funding · series_a · b2b_saas · Chennai · agritech supply chain",
+      "input": {
+        "title": "WayCool Foods raises $25M Series A to expand agri supply chain platform",
+        "summary": "Chennai-based agritech startup WayCool Foods raised $25 million in a Series A round led by LightBox Ventures with participation from Sequoia Capital India, announced in January 2025. The investment will expand WayCool's cold chain logistics and B2B produce procurement platform across India.",
+        "source_url": "https://inc42.com/buzz/waycool-foods-25m-series-a",
+        "source_name": "inc42",
+        "published_date": "2025-01-25"
+      },
+      "ground_truth": {
+        "category": "funding",
+        "entities": {
+          "company_name": "WayCool Foods",
+          "company_name_normalized": "waycool foods",
+          "founder_name": null,
+          "investor_names": [
+            "LightBox Ventures",
+            "Sequoia Capital India"
+          ],
+          "investor_names_normalized": [
+            "lightbox ventures",
+            "sequoia capital india"
+          ],
+          "funding_amount_usd": 25000000,
+          "funding_stage": "series_a",
+          "sector": "b2b_saas",
+          "location": "Chennai",
+          "announced_date": "2025-01-25"
+        }
+      }
+    },
+    {
+      "id": "A-007",
+      "notes": "funding · seed · fintech · Bengaluru · small round · single investor · crypto",
+      "input": {
+        "title": "Crypto investment platform Mudrex secures $2.5M seed from Better Capital",
+        "summary": "Bengaluru-based cryptocurrency investment platform Mudrex raised $2.5 million in a seed round from Better Capital, announced in March 2025. Mudrex provides automated crypto investment strategies and plans to expand to Southeast Asia.",
+        "source_url": "https://yourstory.com/2025/03/mudrex-seed-better-capital",
+        "source_name": "yourstory",
+        "published_date": "2025-03-20"
+      },
+      "ground_truth": {
+        "category": "funding",
+        "entities": {
+          "company_name": "Mudrex",
+          "company_name_normalized": "mudrex",
+          "founder_name": null,
+          "investor_names": [
+            "Better Capital"
+          ],
+          "investor_names_normalized": [
+            "better capital"
+          ],
+          "funding_amount_usd": 2500000,
+          "funding_stage": "seed",
+          "sector": "fintech",
+          "location": "Bengaluru",
+          "announced_date": "2025-03-20"
+        }
+      }
+    },
+    {
+      "id": "A-008",
+      "notes": "funding · seed · climate · Pune · crore→USD · single investor · small round",
+      "input": {
+        "title": "Pune climate startup Nuvama Energy raises Rs 12.5 crore to scale solar micro-grids",
+        "summary": "Pune-based climate tech startup Nuvama Energy raised Rs 12.5 crore (approximately $1.5 million) in a seed round from Climake Fund and angel investors, announced in February 2025. The funding supports deployment of decentralised solar micro-grids for rural communities across Maharashtra and Rajasthan.",
+        "source_url": "https://economictimes.indiatimes.com/tech/startups/nuvama-energy-seed/articleshow/22222.cms",
+        "source_name": "economictimes",
+        "published_date": "2025-02-15"
+      },
+      "ground_truth": {
+        "category": "funding",
+        "entities": {
+          "company_name": "Nuvama Energy",
+          "company_name_normalized": "nuvama energy",
+          "founder_name": null,
+          "investor_names": [
+            "Climake Fund"
+          ],
+          "investor_names_normalized": [
+            "climake fund"
+          ],
+          "funding_amount_usd": 1500000,
+          "funding_stage": "seed",
+          "sector": "climate",
+          "location": "Pune",
+          "announced_date": "2025-02-15"
+        }
+      }
+    },
+    {
+      "id": "A-009",
+      "notes": "hiring · consumer · Mumbai · no funding · headcount number explicitly mentioned",
+      "input": {
+        "title": "Zepto doubles engineering team to 400 as quick commerce competition intensifies",
+        "summary": "Mumbai-based quick commerce startup Zepto doubled its engineering team from 200 to 400 employees in the past six months, announced in March 2025. Zepto is aggressively hiring backend engineers and ML researchers to compete with Swiggy Instamart and Blinkit in 10-minute grocery delivery.",
+        "source_url": "https://inc42.com/buzz/zepto-doubles-engineering-team",
+        "source_name": "inc42",
+        "published_date": "2025-03-12"
+      },
+      "ground_truth": {
+        "category": "hiring",
+        "entities": {
+          "company_name": "Zepto",
+          "company_name_normalized": "zepto",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": "consumer",
+          "location": "Mumbai",
+          "announced_date": "2025-03-12"
+        }
+      }
+    },
+    {
+      "id": "A-010",
+      "notes": "hiring · fintech · Bengaluru · IPO context present but primary event is hiring plan",
+      "input": {
+        "title": "Groww to hire 500 people across tech and compliance roles in 2025",
+        "summary": "Bengaluru-based investment platform Groww announced plans to hire 500 employees in 2025, focusing on engineering, product, and regulatory compliance, announced in February 2025. Groww, which crossed 10 million active investors in 2024, is preparing for an upcoming IPO.",
+        "source_url": "https://yourstory.com/2025/02/groww-500-hiring",
+        "source_name": "yourstory",
+        "published_date": "2025-02-28"
+      },
+      "ground_truth": {
+        "category": "hiring",
+        "entities": {
+          "company_name": "Groww",
+          "company_name_normalized": "groww",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": "fintech",
+          "location": "Bengaluru",
+          "announced_date": "2025-02-28"
+        }
+      }
+    },
+    {
+      "id": "A-011",
+      "notes": "hiring · b2b_saas · Bengaluru · geographic expansion context, no funding event",
+      "input": {
+        "title": "Perfios adds 300 engineers as it expands into Southeast Asia and Middle East",
+        "summary": "Bengaluru-based financial data platform Perfios is hiring 300 engineers in 2025 as it expands its credit decisioning infrastructure to banks and fintechs in Southeast Asia and the Middle East, announced in January 2025.",
+        "source_url": "https://economictimes.indiatimes.com/tech/startups/perfios-300-engineers/articleshow/33333.cms",
+        "source_name": "economictimes",
+        "published_date": "2025-01-20"
+      },
+      "ground_truth": {
+        "category": "hiring",
+        "entities": {
+          "company_name": "Perfios",
+          "company_name_normalized": "perfios",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": "b2b_saas",
+          "location": "Bengaluru",
+          "announced_date": "2025-01-20"
+        }
+      }
+    },
+    {
+      "id": "A-012",
+      "notes": "founder_move · b2b_saas · Bengaluru · named founder departing existing startup",
+      "input": {
+        "title": "Udaan co-founder Sujeet Kumar steps down to launch new B2B commerce venture",
+        "summary": "Sujeet Kumar, co-founder and COO of B2B commerce startup Udaan, has stepped down to launch a new startup focused on supply chain infrastructure, announced in March 2025. Kumar co-founded Udaan in 2016 alongside Amod Malviya and Vaibhav Gupta and led operations since its founding.",
+        "source_url": "https://inc42.com/buzz/udaan-cofounder-sujeet-kumar-steps-down",
+        "source_name": "inc42",
+        "published_date": "2025-03-08"
+      },
+      "ground_truth": {
+        "category": "founder_move",
+        "entities": {
+          "company_name": "Udaan",
+          "company_name_normalized": "udaan",
+          "founder_name": "Sujeet Kumar",
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": "b2b_saas",
+          "location": "Bengaluru",
+          "announced_date": "2025-03-08"
+        }
+      }
+    },
+    {
+      "id": "A-013",
+      "notes": "founder_move · fintech · Bengaluru · founder making angel investment in another startup",
+      "input": {
+        "title": "CRED founder Kunal Shah joins ClearTax board as strategic investor",
+        "summary": "Kunal Shah, founder of rewards platform CRED, has made a strategic angel investment in tax compliance startup ClearTax and joined its board of directors, announced in February 2025. Shah said ClearTax's B2B tax platform aligns with his vision of simplifying finance for Indian businesses.",
+        "source_url": "https://yourstory.com/2025/02/cred-kunal-shah-cleartax",
+        "source_name": "yourstory",
+        "published_date": "2025-02-10"
+      },
+      "ground_truth": {
+        "category": "founder_move",
+        "entities": {
+          "company_name": "ClearTax",
+          "company_name_normalized": "cleartax",
+          "founder_name": "Kunal Shah",
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": "fintech",
+          "location": "Bengaluru",
+          "announced_date": "2025-02-10"
+        }
+      }
+    },
+    {
+      "id": "A-014",
+      "notes": "accelerator · logistics · Chennai · YC W25 · YC $500K standard deal",
+      "input": {
+        "title": "Chennai logistics startup RouteBox joins Y Combinator Winter 2025 batch",
+        "summary": "RouteBox, a Chennai-based last-mile delivery optimization startup, has been accepted into Y Combinator's Winter 2025 batch, announced in January 2025. The startup uses AI to optimize delivery routes for D2C brands and receives the standard $500,000 YC investment.",
+        "source_url": "https://ycombinator.com/companies/routebox",
+        "source_name": "yc",
+        "published_date": "2025-01-15"
+      },
+      "ground_truth": {
+        "category": "accelerator",
+        "entities": {
+          "company_name": "RouteBox",
+          "company_name_normalized": "routebox",
+          "founder_name": null,
+          "investor_names": [
+            "Y Combinator"
+          ],
+          "investor_names_normalized": [
+            "y combinator"
+          ],
+          "funding_amount_usd": 500000,
+          "funding_stage": "accelerator",
+          "sector": "logistics",
+          "location": "Chennai",
+          "announced_date": "2025-01-15"
+        }
+      }
+    },
+    {
+      "id": "A-015",
+      "notes": "accelerator · climate · Bengaluru · Surge S25 · no explicit amount mentioned",
+      "input": {
+        "title": "ClimateConnect Digital joins Peak XV Surge S25 cohort for carbon credit platform",
+        "summary": "Bengaluru-based climate startup ClimateConnect Digital has been selected for Peak XV Partners' Surge S25 cohort, announced in February 2025. ClimateConnect builds a marketplace for voluntary carbon credits targeting Indian SMEs and was one of 22 startups in the cohort.",
+        "source_url": "https://inc42.com/buzz/climateconnect-surge-s25",
+        "source_name": "inc42",
+        "published_date": "2025-02-01"
+      },
+      "ground_truth": {
+        "category": "accelerator",
+        "entities": {
+          "company_name": "ClimateConnect Digital",
+          "company_name_normalized": "climateconnect digital",
+          "founder_name": null,
+          "investor_names": [
+            "Peak XV Partners"
+          ],
+          "investor_names_normalized": [
+            "peak xv partners"
+          ],
+          "funding_amount_usd": null,
+          "funding_stage": "accelerator",
+          "sector": "climate",
+          "location": "Bengaluru",
+          "announced_date": "2025-02-01"
+        }
+      }
+    },
+    {
+      "id": "A-016",
+      "notes": "accelerator · mixed sectors · no single company · Antler India batch announcement · company_name null",
+      "input": {
+        "title": "Antler India announces third cohort of 8 startups, all at pre-seed stage",
+        "summary": "Antler India, the local arm of global early-stage VC Antler, announced its third cohort of eight startups in March 2025. The cohort spans AI, fintech, and healthtech sectors. Each startup receives $125,000 in pre-seed funding from Antler in exchange for equity.",
+        "source_url": "https://yourstory.com/2025/03/antler-india-third-cohort",
+        "source_name": "yourstory",
+        "published_date": "2025-03-01"
+      },
+      "ground_truth": {
+        "category": "accelerator",
+        "entities": {
+          "company_name": null,
+          "company_name_normalized": null,
+          "founder_name": null,
+          "investor_names": [
+            "Antler India"
+          ],
+          "investor_names_normalized": [
+            "antler india"
+          ],
+          "funding_amount_usd": 125000,
+          "funding_stage": "pre_seed",
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-01"
+        }
+      }
+    },
+    {
+      "id": "A-017",
+      "notes": "shutdown · edtech · Delhi · named founder · previous funding mentioned as context only",
+      "input": {
+        "title": "Delhi edtech startup Vidyartha shuts down after failing to close Series A",
+        "summary": "Vidyartha, a Delhi-based K-12 test preparation startup, has shut down after failing to close its planned Series A round, announced via a LinkedIn post by co-founder Arjun Mehta in February 2025. Founded in 2021, Vidyartha had raised a seed round of Rs 8 crore in 2022 and served approximately 50,000 students.",
+        "source_url": "https://inc42.com/buzz/vidyartha-edtech-shutdown",
+        "source_name": "inc42",
+        "published_date": "2025-02-18"
+      },
+      "ground_truth": {
+        "category": "shutdown",
+        "entities": {
+          "company_name": "Vidyartha",
+          "company_name_normalized": "vidyartha",
+          "founder_name": "Arjun Mehta",
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": "edtech",
+          "location": "Delhi",
+          "announced_date": "2025-02-18"
+        }
+      }
+    },
+    {
+      "id": "A-018",
+      "notes": "shutdown · consumer · Bengaluru · no named founder · unit economics reason stated",
+      "input": {
+        "title": "Cloud kitchen network TapChef ceases operations citing unit economics collapse",
+        "summary": "Bengaluru-based cloud kitchen startup TapChef has shut down all operations as of January 2025, according to a company email sent to staff. TapChef operated 45 dark kitchens across six cities and cited worsening unit economics and competition from Swiggy and Zomato's in-house cloud kitchen brands as the reasons for closure.",
+        "source_url": "https://yourstory.com/2025/01/tapchef-shutdown",
+        "source_name": "yourstory",
+        "published_date": "2025-01-30"
+      },
+      "ground_truth": {
+        "category": "shutdown",
+        "entities": {
+          "company_name": "TapChef",
+          "company_name_normalized": "tapchef",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": "consumer",
+          "location": "Bengaluru",
+          "announced_date": "2025-01-30"
+        }
+      }
+    },
+    {
+      "id": "A-019",
+      "notes": "pivot · b2b_saas · Bengaluru · logistics SaaS → supply chain intelligence platform",
+      "input": {
+        "title": "Locus pivots from last-mile delivery SaaS to enterprise supply chain intelligence",
+        "summary": "Bengaluru-based Locus has pivoted its product strategy from last-mile delivery optimization to a broader enterprise supply chain intelligence platform, announced in March 2025. New modules cover demand forecasting, inventory optimization, and procurement analytics — driven by customer demand for end-to-end visibility.",
+        "source_url": "https://economictimes.indiatimes.com/tech/startups/locus-pivot/articleshow/44444.cms",
+        "source_name": "economictimes",
+        "published_date": "2025-03-05"
+      },
+      "ground_truth": {
+        "category": "pivot",
+        "entities": {
+          "company_name": "Locus",
+          "company_name_normalized": "locus",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": "b2b_saas",
+          "location": "Bengaluru",
+          "announced_date": "2025-03-05"
+        }
+      }
+    },
+    {
+      "id": "A-020",
+      "notes": "ecosystem_trend · AI · India-wide · no specific company · no funding amount · report-based",
+      "input": {
+        "title": "India's generative AI startup wave: 200 new companies launched in 2024",
+        "summary": "India produced over 200 new generative AI startups in 2024, with the pace accelerating into early 2025, according to an iSPIRT report released in March 2025. Bengaluru and Hyderabad account for 60 percent of India's generative AI startups. The most common applications are coding assistance, document processing, and vernacular language AI.",
+        "source_url": "https://inc42.com/features/india-gen-ai-startup-wave-2024",
+        "source_name": "inc42",
+        "published_date": "2025-03-25"
+      },
+      "ground_truth": {
+        "category": "ecosystem_trend",
+        "entities": {
+          "company_name": null,
+          "company_name_normalized": null,
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": "AI",
+          "location": "Bengaluru",
+          "announced_date": "2025-03-25"
+        }
+      }
+    }
+  ]

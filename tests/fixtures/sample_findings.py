@@ -1,9 +1,16 @@
+from datetime import datetime, timedelta, timezone
+
+# Relative date so SAMPLE_FUNDING_FINDING stays inside the 30-day freshness window.
+_SAMPLE_FUNDING_PUBLISHED_DATE = (
+    datetime.now(timezone.utc).date() - timedelta(days=7)
+).isoformat()
+
 SAMPLE_FUNDING_FINDING = {
     "title": "Bengaluru fintech startup PayNova raises $8M Series A led by Elevation Capital",
     "summary": "PayNova, a Bengaluru-based fintech platform, announced an $8 million Series A round led by Elevation Capital with participation from existing investors in March 2025.",
     "source_url": "https://inc42.com/buzz/paynova-series-a",
     "source_name": "inc42",
-    "published_date": "2025-03-10",
+    "published_date": _SAMPLE_FUNDING_PUBLISHED_DATE,
 }
 
 SAMPLE_HIRING_FINDING = {

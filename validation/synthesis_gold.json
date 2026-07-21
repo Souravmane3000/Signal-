@@ -1,0 +1,302 @@
+[
+    {
+      "id": "E-001",
+      "notes": "mixed_signals_standard_week",
+      "input": {
+        "new_findings": [
+          {
+            "title": "Bengaluru fintech startup PayNova raises $8M Series A led by Elevation Capital",
+            "summary": "PayNova, a Bengaluru-based fintech platform, announced an $8 million Series A round led by Elevation Capital with participation from existing investors in March 2025.",
+            "source_url": "https://inc42.com/buzz/paynova-series-a",
+            "source_name": "inc42",
+            "published_date": "2025-03-10",
+            "entities": {
+              "company_name": "PayNova",
+              "company_name_normalized": "paynova",
+              "founder_name": null,
+              "investor_names": ["Elevation Capital"],
+              "investor_names_normalized": ["elevation capital"],
+              "funding_amount_usd": 8000000,
+              "funding_stage": "series_a",
+              "sector": "fintech",
+              "location": "Bengaluru",
+              "announced_date": "2025-03-10"
+            },
+            "category": "funding",
+            "source_trust_score": 0.90,
+            "freshness_penalty_applied": false,
+            "confidence_score": 0.90,
+            "is_duplicate": false,
+            "duplicate_reason": null
+          },
+          {
+            "title": "AI startup Sarvam doubles engineering team in Q1 2025",
+            "summary": "Sarvam AI has grown its engineering headcount from 20 to 45 in the first quarter, with a focus on hiring NLP researchers.",
+            "source_url": "https://yourstory.com/sarvam-hiring",
+            "source_name": "yourstory",
+            "published_date": "2025-04-01",
+            "entities": {
+              "company_name": "Sarvam AI",
+              "company_name_normalized": "sarvam ai",
+              "founder_name": null,
+              "investor_names": [],
+              "investor_names_normalized": [],
+              "funding_amount_usd": null,
+              "funding_stage": null,
+              "sector": "AI",
+              "location": "Bengaluru",
+              "announced_date": "2025-04-01"
+            },
+            "category": "hiring",
+            "source_trust_score": 0.90,
+            "freshness_penalty_applied": false,
+            "confidence_score": 0.90,
+            "is_duplicate": false,
+            "duplicate_reason": null
+          }
+        ]
+      },
+      "ground_truth": {
+        "case_id": "E-001",
+        "expected_sections": ["Executive Summary", "Funding Highlights", "Ecosystem Moves", "Trends to Watch"],
+        "must_include_companies": ["PayNova", "Sarvam AI"],
+        "must_not_hallucinate": true,
+        "acceptable_briefing_example": "## Signal Weekly Briefing\n\n### Executive Summary\nThis week in the Indian startup ecosystem features solid growth signals across both capital and talent. Fintech platform PayNova secured significant Series A backing, while generative AI player Sarvam AI is aggressively scaling its technical talent pool.\n\n### Funding Highlights\n- **PayNova** (Bengaluru, Fintech): Raised an $8 million Series A round led by Elevation Capital to scale its platform.\n\n### Ecosystem Moves\n- **Sarvam AI** (Hiring): The Bengaluru-based AI startup has more than doubled its engineering headcount to 45, prioritizing NLP researchers in Q1 2025.\n\n### Trends to Watch\nAI startups are heavily competing for specialized engineering talent as foundational model builders rapidly expand their teams following early capital injections."
+      }
+    },
+    {
+      "id": "E-002",
+      "notes": "heavy_funding_week",
+      "input": {
+        "new_findings": [
+          {
+            "title": "Bengaluru AI startup Sarvam raises $41M Series A led by Lightspeed",
+            "summary": "Sarvam AI raised $41 million in a Series A round led by Lightspeed Venture Partners in March 2025.",
+            "source_url": "https://inc42.com/buzz/sarvam-ai-series-a-41m",
+            "source_name": "inc42",
+            "published_date": "2025-03-15",
+            "entities": {
+              "company_name": "Sarvam AI",
+              "company_name_normalized": "sarvam ai",
+              "founder_name": "Vivek Raghunathan",
+              "investor_names": ["Lightspeed Venture Partners", "Peak XV Partners"],
+              "investor_names_normalized": ["lightspeed venture partners", "peak xv partners"],
+              "funding_amount_usd": 41000000,
+              "funding_stage": "series_a",
+              "sector": "AI",
+              "location": "Bengaluru",
+              "announced_date": "2025-03-15"
+            },
+            "category": "funding",
+            "source_trust_score": 0.90,
+            "freshness_penalty_applied": false,
+            "confidence_score": 0.90,
+            "is_duplicate": false,
+            "duplicate_reason": null
+          },
+          {
+            "title": "Fintech startup Niro Credit raises Rs 25 crore seed round",
+            "summary": "Niro Credit has secured approximately $3 million in a seed funding round led by Prime Venture Partners.",
+            "source_url": "https://yourstory.com/2025/02/niro-credit-seed",
+            "source_name": "yourstory",
+            "published_date": "2025-02-20",
+            "entities": {
+              "company_name": "Niro Credit",
+              "company_name_normalized": "niro credit",
+              "founder_name": null,
+              "investor_names": ["Prime Venture Partners"],
+              "investor_names_normalized": ["prime venture partners"],
+              "funding_amount_usd": 3000000,
+              "funding_stage": "seed",
+              "sector": "fintech",
+              "location": "Bengaluru",
+              "announced_date": "2025-02-20"
+            },
+            "category": "funding",
+            "source_trust_score": 0.90,
+            "freshness_penalty_applied": false,
+            "confidence_score": 0.90,
+            "is_duplicate": false,
+            "duplicate_reason": null
+          }
+        ]
+      },
+      "ground_truth": {
+        "case_id": "E-002",
+        "expected_sections": ["Executive Summary", "Funding Highlights", "Ecosystem Moves", "Trends to Watch"],
+        "must_include_companies": ["Sarvam AI", "Niro Credit"],
+        "must_not_hallucinate": true,
+        "acceptable_briefing_example": "## Signal Weekly Briefing\n\n### Executive Summary\nBengaluru continues to dominate capital inflows this week, capturing major rounds in both generative AI and embedded finance. Sarvam AI's massive $41M Series A highlights the premium on vernacular LLM infrastructure.\n\n### Funding Highlights\n- **Sarvam AI** (Bengaluru, AI): Raised a $41 million Series A led by Lightspeed Venture Partners, with Peak XV Partners participating, to build LLMs for Indian languages.\n- **Niro Credit** (Bengaluru, Fintech): Secured a $3 million Seed round led by Prime Venture Partners for its credit-as-a-service platform.\n\n### Ecosystem Moves\nNo major ecosystem moves (hiring, accelerator batches, or founder transitions) were tracked this week.\n\n### Trends to Watch\nHigh-conviction bets are returning to deep tech and foundational AI layers in India, with top-tier global funds backing ecosystem-specific model development over pure application layers."
+      }
+    },
+    {
+      "id": "E-003",
+      "notes": "negative_signals_week",
+      "input": {
+        "new_findings": [
+          {
+            "title": "Quick commerce startup Dunzo shuts down operations after funding crunch",
+            "summary": "Dunzo has officially ceased operations citing inability to raise further funding amid a prolonged cash crunch.",
+            "source_url": "https://economictimes.indiatimes.com/dunzo-shutdown",
+            "source_name": "economictimes",
+            "published_date": "2025-02-15",
+            "entities": {
+              "company_name": "Dunzo",
+              "company_name_normalized": "dunzo",
+              "founder_name": null,
+              "investor_names": [],
+              "investor_names_normalized": [],
+              "funding_amount_usd": null,
+              "funding_stage": null,
+              "sector": "consumer",
+              "location": "Bengaluru",
+              "announced_date": "2025-02-15"
+            },
+            "category": "shutdown",
+            "source_trust_score": 0.85,
+            "freshness_penalty_applied": false,
+            "confidence_score": 0.85,
+            "is_duplicate": false,
+            "duplicate_reason": null
+          },
+          {
+            "title": "Locus pivots from last-mile delivery SaaS to enterprise supply chain intelligence",
+            "summary": "Bengaluru-based Locus has pivoted its product strategy from last-mile delivery optimization to a broader enterprise supply chain intelligence platform.",
+            "source_url": "https://inc42.com/buzz/locus-pivot",
+            "source_name": "inc42",
+            "published_date": "2025-03-05",
+            "entities": {
+              "company_name": "Locus",
+              "company_name_normalized": "locus",
+              "founder_name": null,
+              "investor_names": [],
+              "investor_names_normalized": [],
+              "funding_amount_usd": null,
+              "funding_stage": null,
+              "sector": "b2b_saas",
+              "location": "Bengaluru",
+              "announced_date": "2025-03-05"
+            },
+            "category": "pivot",
+            "source_trust_score": 0.90,
+            "freshness_penalty_applied": false,
+            "confidence_score": 0.90,
+            "is_duplicate": false,
+            "duplicate_reason": null
+          }
+        ]
+      },
+      "ground_truth": {
+        "case_id": "E-003",
+        "expected_sections": ["Executive Summary", "Funding Highlights", "Ecosystem Moves", "Trends to Watch"],
+        "must_include_companies": ["Dunzo", "Locus"],
+        "must_not_hallucinate": true,
+        "acceptable_briefing_example": "## Signal Weekly Briefing\n\n### Executive Summary\nThe logistics and quick commerce sectors are facing a harsh reality check this week. Capital exhaustion has forced the complete shutdown of pioneer Dunzo, while B2B players like Locus are pivoting away from last-mile delivery to find sustainable enterprise margins.\n\n### Funding Highlights\nNo new funding rounds were tracked this week.\n\n### Ecosystem Moves\n- **Dunzo** (Shutdown): The Bengaluru-based quick commerce startup has officially ceased operations due to an ongoing cash crunch and inability to secure fresh capital.\n- **Locus** (Pivot): Shifted its core product strategy from last-mile delivery SaaS to a comprehensive enterprise supply chain intelligence platform.\n\n### Trends to Watch\nLast-mile logistics continues to be a graveyard for startup unit economics. Companies surviving the current market are aggressively moving upmarket to enterprise SaaS or exiting consumer delivery entirely."
+      }
+    },
+    {
+      "id": "E-004",
+      "notes": "ecosystem_moves_heavy",
+      "input": {
+        "new_findings": [
+          {
+            "title": "Chennai-based logistics startup RouteBox accepted into YC W25 batch",
+            "summary": "RouteBox, a logistics optimization startup from Chennai, has been accepted into Y Combinator's Winter 2025 batch.",
+            "source_url": "https://ycombinator.com/companies/routebox",
+            "source_name": "yc",
+            "published_date": "2025-01-20",
+            "entities": {
+              "company_name": "RouteBox",
+              "company_name_normalized": "routebox",
+              "founder_name": null,
+              "investor_names": ["Y Combinator"],
+              "investor_names_normalized": ["y combinator"],
+              "funding_amount_usd": 500000,
+              "funding_stage": "accelerator",
+              "sector": "logistics",
+              "location": "Chennai",
+              "announced_date": "2025-01-20"
+            },
+            "category": "accelerator",
+            "source_trust_score": 1.0,
+            "freshness_penalty_applied": false,
+            "confidence_score": 1.0,
+            "is_duplicate": false,
+            "duplicate_reason": null
+          },
+          {
+            "title": "Udaan co-founder Sujeet Kumar steps down to launch new B2B commerce venture",
+            "summary": "Sujeet Kumar, co-founder and COO of B2B commerce startup Udaan, has stepped down to launch a new startup focused on supply chain infrastructure.",
+            "source_url": "https://yourstory.com/udaan-cofounder-sujeet-kumar",
+            "source_name": "yourstory",
+            "published_date": "2025-03-08",
+            "entities": {
+              "company_name": "Udaan",
+              "company_name_normalized": "udaan",
+              "founder_name": "Sujeet Kumar",
+              "investor_names": [],
+              "investor_names_normalized": [],
+              "funding_amount_usd": null,
+              "funding_stage": null,
+              "sector": "b2b_saas",
+              "location": "Bengaluru",
+              "announced_date": "2025-03-08"
+            },
+            "category": "founder_move",
+            "source_trust_score": 0.90,
+            "freshness_penalty_applied": false,
+            "confidence_score": 0.90,
+            "is_duplicate": false,
+            "duplicate_reason": null
+          }
+        ]
+      },
+      "ground_truth": {
+        "case_id": "E-004",
+        "expected_sections": ["Executive Summary", "Funding Highlights", "Ecosystem Moves", "Trends to Watch"],
+        "must_include_companies": ["RouteBox", "Udaan"],
+        "must_not_hallucinate": true,
+        "acceptable_briefing_example": "## Signal Weekly Briefing\n\n### Executive Summary\nKey founder transitions and accelerator acceptances dominate the news this week. Y Combinator continues to tap into emerging Indian hubs like Chennai, while established unicorn operators step down to launch second-act ventures.\n\n### Funding Highlights\n- **RouteBox** (Chennai, Logistics): Secured standard $500K backing as part of its acceptance into Y Combinator's W25 batch.\n\n### Ecosystem Moves\n- **Udaan** (Founder Move): Co-founder and COO Sujeet Kumar has departed the B2B commerce unicorn to launch a new venture in the supply chain infrastructure space.\n- **RouteBox** (Accelerator): Accepted into Y Combinator's Winter 2025 cohort.\n\n### Trends to Watch\nWatch for a wave of \"second-generation\" startups being founded by early operators and co-founders of India's 2016-2019 unicorn cohort, bringing deep operational expertise back to the seed stage."
+      }
+    },
+    {
+      "id": "E-005",
+      "notes": "sparse_week_single_finding",
+      "input": {
+        "new_findings": [
+          {
+            "title": "India's generative AI startup wave: 200 new companies launched in 2024",
+            "summary": "India produced over 200 new generative AI startups in 2024, with Bengaluru and Hyderabad accounting for 60 percent, according to an iSPIRT report.",
+            "source_url": "https://inc42.com/features/india-gen-ai-startup-wave",
+            "source_name": "inc42",
+            "published_date": "2025-03-25",
+            "entities": {
+              "company_name": null,
+              "company_name_normalized": null,
+              "founder_name": null,
+              "investor_names": [],
+              "investor_names_normalized": [],
+              "funding_amount_usd": null,
+              "funding_stage": null,
+              "sector": "AI",
+              "location": "Bengaluru",
+              "announced_date": "2025-03-25"
+            },
+            "category": "ecosystem_trend",
+            "source_trust_score": 0.90,
+            "freshness_penalty_applied": false,
+            "confidence_score": 0.90,
+            "is_duplicate": false,
+            "duplicate_reason": null
+          }
+        ]
+      },
+      "ground_truth": {
+        "case_id": "E-005",
+        "expected_sections": ["Executive Summary", "Funding Highlights", "Ecosystem Moves", "Trends to Watch"],
+        "must_include_companies": [],
+        "must_not_hallucinate": true,
+        "acceptable_briefing_example": "## Signal Weekly Briefing\n\n### Executive Summary\nIt has been a remarkably quiet week for explicit funding rounds or founder moves. The primary signal comes from macro reporting on the rapid acceleration of the generative AI ecosystem across southern tech hubs.\n\n### Funding Highlights\nNo new funding rounds were tracked this week.\n\n### Ecosystem Moves\nNo specific founder transitions, hiring surges, or accelerator batches were announced.\n\n### Trends to Watch\n**Generative AI Proliferation:** Over 200 new generative AI startups were launched in India over the past year. The ecosystem is heavily concentrated, with Bengaluru and Hyderabad housing 60% of these new ventures, signaling strong geographic clusters for AI talent and capital."
+      }
+    }
+  ]

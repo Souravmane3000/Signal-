@@ -1,0 +1,351 @@
+[
+  {
+    "id": "F-001",
+    "notes": "fresh · within_window_standard · ISO_format",
+    "input": {
+      "title": "Sarvam AI closes $41M Series A led by Lightspeed",
+      "summary": "Bengaluru-based Sarvam AI announced a fresh capital injection of $41M to accelerate model training and expand technical headcount.",
+      "source_url": "https://inc42.com/buzz/sarvam-ai-fresh",
+      "source_name": "inc42",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-001",
+      "expected_result": "RETAIN",
+      "reason": "freshness_validation:within_30_days",
+      "published_date_offset_days": -5,
+      "published_date_resolution": "relative_to_eval_reference_date"
+    }
+  },
+  {
+    "id": "F-002",
+    "notes": "fresh · within_window_standard · YYYY-MM-DD",
+    "input": {
+      "title": "Niro Credit secures Rs 25 Crore seed funding",
+      "summary": "Fintech startup Niro Credit embeds consumer credit options into digital platforms and plans regional market expansion.",
+      "source_url": "https://yourstory.com/niro-credit-fresh",
+      "source_name": "yourstory",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-002",
+      "expected_result": "RETAIN",
+      "reason": "freshness_validation:within_30_days",
+      "published_date_offset_days": -10,
+      "published_date_resolution": "relative_to_eval_reference_date"
+    }
+  },
+  {
+    "id": "F-003",
+    "notes": "fresh · within_window_standard · RSS_format",
+    "input": {
+      "title": "Plum Health tech scales group insurance platforms",
+      "summary": "Mumbai insurtech startup Plum targets group health insurance options for small-and-medium enterprises across Tier-2 cities.",
+      "source_url": "https://economictimes.indiatimes.com/plum-fresh",
+      "source_name": "economictimes",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-003",
+      "expected_result": "RETAIN",
+      "reason": "freshness_validation:within_30_days",
+      "published_date_offset_days": -7,
+      "published_date_resolution": "relative_to_eval_reference_date"
+    }
+  },
+  {
+    "id": "F-004",
+    "notes": "fresh · upper_edge_boundary_29_days",
+    "input": {
+      "title": "KreditBee secures $40M Series B injection",
+      "summary": "Digital lending platform flags robust margins and path to credit profitability following strategic investment round.",
+      "source_url": "https://inc42.com/buzz/kreditbee-fresh",
+      "source_name": "inc42",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-004",
+      "expected_result": "RETAIN",
+      "reason": "freshness_validation:within_30_days",
+      "published_date_offset_days": -29,
+      "published_date_resolution": "relative_to_eval_reference_date"
+    }
+  },
+  {
+    "id": "F-005",
+    "notes": "fresh · exact_boundary_30_days",
+    "input": {
+      "title": "Miko Robotics steps up companion AI distribution",
+      "summary": "AI companion robotics manufacturer secures global channels to expand automated early learning products.",
+      "source_url": "https://yourstory.com/miko-fresh",
+      "source_name": "yourstory",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-005",
+      "expected_result": "RETAIN",
+      "reason": "freshness_validation:exact_30_days",
+      "published_date_offset_days": -30,
+      "published_date_resolution": "relative_to_eval_reference_date"
+    }
+  },
+  {
+    "id": "F-006",
+    "notes": "fresh · lower_edge_boundary_today",
+    "input": {
+      "title": "WayCool Foods hits major revenue milestone",
+      "summary": "Agritech logistics platform expands B2B network across southern agricultural clusters following deep tech integrations.",
+      "source_url": "https://economictimes.indiatimes.com/waycool-fresh",
+      "source_name": "economictimes",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-006",
+      "expected_result": "RETAIN",
+      "reason": "freshness_validation:current_day",
+      "published_date_offset_days": 0,
+      "published_date_resolution": "relative_to_eval_reference_date"
+    }
+  },
+  {
+    "id": "F-007",
+    "notes": "fresh · within_window_alternative_rss",
+    "input": {
+      "title": "Mudrex launches automated crypto index strategies",
+      "summary": "Crypto asset compliance platform targets expansion blueprints targeting regulatory compliance across Southeast Asia.",
+      "source_url": "https://yourstory.com/mudrex-fresh",
+      "source_name": "yourstory",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-007",
+      "expected_result": "RETAIN",
+      "reason": "freshness_validation:within_30_days",
+      "published_date_offset_days": -12,
+      "published_date_resolution": "relative_to_eval_reference_date"
+    }
+  },
+  {
+    "id": "F-008",
+    "notes": "fresh · within_window_deep_tech",
+    "input": {
+      "title": "Nuvama Energy scales rural microgrid footprint",
+      "summary": "Pune decentralized solar infrastructure network plans micro-grid rollouts across desert terrain segments.",
+      "source_url": "https://economictimes.indiatimes.com/nuvama-fresh",
+      "source_name": "economictimes",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-008",
+      "expected_result": "RETAIN",
+      "reason": "freshness_validation:within_30_days",
+      "published_date_offset_days": -19,
+      "published_date_resolution": "relative_to_eval_reference_date"
+    }
+  },
+  {
+    "id": "F-009",
+    "notes": "fresh · within_window_hiring_push",
+    "input": {
+      "title": "Zepto scales quick commerce micro-fulfillment network",
+      "summary": "Quick commerce platform onboards engineering managers to scale dark kitchen routing algorithm efficiencies.",
+      "source_url": "https://inc42.com/buzz/zepto-fresh",
+      "source_name": "inc42",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-009",
+      "expected_result": "RETAIN",
+      "reason": "freshness_validation:within_30_days",
+      "published_date_offset_days": -2,
+      "published_date_resolution": "relative_to_eval_reference_date"
+    }
+  },
+  {
+    "id": "F-010",
+    "notes": "fresh · within_window_pre_seed",
+    "input": {
+      "title": "RouteBox enters global early stage supply pipeline",
+      "summary": "Logistics platform automates destination route configurations to mitigate distribution bottlenecks for D2C storefronts.",
+      "source_url": "https://ycombinator.com/companies/routebox-fresh",
+      "source_name": "yc",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-010",
+      "expected_result": "RETAIN",
+      "reason": "freshness_validation:within_30_days",
+      "published_date_offset_days": -15,
+      "published_date_resolution": "relative_to_eval_reference_date"
+    }
+  },
+  {
+    "id": "F-011",
+    "notes": "stale · explicit_boundary_31_days",
+    "input": {
+      "title": "Groww expands compliance headcount parameters",
+      "summary": "Investment technology platform scales middle-office framework to handle automated wealth product checking algorithms.",
+      "source_url": "https://yourstory.com/groww-stale",
+      "source_name": "yourstory",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-011",
+      "expected_result": "DROP",
+      "reason": "freshness_validation:older_than_30_days",
+      "published_date_offset_days": -31,
+      "published_date_resolution": "relative_to_eval_reference_date"
+    }
+  },
+  {
+    "id": "F-012",
+    "notes": "stale · legacy_news_republished · 45_days_old",
+    "input": {
+      "title": "Perfios scales credit decision data engines",
+      "summary": "Financial software architecture engine expands distribution capabilities to service transactional nodes across dynamic markets.",
+      "source_url": "https://economictimes.indiatimes.com/perfios-stale",
+      "source_name": "economictimes",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-012",
+      "expected_result": "DROP",
+      "reason": "freshness_validation:older_than_30_days",
+      "published_date_offset_days": -45,
+      "published_date_resolution": "relative_to_eval_reference_date"
+    }
+  },
+  {
+    "id": "F-013",
+    "notes": "stale · aggregator_scrape_trap · 60_days_old",
+    "input": {
+      "title": "Udaan infrastructure shifts operational management structures",
+      "summary": "B2B infrastructure optimization algorithms lower supply chain operational redundancies within regional warehouse layouts.",
+      "source_url": "https://inc42.com/buzz/udaan-stale",
+      "source_name": "inc42",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-013",
+      "expected_result": "DROP",
+      "reason": "freshness_validation:older_than_30_days",
+      "published_date_offset_days": -60,
+      "published_date_resolution": "relative_to_eval_reference_date"
+    }
+  },
+  {
+    "id": "F-014",
+    "notes": "stale · severe_stale_republish · 6_months_old",
+    "input": {
+      "title": "ClearTax closes strategic platform enterprise deals",
+      "summary": "Tax processing optimization software integrates corporate compliance suites into decentralized ERP frameworks.",
+      "source_url": "https://yourstory.com/cleartax-stale",
+      "source_name": "yourstory",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-014",
+      "expected_result": "DROP",
+      "reason": "freshness_validation:older_than_30_days",
+      "published_date_offset_days": -181,
+      "published_date_resolution": "relative_to_eval_reference_date"
+    }
+  },
+  {
+    "id": "F-015",
+    "notes": "stale · historical_archive_data",
+    "input": {
+      "title": "ClimateConnect Digital maps voluntary carbon offsets",
+      "summary": "Ecosystem monitoring tool verifies credit allocations for manufacturing installations across commercial zones.",
+      "source_url": "https://inc42.com/buzz/climateconnect-stale",
+      "source_name": "inc42",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-015",
+      "expected_result": "DROP",
+      "reason": "freshness_validation:older_than_30_days",
+      "published_date_offset_days": -217,
+      "published_date_resolution": "relative_to_eval_reference_date"
+    }
+  },
+  {
+    "id": "F-016",
+    "notes": "undated · null_field_retained_with_penalty",
+    "input": {
+      "title": "Antler India announces pre-seed allocation pools",
+      "summary": "Early investment management structure targets decentralized app architectures across emerging deep tech sectors.",
+      "source_url": "https://yourstory.com/antler-undated",
+      "source_name": "yourstory",
+      "published_date": null
+    },
+    "ground_truth": {
+      "case_id": "F-016",
+      "expected_result": "RETAIN_WITH_PENALTY",
+      "reason": "freshness_validation:missing_date_field"
+    }
+  },
+  {
+    "id": "F-017",
+    "notes": "undated · empty_string_retained_with_penalty",
+    "input": {
+      "title": "Vidyartha platform transitions test prep methods",
+      "summary": "Education analytics company customizes instructional sequencing templates based on cognitive performance trends.",
+      "source_url": "https://inc42.com/buzz/vidyartha-undated",
+      "source_name": "inc42",
+      "published_date": ""
+    },
+    "ground_truth": {
+      "case_id": "F-017",
+      "expected_result": "RETAIN_WITH_PENALTY",
+      "reason": "freshness_validation:missing_date_field"
+    }
+  },
+  {
+    "id": "F-018",
+    "notes": "undated · unparseable_text_format",
+    "input": {
+      "title": "TapChef network alters consumer distribution models",
+      "summary": "Dark kitchen kitchen operations consolidate regional processing centers to optimize local ingredient supply chains.",
+      "source_url": "https://yourstory.com/tapchef-undated",
+      "source_name": "yourstory",
+      "published_date": "Available early summer season"
+    },
+    "ground_truth": {
+      "case_id": "F-018",
+      "expected_result": "RETAIN_WITH_PENALTY",
+      "reason": "freshness_validation:unparseable_date_string"
+    }
+  },
+  {
+    "id": "F-019",
+    "notes": "undated · partial_year_only_unparseable",
+    "input": {
+      "title": "Locus launches supply intelligence product suites",
+      "summary": "Enterprise supply tracking engine targets predictive load configurations for long-haul shipping routes.",
+      "source_url": "https://economictimes.indiatimes.com/locus-undated",
+      "source_name": "economictimes",
+      "published_date": "Mid-2026"
+    },
+    "ground_truth": {
+      "case_id": "F-019",
+      "expected_result": "RETAIN_WITH_PENALTY",
+      "reason": "freshness_validation:unparseable_date_string"
+    }
+  },
+  {
+    "id": "F-020",
+    "notes": "undated · missing_key_retained_with_penalty",
+    "input": {
+      "title": "iSPIRT research maps generational AI startup velocity",
+      "summary": "Ecosystem survey lists structural metrics defining growth trajectories across vernacular technology deployments.",
+      "source_url": "https://inc42.com/features/ispirt-undated",
+      "source_name": "inc42"
+    },
+    "ground_truth": {
+      "case_id": "F-020",
+      "expected_result": "RETAIN_WITH_PENALTY",
+      "reason": "freshness_validation:missing_date_key"
+    }
+  }
+]

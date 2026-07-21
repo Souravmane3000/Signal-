@@ -16,7 +16,7 @@ This file is the primary execution context for Builder Agent.
 
 Name:
 
-Vertical Slice 2 - Research Pipeline
+Vertical Slice 4 — Phase 2 Infrastructure + HITL
 
 Status:
 
@@ -24,37 +24,46 @@ IN_PROGRESS
 
 Goal:
 
-Build the research pipeline required for Signal'
+PostgresSaver live, HITL interrupt working, conditional routing correct per DEC-004, delivery working, all memory and metrics writing to Supabase.
 
-### Slice Exit criteria:**
-- All 4 source nodes individually testable without crashing
-- Combined `raw_findings` across all 4 nodes ≥5 items
-- ≥2 distinct `source_name` values in combined output
-- `source_failures` dict returned by every node
-- Retry logic present in all 4 node files (confirm by reading `_retry` calls)
-- No node raises unhandled exception on API timeout or empty result
+**Slice exit criteria:**
+- `MemorySaver` fully replaced by `PostgresSaver` — graph state persists across process restarts
+- `graph.invoke` pauses at `hitl_node` — confirmed via LangSmith interrupt span
+- Approve path: `episodic_memory_writer` executes → delivery proceeds → episode in PostgresStore
+- Reject path: `discard_and_log` executes → `episodic_memory_writer` does NOT execute → no episode in PostgresStore (DEC-004, EVAL.md Section 13)
+- `run_metrics_writer` executes on BOTH approve and reject paths
+- Approved briefing arrives in `delivery_email` inbox
+- `agent_run_metrics` table has one row per run with `graph_version` and `source_health` as separate columns
+- Embedding dedup (SIG-014B) catches fuzzy duplicate that stages 0–2 missed
+
 
 
 # CURRENT TASK
-### SIG-008 — Reducer Node
-**Tier:** 1 | **Owner:** Builder Agent | **Phase:** 1 | **Status:** TODO
-**Depends on:** SIG-004, SIG-005, SIG-006, SIG-007
-**Spec ref:** BUILD_SPEC.md Section 7
+
+
+### SIG-P2-002 — PostgresSaver + PostgresStore Migration
+**Tier:** 1 | **Owner:** Builder Agent | **Phase:** 2 | **Status:** TODO
+**Depends on:** SIG-P2-001
+**Spec ref:** BUILD_SPEC.md Section 17.1
 
 **Files in Scope:**
-- `agent/nodes/reducer.py`
+- `agent/graph.py`
 
 **Acceptance criteria:**
-- Returns `raw_findings` unchanged — no transformation, no filtering, no dedup
-- `len(output["raw_findings"]) == len(input["raw_findings"])`
-- Print statement `f"Reducer: {N} total findings merged from all research nodes"` visible in output
-- Node is confirmed pass-through by reading the code — single print + return only
+- `MemorySaver` replaced by `PostgresSaver` using `DATABASE_URL` from `.env`
+- `InMemoryStore` replaced by `PostgresStore` for all memory namespaces
+- `graph.compile(checkpointer=postgres_saver, store=postgres_store)`
+- `python scripts/run_agent.py` still runs end-to-end after migration
+- Kill process mid-run, restart → graph resumes from last checkpoint (verify via LangSmith)
 
 **Stop conditions — escalate to human immediately if:**
-- `state["raw_findings"]` is not a list (Annotated reducer not working — state schema error in SIG-001B)
-- Output list shorter than input list (transformation occurred — not allowed in this node)
+- `DATABASE_URL` missing from `.env`
+- `PostgresSaver` import fails — package not in `requirements.txt`
+- `graph.compile()` raises error with new checkpointer
+- Process restart does not resume from checkpoint (PostgresSaver not persisting correctly)
 
 ---
+
 
 # BUDGET GATE
 
@@ -117,24 +126,24 @@ Upon successful completion:
 
 Task:
 
-SIG-009
+SIG-P2-002B
 
 Title:
 
-Freshness Validation Node
+Config loader Supabase Upgrade
 
 Builder Agent must wait for human approval before work begins.
 
 # HUMAN NOTES
 
-None
+Entity Extraction OpenAI client wrapped with langsmith.wrappers.wrap_openai to enable LangSmith LLM child spans and token/cost observability. No architecture or extraction logic changed.
 
 # EXECUTION TIMESTAMP
 
 Last Updated:
 
 
-2026-07-15 11:32
+2026-07-21 11:36
 
 Updated By:
 

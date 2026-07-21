@@ -1,0 +1,1222 @@
+[
+  {
+    "group_id": "B-001",
+    "canonical_company": "Sarvam AI",
+    "canonical_event": "Series A funding of $41M led by Lightspeed Venture Partners — March 2025",
+    "expected_catch_stage": "pre_filter",
+    "notes": "Standard cross-publication funding coverage; both articles published same day",
+    "members": [
+      {
+        "title": "Bengaluru AI startup Sarvam raises $41M Series A led by Lightspeed",
+        "summary": "Sarvam AI, a Bengaluru-based startup building LLMs for Indian languages, raised $41 million in a Series A led by Lightspeed Venture Partners, announced March 15, 2025. Peak XV Partners also participated. Co-founder Vivek Raghunathan said the round accelerates model training.",
+        "source_url": "https://inc42.com/buzz/sarvam-ai-series-a-41m",
+        "source_name": "inc42",
+        "published_date": "2025-03-15",
+        "entities": {
+          "company_name": "Sarvam Ai",
+          "company_name_normalized": "sarvam ai",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-15"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Indian AI firm Sarvam bags $41 million Series A from Lightspeed to build sovereign LLMs",
+        "summary": "Sarvam AI has closed a $41 million Series A funding round led by Lightspeed Venture Partners with participation from Peak XV Partners, the Bengaluru-based company announced on March 15, 2025. The startup is focused on building foundational AI models for Indian languages.",
+        "source_url": "https://yourstory.com/2025/03/sarvam-ai-41m-series-a-lightspeed",
+        "source_name": "yourstory",
+        "published_date": "2025-03-15",
+        "entities": {
+          "company_name": "Sarvam Ai",
+          "company_name_normalized": "sarvam ai",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-15"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-002",
+    "canonical_company": "KreditBee",
+    "canonical_event": "Series B funding of $40M led by Premji Invest — March 2025",
+    "expected_catch_stage": "pre_filter",
+    "notes": "Digital lending round; different framing (profitability vs market position) across sources",
+    "members": [
+      {
+        "title": "KreditBee secures $40M Series B as digital lender eyes profitability",
+        "summary": "Bengaluru-based digital lender KreditBee raised $40 million in a Series B round led by Premji Invest and Motilal Oswal Private Equity, announced March 1, 2025. The company, which provides personal loans to salaried professionals, has disbursed over Rs 50,000 crore to date.",
+        "source_url": "https://inc42.com/buzz/kreditbee-40m-series-b",
+        "source_name": "inc42",
+        "published_date": "2025-03-01",
+        "entities": {
+          "company_name": "Kreditbee",
+          "company_name_normalized": "kreditbee",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-01"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "KreditBee raises $40 million in fresh round as personal loan demand surges",
+        "summary": "Digital lending startup KreditBee has received $40 million in a new funding round backed by Premji Invest and Motilal Oswal Private Equity, the company disclosed on March 1, 2025. KreditBee targets salaried workers underserved by traditional banking and has seen demand accelerate in tier-2 and tier-3 cities.",
+        "source_url": "https://economictimes.indiatimes.com/tech/startups/kreditbee-40-million-series-b/articleshow/55555.cms",
+        "source_name": "economictimes",
+        "published_date": "2025-03-01",
+        "entities": {
+          "company_name": "Kreditbee",
+          "company_name_normalized": "kreditbee",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-01"
+        },
+        "category": "funding",
+        "source_trust_score": 0.85,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.85,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-003",
+    "canonical_company": "Plum",
+    "canonical_event": "Series A funding of $15M co-led by Sequoia and Tiger Global — January 2025",
+    "expected_catch_stage": "url_match",
+    "notes": "Healthtech round syndicated under identical canonical URL; Member 2 has announced_date=null so Stage 0 pre_filter cannot fire. Different titles block Stage 2. Stage 1 url_match catches the duplicate.",
+    "members": [
+      {
+        "title": "Plum raises $15M Series A to scale group health insurance for startups",
+        "summary": "Mumbai-based insurtech Plum closed a $15 million Series A round co-led by Sequoia Capital India and Tiger Global, announced January 10, 2025. The funding will expand Plum's group health insurance platform to SMEs and startups across India.",
+        "source_url": "https://inc42.com/buzz/plum-15m-series-a-health-insurance",
+        "source_name": "yourstory",
+        "published_date": "2025-01-10",
+        "entities": {
+          "company_name": "Plum",
+          "company_name_normalized": "plum",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-01-10"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Sequoia, Tiger Global back Mumbai insurtech Plum in $15 million Series A",
+        "summary": "Plum, a Mumbai-based startup that provides group health insurance to companies, has raised $15 million in a Series A funding round jointly led by Sequoia Capital India and Tiger Global, it announced on January 10, 2025.",
+        "source_url": "https://inc42.com/buzz/plum-15m-series-a-health-insurance",
+        "source_name": "economictimes",
+        "published_date": "2025-01-10",
+        "entities": {
+          "company_name": "Plum",
+          "company_name_normalized": "plum",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": null
+        },
+        "category": "funding",
+        "source_trust_score": 0.85,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.85,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-004",
+    "canonical_company": "Miko",
+    "canonical_event": "Series A funding of $20M led by Fundamentum — February 2025",
+    "expected_catch_stage": "pre_filter",
+    "notes": "Consumer robotics round; different publication angles on AI vs children's education angle",
+    "members": [
+      {
+        "title": "Miko raises $20M Series A to grow AI-powered companion robots for children",
+        "summary": "Mumbai-based robotics startup Miko raised $20 million in a Series A led by Fundamentum Partnership and Leo Capital, announced February 5, 2025. Miko's AI companion robots use multimodal interaction for personalised learning experiences for children.",
+        "source_url": "https://yourstory.com/2025/02/miko-20m-series-a-fundamentum",
+        "source_name": "yourstory",
+        "published_date": "2025-02-05",
+        "entities": {
+          "company_name": "Miko",
+          "company_name_normalized": "miko",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-02-05"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Mumbai startup Miko secures $20 million to expand kids AI robot platform globally",
+        "summary": "Miko, a Mumbai-based maker of AI-powered robots for children, has raised $20 million in a Series A funding round backed by Fundamentum Partnership and Leo Capital, the company announced on February 5, 2025. Miko plans to use the capital for international expansion.",
+        "source_url": "https://inc42.com/buzz/miko-20m-series-a-ai-robots",
+        "source_name": "inc42",
+        "published_date": "2025-02-05",
+        "entities": {
+          "company_name": "Miko",
+          "company_name_normalized": "miko",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-02-05"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-005",
+    "canonical_company": "WayCool Foods",
+    "canonical_event": "Series A funding of $25M led by LightBox Ventures — January 2025",
+    "expected_catch_stage": "pre_filter",
+    "notes": "Agritech B2B round; one focuses on cold chain, other on procurement platform",
+    "members": [
+      {
+        "title": "WayCool Foods raises $25M Series A to expand agri supply chain platform",
+        "summary": "Chennai-based agritech startup WayCool Foods raised $25 million in a Series A from LightBox Ventures and Sequoia Capital India, announced January 25, 2025. The round will expand WayCool's cold chain logistics and B2B produce procurement platform across India.",
+        "source_url": "https://inc42.com/buzz/waycool-foods-25m-series-a",
+        "source_name": "inc42",
+        "published_date": "2025-01-25",
+        "entities": {
+          "company_name": "Waycool Foods",
+          "company_name_normalized": "waycool foods",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-01-25"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Chennai agritech firm WayCool gets $25 million to digitise fresh produce supply chain",
+        "summary": "WayCool Foods, a Chennai-based startup connecting farmers to B2B buyers through a digitised supply chain, has raised $25 million in Series A funding led by LightBox Ventures, with participation from Sequoia Capital India. The announcement was made January 25, 2025.",
+        "source_url": "https://yourstory.com/2025/01/waycool-foods-series-a-lightbox",
+        "source_name": "yourstory",
+        "published_date": "2025-01-25",
+        "entities": {
+          "company_name": "Waycool Foods",
+          "company_name_normalized": "waycool foods",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-01-25"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-006",
+    "canonical_company": "Niro Credit",
+    "canonical_event": "Seed funding of Rs 25 crore (~$3M) from Prime Venture Partners — February 2025",
+    "expected_catch_stage": "pre_filter",
+    "notes": "Small seed round; one uses crore, other uses USD — entity extraction handles conversion",
+    "members": [
+      {
+        "title": "Fintech startup Niro Credit raises Rs 25 crore seed from Prime Ventures",
+        "summary": "Bengaluru-based credit startup Niro Credit secured Rs 25 crore (approximately $3 million) in a seed round led by Prime Venture Partners, announced February 20, 2025. Niro embeds consumer credit products into digital platforms.",
+        "source_url": "https://yourstory.com/2025/02/niro-credit-seed-prime-ventures",
+        "source_name": "yourstory",
+        "published_date": "2025-02-20",
+        "entities": {
+          "company_name": "Niro Credit",
+          "company_name_normalized": "niro credit",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-02-20"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Credit-as-a-service platform Niro Credit closes $3M seed funding round",
+        "summary": "Niro Credit, a Bengaluru-based startup embedding credit into consumer digital platforms, has closed a $3 million seed funding round from Prime Venture Partners, the company announced on February 20, 2025.",
+        "source_url": "https://inc42.com/buzz/niro-credit-3m-seed",
+        "source_name": "inc42",
+        "published_date": "2025-02-20",
+        "entities": {
+          "company_name": "Niro Credit",
+          "company_name_normalized": "niro credit",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-02-20"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-007",
+    "canonical_company": "Mudrex",
+    "canonical_event": "Seed funding of $2.5M from Better Capital — March 2025",
+    "expected_catch_stage": "pre_filter",
+    "notes": "Small crypto fintech seed; different summaries but same core fact",
+    "members": [
+      {
+        "title": "Crypto investment platform Mudrex secures $2.5M seed from Better Capital",
+        "summary": "Bengaluru-based cryptocurrency investment platform Mudrex raised $2.5 million in a seed round from Better Capital, announced March 20, 2025. Mudrex provides automated crypto strategies and plans to expand to Southeast Asia.",
+        "source_url": "https://yourstory.com/2025/03/mudrex-seed-better-capital",
+        "source_name": "yourstory",
+        "published_date": "2025-03-20",
+        "entities": {
+          "company_name": "Mudrex",
+          "company_name_normalized": "mudrex",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-20"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Mudrex raises $2.5 million in seed funding to automate crypto investing for retail traders",
+        "summary": "Mudrex, a Bengaluru-based platform that lets retail investors automate cryptocurrency strategies, has raised $2.5 million in seed funding from Better Capital, the company announced on March 20, 2025.",
+        "source_url": "https://economictimes.indiatimes.com/tech/startups/mudrex-2-5m-seed/articleshow/77777.cms",
+        "source_name": "economictimes",
+        "published_date": "2025-03-20",
+        "entities": {
+          "company_name": "Mudrex",
+          "company_name_normalized": "mudrex",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-20"
+        },
+        "category": "funding",
+        "source_trust_score": 0.85,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.85,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-008",
+    "canonical_company": "Nuvama Energy",
+    "canonical_event": "Seed funding of Rs 12.5 crore (~$1.5M) from Climake Fund — February 2025",
+    "expected_catch_stage": "pre_filter",
+    "notes": "Climate tech seed; both use crore notation; one covers rural angle, other covers SME angle",
+    "members": [
+      {
+        "title": "Pune climate startup Nuvama Energy raises Rs 12.5 crore to scale solar micro-grids",
+        "summary": "Pune-based climate tech startup Nuvama Energy raised Rs 12.5 crore (approximately $1.5 million) in a seed round from Climake Fund and angel investors, announced February 15, 2025. Nuvama deploys solar micro-grids for rural communities across Maharashtra and Rajasthan.",
+        "source_url": "https://economictimes.indiatimes.com/tech/startups/nuvama-energy-seed/articleshow/88888.cms",
+        "source_name": "economictimes",
+        "published_date": "2025-02-15",
+        "entities": {
+          "company_name": "Nuvama Energy",
+          "company_name_normalized": "nuvama energy",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-02-15"
+        },
+        "category": "funding",
+        "source_trust_score": 0.85,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.85,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Nuvama Energy secures Rs 12.5 crore seed round to power India's rural solar transition",
+        "summary": "Nuvama Energy, a Pune-based startup deploying decentralised solar solutions, has raised Rs 12.5 crore in seed funding from Climake Fund, the company announced on February 15, 2025. The capital will fund solar micro-grid expansion for industrial SMEs and rural communities.",
+        "source_url": "https://inc42.com/buzz/nuvama-energy-seed-climake",
+        "source_name": "inc42",
+        "published_date": "2025-02-15",
+        "entities": {
+          "company_name": "Nuvama Energy",
+          "company_name_normalized": "nuvama energy",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-02-15"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-009",
+    "canonical_company": "RouteBox",
+    "canonical_event": "Y Combinator Winter 2025 batch acceptance — January 2025",
+    "expected_catch_stage": "pre_filter",
+    "notes": "YC acceptance; yc.com listing vs media coverage on same date",
+    "members": [
+      {
+        "title": "Chennai logistics startup RouteBox joins Y Combinator Winter 2025 batch",
+        "summary": "RouteBox, a Chennai-based AI-powered last-mile delivery optimization startup, has been accepted into Y Combinator's Winter 2025 cohort, announced January 15, 2025. The startup receives the standard $500,000 YC investment and will go through the three-month programme in San Francisco.",
+        "source_url": "https://ycombinator.com/companies/routebox",
+        "source_name": "yc",
+        "published_date": "2025-01-15",
+        "entities": {
+          "company_name": "Routebox",
+          "company_name_normalized": "routebox",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-01-15"
+        },
+        "category": "funding",
+        "source_trust_score": 1.0,
+        "freshness_penalty_applied": false,
+        "confidence_score": 1.0,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "RouteBox from Chennai becomes one of four Indian startups in YC W25",
+        "summary": "Chennai-based delivery route optimization startup RouteBox is among four Indian companies selected for Y Combinator's Winter 2025 batch, the startup confirmed on January 15, 2025. YC provides $500,000 to each accepted company as part of its standard deal.",
+        "source_url": "https://inc42.com/buzz/routebox-yc-w25-batch",
+        "source_name": "inc42",
+        "published_date": "2025-01-15",
+        "entities": {
+          "company_name": "Routebox",
+          "company_name_normalized": "routebox",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-01-15"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-010",
+    "canonical_company": "ClimateConnect Digital",
+    "canonical_event": "Surge S25 cohort selection — February 2025",
+    "expected_catch_stage": "pre_filter",
+    "notes": "Accelerator batch; one article gives company detail, other gives cohort context",
+    "members": [
+      {
+        "title": "ClimateConnect Digital joins Peak XV Surge S25 cohort for carbon credit platform",
+        "summary": "Bengaluru-based climate startup ClimateConnect Digital has been selected for Peak XV Partners' Surge S25 accelerator cohort, the company announced February 1, 2025. ClimateConnect builds a voluntary carbon credit marketplace for Indian SMEs.",
+        "source_url": "https://inc42.com/buzz/climateconnect-surge-s25",
+        "source_name": "inc42",
+        "published_date": "2025-02-01",
+        "entities": {
+          "company_name": "Climateconnect Digital",
+          "company_name_normalized": "climateconnect digital",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-02-01"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Surge S25 cohort includes Bengaluru climate startup ClimateConnect Digital among 22 companies",
+        "summary": "ClimateConnect Digital, a Bengaluru-based startup building a carbon credit platform for SMEs, is among 22 startups selected for Peak XV Partners' Surge S25 programme, announced February 1, 2025. The cohort spans climate, fintech, and B2B SaaS sectors.",
+        "source_url": "https://yourstory.com/2025/02/surge-s25-climateconnect-digital",
+        "source_name": "yourstory",
+        "published_date": "2025-02-01",
+        "entities": {
+          "company_name": "Climateconnect Digital",
+          "company_name_normalized": "climateconnect digital",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-02-01"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-011",
+    "canonical_company": "Zepto",
+    "canonical_event": "Engineering team doubling to 400 — March 2025",
+    "expected_catch_stage": "pre_filter",
+    "notes": "Hiring signal; different framing but same announcement date",
+    "members": [
+      {
+        "title": "Zepto doubles engineering team to 400 as quick commerce competition intensifies",
+        "summary": "Mumbai-based quick commerce startup Zepto doubled its engineering headcount from 200 to 400, the company announced March 12, 2025. Zepto is hiring backend engineers and ML researchers to strengthen its technology advantage over Blinkit and Swiggy Instamart.",
+        "source_url": "https://inc42.com/buzz/zepto-doubles-engineering-team",
+        "source_name": "inc42",
+        "published_date": "2025-03-12",
+        "entities": {
+          "company_name": "Zepto",
+          "company_name_normalized": "zepto",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-12"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Quick commerce startup Zepto on aggressive hiring spree, adds 200 engineers in six months",
+        "summary": "Zepto, the Mumbai-based 10-minute grocery delivery platform, has added 200 engineers to its team in the past six months, bringing its total engineering strength to 400, as announced on March 12, 2025. The company continues hiring ML and infrastructure talent.",
+        "source_url": "https://yourstory.com/2025/03/zepto-hiring-200-engineers",
+        "source_name": "yourstory",
+        "published_date": "2025-03-12",
+        "entities": {
+          "company_name": "Zepto",
+          "company_name_normalized": "zepto",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-12"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-012",
+    "canonical_company": "Groww",
+    "canonical_event": "Plan to hire 500 employees in 2025 — February 2025",
+    "expected_catch_stage": "pre_filter",
+    "notes": "Hiring announcement; one article focuses on tech roles, other on compliance context",
+    "members": [
+      {
+        "title": "Groww to hire 500 people across tech and compliance roles in 2025",
+        "summary": "Bengaluru-based investment platform Groww announced plans to hire 500 employees in 2025, focusing on engineering, product, and regulatory compliance, disclosed February 28, 2025. The company crossed 10 million active investors in 2024 and is preparing for an IPO.",
+        "source_url": "https://yourstory.com/2025/02/groww-500-hiring-2025",
+        "source_name": "yourstory",
+        "published_date": "2025-02-28",
+        "entities": {
+          "company_name": "Groww",
+          "company_name_normalized": "groww",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-02-28"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Groww announces 500-person hiring plan ahead of anticipated public market debut",
+        "summary": "Stock and mutual fund investment app Groww said it will recruit 500 people this year, with an emphasis on technology and compliance functions, the company announced on February 28, 2025. Groww is expected to file for an IPO in the coming months.",
+        "source_url": "https://economictimes.indiatimes.com/tech/startups/groww-500-hiring-ipo/articleshow/99999.cms",
+        "source_name": "economictimes",
+        "published_date": "2025-02-28",
+        "entities": {
+          "company_name": "Groww",
+          "company_name_normalized": "groww",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-02-28"
+        },
+        "category": "funding",
+        "source_trust_score": 0.85,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.85,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-013",
+    "canonical_company": "Vidyartha",
+    "canonical_event": "Shutdown announcement — February 2025",
+    "expected_catch_stage": "pre_filter",
+    "notes": "Shutdown; LinkedIn post origin; second article is a follow-up same day",
+    "members": [
+      {
+        "title": "Delhi edtech startup Vidyartha shuts down after failing to close Series A",
+        "summary": "Vidyartha, a Delhi-based K-12 test prep platform, has shut down following its failure to secure a Series A round, the company's co-founder Arjun Mehta announced via LinkedIn on February 18, 2025. Vidyartha raised Rs 8 crore in seed in 2022 and served around 50,000 students.",
+        "source_url": "https://inc42.com/buzz/vidyartha-edtech-shutdown",
+        "source_name": "inc42",
+        "published_date": "2025-02-18",
+        "entities": {
+          "company_name": "Vidyartha",
+          "company_name_normalized": "vidyartha",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-02-18"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Another edtech startup bites the dust: Vidyartha ceases operations amid funding drought",
+        "summary": "Delhi-based Vidyartha, an online K-12 tutoring platform, has closed down, its co-founder announced on LinkedIn on February 18, 2025. The startup could not raise its planned Series A and has notified students of the closure.",
+        "source_url": "https://yourstory.com/2025/02/vidyartha-shutdown-edtech",
+        "source_name": "yourstory",
+        "published_date": "2025-02-18",
+        "entities": {
+          "company_name": "Vidyartha",
+          "company_name_normalized": "vidyartha",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-02-18"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-014",
+    "canonical_company": "TapChef",
+    "canonical_event": "Shutdown of cloud kitchen operations — January 2025",
+    "expected_catch_stage": "pre_filter",
+    "notes": "Consumer food-tech shutdown; different angles on reason for closure",
+    "members": [
+      {
+        "title": "Cloud kitchen network TapChef ceases operations citing unit economics collapse",
+        "summary": "Bengaluru-based cloud kitchen startup TapChef shut down all operations as of January 2025, the company communicated via an email to staff and partners. The startup cited worsening unit economics and competition from Swiggy and Zomato in-house brands as reasons. Announced January 30, 2025.",
+        "source_url": "https://yourstory.com/2025/01/tapchef-shutdown-cloud-kitchen",
+        "source_name": "yourstory",
+        "published_date": "2025-01-30",
+        "entities": {
+          "company_name": "Tapchef",
+          "company_name_normalized": "tapchef",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-01-30"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "TapChef joins growing list of cloud kitchen startups shutting down in India",
+        "summary": "TapChef, a Bengaluru-based cloud kitchen operator running 45 dark kitchens across six cities, has ceased operations, the company announced January 30, 2025. The startup pointed to deteriorating unit economics as the primary cause.",
+        "source_url": "https://economictimes.indiatimes.com/tech/startups/tapchef-shutdown/articleshow/10101.cms",
+        "source_name": "economictimes",
+        "published_date": "2025-01-30",
+        "entities": {
+          "company_name": "Tapchef",
+          "company_name_normalized": "tapchef",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-01-30"
+        },
+        "category": "funding",
+        "source_trust_score": 0.85,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.85,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-015",
+    "canonical_company": "Locus",
+    "canonical_event": "Pivot from last-mile SaaS to supply chain intelligence platform — March 2025",
+    "expected_catch_stage": "pre_filter",
+    "notes": "Pivot announcement; one covers product detail, other covers strategic rationale",
+    "members": [
+      {
+        "title": "Locus pivots from last-mile delivery SaaS to enterprise supply chain intelligence",
+        "summary": "Bengaluru-based Locus has pivoted its product to an enterprise supply chain intelligence platform, the company announced March 5, 2025. New modules include demand forecasting, inventory optimization, and procurement analytics, driven by customer demand for end-to-end supply chain visibility.",
+        "source_url": "https://economictimes.indiatimes.com/tech/startups/locus-pivot/articleshow/11011.cms",
+        "source_name": "economictimes",
+        "published_date": "2025-03-05",
+        "entities": {
+          "company_name": "Locus",
+          "company_name_normalized": "locus",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-05"
+        },
+        "category": "funding",
+        "source_trust_score": 0.85,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.85,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Locus rebrands product focus, moves beyond last-mile to full supply chain intelligence",
+        "summary": "Supply chain software startup Locus announced on March 5, 2025 that it is broadening its platform beyond last-mile delivery optimisation to cover the full enterprise supply chain — including procurement, inventory, and forecasting — in a strategic pivot driven by enterprise customer feedback.",
+        "source_url": "https://inc42.com/buzz/locus-supply-chain-pivot-2025",
+        "source_name": "inc42",
+        "published_date": "2025-03-05",
+        "entities": {
+          "company_name": "Locus",
+          "company_name_normalized": "locus",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-05"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-016",
+    "canonical_company": "Zetwerk",
+    "canonical_event": "Series A funding of $35M led by Lightspeed — February 2025",
+    "expected_catch_stage": "title_match",
+    "notes": "Member 1 has a parseable announced_date. Member 2's article uses vague date language ('earlier this week') so entity extraction produces announced_date=null. Stage 0 cannot fire (null blocks the pre-filter key construction). Titles are identical after .lower().strip() — Stage 2 catches this.",
+    "members": [
+      {
+        "title": "Zetwerk raises $35 million Series A to accelerate B2B manufacturing marketplace",
+        "summary": "Bengaluru-based B2B manufacturing marketplace Zetwerk raised $35 million in a Series A led by Lightspeed Venture Partners, announced February 12, 2025. The platform connects manufacturers with enterprise buyers and plans to use the capital for geographic expansion.",
+        "source_url": "https://yourstory.com/2025/02/zetwerk-35m-series-a-lightspeed",
+        "source_name": "yourstory",
+        "published_date": "2025-02-14",
+        "entities": {
+          "company_name": "Zetwerk",
+          "company_name_normalized": "zetwerk",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-02-12"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Zetwerk raises $35 million Series A to accelerate B2B manufacturing marketplace",
+        "summary": "Zetwerk, the Bengaluru-based marketplace linking manufacturers with enterprise buyers, announced earlier this week that it has secured $35 million in a Series A round from Lightspeed Venture Partners. The funding will fuel platform expansion across new manufacturing verticals.",
+        "source_url": "https://livemint.com/companies/startups/zetwerk-series-a-35-million-lightspeed-11111.htm",
+        "source_name": "mint",
+        "published_date": "2025-02-14",
+        "entities": {
+          "company_name": "Zetwerk",
+          "company_name_normalized": "zetwerk",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": null
+        },
+        "category": "funding",
+        "source_trust_score": 0.85,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.85,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-017",
+    "canonical_company": "Darwinbox",
+    "canonical_event": "Series B funding of $30M led by Sequoia — March 2025",
+    "expected_catch_stage": "title_match",
+    "notes": "Same structure as B-016: identical titles, Member 2 has announced_date=null. Stage 0 cannot fire. Stage 2 catches via exact normalized title match.",
+    "members": [
+      {
+        "title": "Darwinbox secures $30M Series B to expand cloud HR platform across Asia",
+        "summary": "Hyderabad-based HR tech company Darwinbox raised $30 million in a Series B round led by Sequoia Capital India, announced March 18, 2025. Darwinbox provides an enterprise HR platform and plans to expand its presence in Southeast Asia and the Middle East.",
+        "source_url": "https://inc42.com/buzz/darwinbox-30m-series-b-sequoia",
+        "source_name": "inc42",
+        "published_date": "2025-03-19",
+        "entities": {
+          "company_name": "Darwinbox",
+          "company_name_normalized": "darwinbox",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-18"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Darwinbox secures $30M Series B to expand cloud HR platform across Asia",
+        "summary": "Darwinbox, the Hyderabad startup building an enterprise HR management platform, has recently received $30 million in Series B funding from Sequoia Capital India. The company intends to grow its footprint across Asian markets with this investment.",
+        "source_url": "https://economictimes.indiatimes.com/tech/startups/darwinbox-series-b-30m/articleshow/22022.cms",
+        "source_name": "economictimes",
+        "published_date": "2025-03-19",
+        "entities": {
+          "company_name": "Darwinbox",
+          "company_name_normalized": "darwinbox",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": null
+        },
+        "category": "funding",
+        "source_trust_score": 0.85,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.85,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 1,
+    "phase_1_eval": true
+  },
+  {
+    "group_id": "B-018",
+    "canonical_company": "IntelliFlow AI",
+    "canonical_event": "Seed funding from Blume Ventures — March 2025",
+    "expected_catch_stage": "embedding_similarity",
+    "notes": "Same funding event, completely different journalistic angles and title phrasing. Dates differ by 2 days (announcement vs publication lag). Stage 0: date mismatch blocks pre-filter. Stage 2: titles too different for exact match. Embeddings on title+summary should exceed 0.85 cosine similarity.",
+    "members": [
+      {
+        "title": "Bengaluru AI startup IntelliFlow raises seed funding to automate enterprise workflows",
+        "summary": "Bengaluru-based IntelliFlow AI has raised seed funding from Blume Ventures to build AI-powered automation tools for enterprise back-office workflows, the company announced March 10, 2025. IntelliFlow uses large language models to automate document processing, approval flows, and data entry tasks.",
+        "source_url": "https://inc42.com/buzz/intelliflow-ai-seed-blume",
+        "source_name": "inc42",
+        "published_date": "2025-03-10",
+        "entities": {
+          "company_name": "Intelliflow Ai",
+          "company_name_normalized": "intelliflow ai",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-10"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Blume Ventures backs IntelliFlow in early-stage bet on enterprise AI automation",
+        "summary": "Venture capital firm Blume Ventures has made an early-stage investment in IntelliFlow AI, a Bengaluru startup whose platform uses LLMs to replace manual back-office work at large companies. The investment was confirmed by Blume in a portfolio update published March 12, 2025.",
+        "source_url": "https://yourstory.com/2025/03/blume-ventures-intelliflow-ai-enterprise",
+        "source_name": "yourstory",
+        "published_date": "2025-03-12",
+        "entities": {
+          "company_name": "Intelliflow Ai",
+          "company_name_normalized": "intelliflow ai",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-12"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 2,
+    "phase_1_eval": false
+  },
+  {
+    "group_id": "B-019",
+    "canonical_company": "Limetray",
+    "canonical_event": "Apollo Hospitals acquiring majority stake — February 2025",
+    "expected_catch_stage": "embedding_similarity",
+    "notes": "M&A event covered from buyer perspective (Apollo) vs target perspective (Limetray). One article has company_name_normalized='limetray', other might extract 'apollo hospitals'. Date difference due to announcement vs reporting lag. Only semantic similarity resolves these as the same event.",
+    "members": [
+      {
+        "title": "Apollo Hospitals acquires majority stake in digital health startup Limetray",
+        "summary": "Apollo Hospitals Group has acquired a majority stake in Limetray, a Bengaluru-based digital health platform focused on hospital supply chain and patient management, the hospital chain announced on February 22, 2025. The acquisition strengthens Apollo's digital health portfolio.",
+        "source_url": "https://economictimes.indiatimes.com/industry/healthcare/apollo-acquires-limetray/articleshow/33033.cms",
+        "source_name": "economictimes",
+        "published_date": "2025-02-22",
+        "entities": {
+          "company_name": "Limetray",
+          "company_name_normalized": "limetray",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-02-22"
+        },
+        "category": "funding",
+        "source_trust_score": 0.85,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.85,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "Limetray founders exit as healthcare giant takes controlling interest in the platform",
+        "summary": "The founding team of Bengaluru-based health-tech startup Limetray has exited the company following a takeover by a major Indian hospital chain, sources confirmed on February 24, 2025. Apollo Hospitals has taken a majority stake in Limetray's hospital supply chain and patient management software.",
+        "source_url": "https://inc42.com/buzz/limetray-founders-exit-apollo-acquisition",
+        "source_name": "inc42",
+        "published_date": "2025-02-24",
+        "entities": {
+          "company_name": "Limetray",
+          "company_name_normalized": "limetray",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-02-24"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 2,
+    "phase_1_eval": false
+  },
+  {
+    "group_id": "B-020",
+    "canonical_company": "PhysicsWallah",
+    "canonical_event": "Launch of corporate upskilling division PW Skills — March 2025",
+    "expected_catch_stage": "embedding_similarity",
+    "notes": "Same expansion announcement but one article uses 'PhysicsWallah' and the other uses abbreviated 'PW'. After normalisation: 'physicswallah' vs 'pw' — Stage 0 blocked by different company_name_normalized. Different title phrasing blocks Stage 2. Only embeddings on the title+summary surface that both describe PW launching a B2B upskilling arm targeting corporates.",
+    "members": [
+      {
+        "title": "PhysicsWallah expands into corporate upskilling with new PW Skills division",
+        "summary": "EdTech giant PhysicsWallah announced March 20, 2025 the launch of PW Skills, a new division targeting corporate upskilling for enterprise clients. The move signals a strategic B2B pivot as consumer edtech faces slowing growth. PW Skills will offer tech and professional development courses to companies.",
+        "source_url": "https://yourstory.com/2025/03/physicswallah-pw-skills-corporate",
+        "source_name": "yourstory",
+        "published_date": "2025-03-20",
+        "entities": {
+          "company_name": "Physicswallah",
+          "company_name_normalized": "physicswallah",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-20"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      },
+      {
+        "title": "PW launches B2B skilling arm, targets large enterprises as consumer edtech cools",
+        "summary": "PW, the Noida-headquartered edtech platform, has set up a dedicated corporate learning division called PW Skills, the company announced in late March 2025. The new unit will sell upskilling programmes directly to businesses, marking PW's entry into the enterprise segment amid slowing consumer demand.",
+        "source_url": "https://inc42.com/buzz/pw-skills-b2b-edtech-launch",
+        "source_name": "inc42",
+        "published_date": "2025-03-22",
+        "entities": {
+          "company_name": "Pw",
+          "company_name_normalized": "pw",
+          "founder_name": null,
+          "investor_names": [],
+          "investor_names_normalized": [],
+          "funding_amount_usd": null,
+          "funding_stage": null,
+          "sector": null,
+          "location": null,
+          "announced_date": "2025-03-22"
+        },
+        "category": "funding",
+        "source_trust_score": 0.9,
+        "freshness_penalty_applied": false,
+        "confidence_score": 0.9,
+        "is_duplicate": false,
+        "duplicate_reason": null
+      }
+    ],
+    "phase": 2,
+    "phase_1_eval": false
+  }
+]

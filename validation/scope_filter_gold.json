@@ -1,0 +1,682 @@
+[
+  {
+    "id": "D-001",
+    "notes": "in_scope · perfect_match_standard",
+    "ground_truth": {
+      "case_id": "D-001",
+      "expected_result": "RETAIN",
+      "reason": "in_scope"
+    },
+    "finding": {
+      "title": "Bengaluru AI startup raises $10M Series A",
+      "summary": "Valid Indian startup raising a standard Series A round within the acceptable threshold.",
+      "source_url": "https://inc42.com/buzz/test-001",
+      "source_name": "inc42",
+      "published_date": "2025-03-01",
+      "entities": {
+        "company_name": "TestCo 1",
+        "company_name_normalized": "testco 1",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 10000000,
+        "funding_stage": "series_a",
+        "sector": null,
+        "location": "Bengaluru",
+        "announced_date": "2025-03-01"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-002",
+    "notes": "in_scope · exact_lower_bound_amount",
+    "ground_truth": {
+      "case_id": "D-002",
+      "expected_result": "RETAIN",
+      "reason": "in_scope"
+    },
+    "finding": {
+      "title": "Mumbai seed stage startup secures $500K",
+      "summary": "Funding amount hits the exact $500K minimum threshold.",
+      "source_url": "https://yourstory.com/test-002",
+      "source_name": "yourstory",
+      "published_date": "2025-03-02",
+      "entities": {
+        "company_name": "TestCo 2",
+        "company_name_normalized": "testco 2",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 500000,
+        "funding_stage": "seed",
+        "sector": null,
+        "location": "Mumbai",
+        "announced_date": "2025-03-02"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-003",
+    "notes": "in_scope · exact_upper_bound_amount",
+    "ground_truth": {
+      "case_id": "D-003",
+      "expected_result": "RETAIN",
+      "reason": "in_scope"
+    },
+    "finding": {
+      "title": "Delhi fintech closes massive $50M Series B",
+      "summary": "Funding amount hits the exact $50M maximum threshold.",
+      "source_url": "https://economictimes.indiatimes.com/test-003",
+      "source_name": "economictimes",
+      "published_date": "2025-03-03",
+      "entities": {
+        "company_name": "TestCo 3",
+        "company_name_normalized": "testco 3",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 50000000,
+        "funding_stage": "series_b",
+        "sector": null,
+        "location": "Delhi",
+        "announced_date": "2025-03-03"
+      },
+      "category": "funding",
+      "source_trust_score": 0.85,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.85,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-004",
+    "notes": "in_scope · null_location",
+    "ground_truth": {
+      "case_id": "D-004",
+      "expected_result": "RETAIN",
+      "reason": "in_scope_null_location_allowed"
+    },
+    "finding": {
+      "title": "Stealth startup raises $2M Seed round",
+      "summary": "Location is missing. Must be retained because missing fields are not explicit violations.",
+      "source_url": "https://inc42.com/buzz/test-004",
+      "source_name": "inc42",
+      "published_date": "2025-03-04",
+      "entities": {
+        "company_name": "TestCo 4",
+        "company_name_normalized": "testco 4",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 2000000,
+        "funding_stage": "seed",
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-03-04"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-005",
+    "notes": "in_scope · null_amount",
+    "ground_truth": {
+      "case_id": "D-005",
+      "expected_result": "RETAIN",
+      "reason": "in_scope_null_amount_allowed"
+    },
+    "finding": {
+      "title": "Pune startup announces undisclosed Series A",
+      "summary": "Funding amount is not disclosed. Must be retained.",
+      "source_url": "https://yourstory.com/test-005",
+      "source_name": "yourstory",
+      "published_date": "2025-03-05",
+      "entities": {
+        "company_name": "TestCo 5",
+        "company_name_normalized": "testco 5",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": null,
+        "funding_stage": "series_a",
+        "sector": null,
+        "location": "Pune",
+        "announced_date": "2025-03-05"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-006",
+    "notes": "in_scope · null_stage",
+    "ground_truth": {
+      "case_id": "D-006",
+      "expected_result": "RETAIN",
+      "reason": "in_scope_null_stage_allowed"
+    },
+    "finding": {
+      "title": "Chennai SaaS firm grabs $5M in fresh funding",
+      "summary": "Stage is not specified. Must be retained.",
+      "source_url": "https://economictimes.indiatimes.com/test-006",
+      "source_name": "economictimes",
+      "published_date": "2025-03-06",
+      "entities": {
+        "company_name": "TestCo 6",
+        "company_name_normalized": "testco 6",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 5000000,
+        "funding_stage": null,
+        "sector": null,
+        "location": "Chennai",
+        "announced_date": "2025-03-06"
+      },
+      "category": "funding",
+      "source_trust_score": 0.85,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.85,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-007",
+    "notes": "in_scope · all_null_fields",
+    "ground_truth": {
+      "case_id": "D-007",
+      "expected_result": "RETAIN",
+      "reason": "in_scope_all_nulls_allowed"
+    },
+    "finding": {
+      "title": "Generative AI usage soars across Indian enterprises",
+      "summary": "An ecosystem trend piece with no specific location, funding, or stage.",
+      "source_url": "https://inc42.com/buzz/test-007",
+      "source_name": "inc42",
+      "published_date": "2025-03-07",
+      "entities": {
+        "company_name": null,
+        "company_name_normalized": null,
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": null,
+        "funding_stage": null,
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-03-07"
+      },
+      "category": "ecosystem_trend",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-008",
+    "notes": "in_scope · non_funding_event",
+    "ground_truth": {
+      "case_id": "D-008",
+      "expected_result": "RETAIN",
+      "reason": "in_scope"
+    },
+    "finding": {
+      "title": "Hyderabad edtech startup plans to double headcount",
+      "summary": "A hiring signal. Amount and stage are irrelevant and null.",
+      "source_url": "https://yourstory.com/test-008",
+      "source_name": "yourstory",
+      "published_date": "2025-03-08",
+      "entities": {
+        "company_name": "TestCo 8",
+        "company_name_normalized": "testco 8",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": null,
+        "funding_stage": null,
+        "sector": null,
+        "location": "Hyderabad",
+        "announced_date": "2025-03-08"
+      },
+      "category": "hiring",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-009",
+    "notes": "in_scope · pre_seed_stage",
+    "ground_truth": {
+      "case_id": "D-009",
+      "expected_result": "RETAIN",
+      "reason": "in_scope"
+    },
+    "finding": {
+      "title": "Gurugram platform secures $750K Pre-Seed",
+      "summary": "Pre-seed is a valid stage under the threshold.",
+      "source_url": "https://economictimes.indiatimes.com/test-009",
+      "source_name": "economictimes",
+      "published_date": "2025-03-09",
+      "entities": {
+        "company_name": "TestCo 9",
+        "company_name_normalized": "testco 9",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 750000,
+        "funding_stage": "pre_seed",
+        "sector": null,
+        "location": "Gurugram",
+        "announced_date": "2025-03-09"
+      },
+      "category": "funding",
+      "source_trust_score": 0.85,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.85,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-010",
+    "notes": "in_scope · accelerator_grant",
+    "ground_truth": {
+      "case_id": "D-010",
+      "expected_result": "RETAIN",
+      "reason": "in_scope"
+    },
+    "finding": {
+      "title": "Climate tech startup gets $1M YC accelerator investment",
+      "summary": "Accelerator rounds are valid and within threshold.",
+      "source_url": "https://yc.com/test-010",
+      "source_name": "yc",
+      "published_date": "2025-03-10",
+      "entities": {
+        "company_name": "TestCo 10",
+        "company_name_normalized": "testco 10",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 1000000,
+        "funding_stage": "accelerator",
+        "sector": null,
+        "location": "Bengaluru",
+        "announced_date": "2025-03-10"
+      },
+      "category": "funding",
+      "source_trust_score": 1.0,
+      "freshness_penalty_applied": false,
+      "confidence_score": 1.0,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-011",
+    "notes": "out_of_scope · location_violation_sf",
+    "ground_truth": {
+      "case_id": "D-011",
+      "expected_result": "DROP",
+      "reason": "scope_filter:non_indian_location"
+    },
+    "finding": {
+      "title": "San Francisco AI startup secures $5M",
+      "summary": "Must be dropped due to non-Indian location match.",
+      "source_url": "https://techcrunch.com/test-011",
+      "source_name": "techcrunch",
+      "published_date": "2025-03-11",
+      "entities": {
+        "company_name": "TestCo 11",
+        "company_name_normalized": "testco 11",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 5000000,
+        "funding_stage": "series_a",
+        "sector": null,
+        "location": "San Francisco",
+        "announced_date": "2025-03-11"
+      },
+      "category": "funding",
+      "source_trust_score": 0.95,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.95,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-012",
+    "notes": "out_of_scope · location_violation_singapore",
+    "ground_truth": {
+      "case_id": "D-012",
+      "expected_result": "DROP",
+      "reason": "scope_filter:non_indian_location"
+    },
+    "finding": {
+      "title": "Singapore logistics firm raises $2M Seed",
+      "summary": "Must be dropped due to non-Indian location match.",
+      "source_url": "https://techcrunch.com/test-012",
+      "source_name": "techcrunch",
+      "published_date": "2025-03-12",
+      "entities": {
+        "company_name": "TestCo 12",
+        "company_name_normalized": "testco 12",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 2000000,
+        "funding_stage": "seed",
+        "sector": null,
+        "location": "Singapore",
+        "announced_date": "2025-03-12"
+      },
+      "category": "funding",
+      "source_trust_score": 0.95,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.95,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-013",
+    "notes": "out_of_scope · amount_too_low",
+    "ground_truth": {
+      "case_id": "D-013",
+      "expected_result": "DROP",
+      "reason": "scope_filter:funding_out_of_range"
+    },
+    "finding": {
+      "title": "Bengaluru startup raises $400K Seed",
+      "summary": "Valid location, but amount is under the $500K minimum.",
+      "source_url": "https://inc42.com/test-013",
+      "source_name": "inc42",
+      "published_date": "2025-03-13",
+      "entities": {
+        "company_name": "TestCo 13",
+        "company_name_normalized": "testco 13",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 400000,
+        "funding_stage": "seed",
+        "sector": null,
+        "location": "Bengaluru",
+        "announced_date": "2025-03-13"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-014",
+    "notes": "out_of_scope · amount_too_high",
+    "ground_truth": {
+      "case_id": "D-014",
+      "expected_result": "DROP",
+      "reason": "scope_filter:funding_out_of_range"
+    },
+    "finding": {
+      "title": "Mumbai fintech raises $55M Series B",
+      "summary": "Valid location, but amount exceeds the $50M maximum.",
+      "source_url": "https://yourstory.com/test-014",
+      "source_name": "yourstory",
+      "published_date": "2025-03-14",
+      "entities": {
+        "company_name": "TestCo 14",
+        "company_name_normalized": "testco 14",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 55000000,
+        "funding_stage": "series_b",
+        "sector": null,
+        "location": "Mumbai",
+        "announced_date": "2025-03-14"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-015",
+    "notes": "out_of_scope · stage_violation_series_c",
+    "ground_truth": {
+      "case_id": "D-015",
+      "expected_result": "DROP",
+      "reason": "scope_filter:stage_out_of_range"
+    },
+    "finding": {
+      "title": "Delhi startup closes $40M Series C",
+      "summary": "Amount is valid, but Series C violates the stage constraint.",
+      "source_url": "https://economictimes.indiatimes.com/test-015",
+      "source_name": "economictimes",
+      "published_date": "2025-03-15",
+      "entities": {
+        "company_name": "TestCo 15",
+        "company_name_normalized": "testco 15",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 40000000,
+        "funding_stage": "series_c",
+        "sector": null,
+        "location": "Delhi",
+        "announced_date": "2025-03-15"
+      },
+      "category": "funding",
+      "source_trust_score": 0.85,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.85,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-016",
+    "notes": "out_of_scope · stage_violation_ipo",
+    "ground_truth": {
+      "case_id": "D-016",
+      "expected_result": "DROP",
+      "reason": "scope_filter:stage_out_of_range"
+    },
+    "finding": {
+      "title": "Bengaluru tech firm announces $40M IPO",
+      "summary": "IPO violates stage constraint.",
+      "source_url": "https://inc42.com/test-016",
+      "source_name": "inc42",
+      "published_date": "2025-03-16",
+      "entities": {
+        "company_name": "TestCo 16",
+        "company_name_normalized": "testco 16",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 40000000,
+        "funding_stage": "ipo",
+        "sector": null,
+        "location": "Bengaluru",
+        "announced_date": "2025-03-16"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-017",
+    "notes": "out_of_scope · multi_violation",
+    "ground_truth": {
+      "case_id": "D-017",
+      "expected_result": "DROP",
+      "reason": "scope_filter:non_indian_location"
+    },
+    "finding": {
+      "title": "London-based SaaS raises $100M Series D",
+      "summary": "Violates location, amount, and stage.",
+      "source_url": "https://techcrunch.com/test-017",
+      "source_name": "techcrunch",
+      "published_date": "2025-03-17",
+      "entities": {
+        "company_name": "TestCo 17",
+        "company_name_normalized": "testco 17",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 100000000,
+        "funding_stage": "series_d",
+        "sector": null,
+        "location": "London",
+        "announced_date": "2025-03-17"
+      },
+      "category": "funding",
+      "source_trust_score": 0.95,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.95,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-018",
+    "notes": "out_of_scope · edge_amount_too_low",
+    "ground_truth": {
+      "case_id": "D-018",
+      "expected_result": "DROP",
+      "reason": "scope_filter:funding_out_of_range"
+    },
+    "finding": {
+      "title": "Pune startup secures $499K",
+      "summary": "Just $1 under the threshold.",
+      "source_url": "https://yourstory.com/test-018",
+      "source_name": "yourstory",
+      "published_date": "2025-03-18",
+      "entities": {
+        "company_name": "TestCo 18",
+        "company_name_normalized": "testco 18",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 499999,
+        "funding_stage": "seed",
+        "sector": null,
+        "location": "Pune",
+        "announced_date": "2025-03-18"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-019",
+    "notes": "out_of_scope · edge_amount_too_high",
+    "ground_truth": {
+      "case_id": "D-019",
+      "expected_result": "DROP",
+      "reason": "scope_filter:funding_out_of_range"
+    },
+    "finding": {
+      "title": "Chennai startup raises $50,000,001",
+      "summary": "Just $1 over the threshold.",
+      "source_url": "https://economictimes.indiatimes.com/test-019",
+      "source_name": "economictimes",
+      "published_date": "2025-03-19",
+      "entities": {
+        "company_name": "TestCo 19",
+        "company_name_normalized": "testco 19",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 50000001,
+        "funding_stage": "series_a",
+        "sector": null,
+        "location": "Chennai",
+        "announced_date": "2025-03-19"
+      },
+      "category": "funding",
+      "source_trust_score": 0.85,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.85,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  },
+  {
+    "id": "D-020",
+    "notes": "out_of_scope · location_substring_match",
+    "ground_truth": {
+      "case_id": "D-020",
+      "expected_result": "DROP",
+      "reason": "scope_filter:non_indian_location"
+    },
+    "finding": {
+      "title": "New York-based startup secures $5M Series A",
+      "summary": "Location explicitly triggers the case-insensitive substring drop list.",
+      "source_url": "https://techcrunch.com/test-020",
+      "source_name": "techcrunch",
+      "published_date": "2025-03-20",
+      "entities": {
+        "company_name": "TestCo 20",
+        "company_name_normalized": "testco 20",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 5000000,
+        "funding_stage": "series_a",
+        "sector": null,
+        "location": "New York-based",
+        "announced_date": "2025-03-20"
+      },
+      "category": "funding",
+      "source_trust_score": 0.95,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.95,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    }
+  }
+]

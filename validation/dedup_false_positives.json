@@ -1,0 +1,622 @@
+[
+  {
+    "pair_id": "C-P01",
+    "phase": 1,
+    "phase_1_eval": true,
+    "notes": "similar_names_same_date · ola_electric",
+    "expected_duplicate": false,
+    "finding_a": {
+      "title": "Ola Electric secures $50M to expand EV manufacturing capabilities",
+      "summary": "Bengaluru-based Ola Electric has raised $50 million in a new funding round announced on February 10, 2025. The capital will be used to expand its gigafactory in Tamil Nadu and accelerate production of its upcoming electric car models.",
+      "source_url": "https://inc42.com/buzz/ola-electric-50m-ev",
+      "source_name": "inc42",
+      "published_date": "2025-02-10",
+      "entities": {
+        "company_name": "Ola Electric",
+        "company_name_normalized": "ola electric",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 50000000,
+        "funding_stage": null,
+        "sector": null,
+        "location": "Bengaluru",
+        "announced_date": "2025-02-10"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "finding_b": {
+      "title": "Ola Cabs launches premium ride service, raises $50M for expansion",
+      "summary": "Ride-hailing giant Ola Cabs announced a $50 million funding round on February 10, 2025, to support the rollout of its new premium fleet service across major Indian metros.",
+      "source_url": "https://yourstory.com/2025/02/ola-cabs-50m-premium",
+      "source_name": "yourstory",
+      "published_date": "2025-02-10",
+      "entities": {
+        "company_name": "Ola Cabs",
+        "company_name_normalized": "ola cabs",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 50000000,
+        "funding_stage": null,
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-02-10"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "ground_truth": {
+      "pair_id": "C-P01",
+      "expected_duplicate": false,
+      "rationale": "Distinct events: Funding round for EV manufacturing vs Funding round for ride-hailing premium service"
+    }
+  },
+  {
+    "pair_id": "C-P02",
+    "phase": 1,
+    "phase_1_eval": true,
+    "notes": "same_company_different_date · zepto_seed",
+    "expected_duplicate": false,
+    "finding_a": {
+      "title": "Quick commerce app Zepto raises $10M Seed to rival Blinkit",
+      "summary": "Mumbai-based Zepto has raised $10M in its initial seed round, announced in October 2024, aiming to deliver groceries in under 10 minutes across Mumbai and Bengaluru.",
+      "source_url": "https://economictimes.indiatimes.com/tech/zepto-10m-seed.cms",
+      "source_name": "economictimes",
+      "published_date": "2024-10-15",
+      "entities": {
+        "company_name": "Zepto",
+        "company_name_normalized": "zepto",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 10000000,
+        "funding_stage": "seed",
+        "sector": null,
+        "location": "Bengaluru",
+        "announced_date": "2024-10-15"
+      },
+      "category": "funding",
+      "source_trust_score": 0.85,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.85,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "finding_b": {
+      "title": "Zepto secures $60M Series A as quick commerce wars heat up",
+      "summary": "Zepto has closed a $60 million Series A round led by Glade Brook Capital, announced in March 2025. The fresh funds will fuel its expansion into 10 new Indian cities.",
+      "source_url": "https://inc42.com/buzz/zepto-60m-series-a",
+      "source_name": "inc42",
+      "published_date": "2025-03-12",
+      "entities": {
+        "company_name": "Zepto",
+        "company_name_normalized": "zepto",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 60000000,
+        "funding_stage": "series_a",
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-03-12"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "ground_truth": {
+      "pair_id": "C-P02",
+      "expected_duplicate": false,
+      "rationale": "Distinct events: Seed funding round ($10M) in 2024 vs Series A funding round ($60M) in 2025"
+    }
+  },
+  {
+    "pair_id": "C-P03",
+    "phase": 1,
+    "phase_1_eval": true,
+    "notes": "same_sector_same_date_different_company · khatabook",
+    "expected_duplicate": false,
+    "finding_a": {
+      "title": "Khatabook raises $10M to digitize MSME ledger management",
+      "summary": "Fintech startup Khatabook has secured $10 million in fresh capital on January 20, 2025, to expand its digital ledger tools for merchants across tier 2 and tier 3 cities in India.",
+      "source_url": "https://yourstory.com/2025/01/khatabook-10m",
+      "source_name": "yourstory",
+      "published_date": "2025-01-20",
+      "entities": {
+        "company_name": "Khatabook",
+        "company_name_normalized": "khatabook",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 10000000,
+        "funding_stage": null,
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-01-20"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "finding_b": {
+      "title": "OkCredit nets $10M investment for regional merchant expansion",
+      "summary": "Digital bookkeeping platform OkCredit announced a $10 million fundraise on January 20, 2025. The company plans to use the funds to launch localized vernacular support for rural merchants.",
+      "source_url": "https://economictimes.indiatimes.com/tech/okcredit-10m.cms",
+      "source_name": "economictimes",
+      "published_date": "2025-01-20",
+      "entities": {
+        "company_name": "OkCredit",
+        "company_name_normalized": "okcredit",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 10000000,
+        "funding_stage": null,
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-01-20"
+      },
+      "category": "funding",
+      "source_trust_score": 0.85,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.85,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "ground_truth": {
+      "pair_id": "C-P03",
+      "expected_duplicate": false,
+      "rationale": "Distinct events: Funding round for MSME ledger vs Funding round for merchant bookkeeping"
+    }
+  },
+  {
+    "pair_id": "C-P04",
+    "phase": 1,
+    "phase_1_eval": true,
+    "notes": "similar_names_different_sector · bharatpe",
+    "expected_duplicate": false,
+    "finding_a": {
+      "title": "BharatPe expands engineering team by 200 to bolster payment infra",
+      "summary": "Fintech unicorn BharatPe announced on February 1, 2025, that it is hiring 200 new engineers for its Bengaluru office to scale its merchant payment infrastructure.",
+      "source_url": "https://inc42.com/buzz/bharatpe-hiring-200",
+      "source_name": "inc42",
+      "published_date": "2025-02-01",
+      "entities": {
+        "company_name": "BharatPe",
+        "company_name_normalized": "bharatpe",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": null,
+        "funding_stage": null,
+        "sector": null,
+        "location": "Bengaluru",
+        "announced_date": "2025-02-01"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "finding_b": {
+      "title": "BharatAgri announces major hiring push across rural tech centers",
+      "summary": "Agritech startup BharatAgri revealed plans on February 1, 2025, to hire over 200 field agents and software developers to strengthen its advisory services for Indian farmers.",
+      "source_url": "https://yourstory.com/2025/02/bharatagri-hiring-push",
+      "source_name": "yourstory",
+      "published_date": "2025-02-01",
+      "entities": {
+        "company_name": "BharatAgri",
+        "company_name_normalized": "bharatagri",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": null,
+        "funding_stage": null,
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-02-01"
+      },
+      "category": "hiring",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "ground_truth": {
+      "pair_id": "C-P04",
+      "expected_duplicate": false,
+      "rationale": "Distinct events: Hiring announcement (200 engineers) vs Hiring announcement (field agents and developers)"
+    }
+  },
+  {
+    "pair_id": "C-P05",
+    "phase": 1,
+    "phase_1_eval": true,
+    "notes": "same_company_different_event_different_date · cred_funding",
+    "expected_duplicate": false,
+    "finding_a": {
+      "title": "CRED secures $80M in Series F to expand wealth management portfolio",
+      "summary": "Bengaluru-based CRED announced an $80 million Series F funding round on January 10, 2025. Founder Kunal Shah stated the funds will be directed toward building out CRED's new wealth and investment products.",
+      "source_url": "https://economictimes.indiatimes.com/tech/cred-80m-series-f.cms",
+      "source_name": "economictimes",
+      "published_date": "2025-01-10",
+      "entities": {
+        "company_name": "CRED",
+        "company_name_normalized": "cred",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 80000000,
+        "funding_stage": null,
+        "sector": null,
+        "location": "Bengaluru",
+        "announced_date": "2025-01-10"
+      },
+      "category": "funding",
+      "source_trust_score": 0.85,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.85,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "finding_b": {
+      "title": "CRED to hire 300 data scientists for its new wealth platform",
+      "summary": "Following its recent fundraise, CRED announced a major hiring initiative on February 15, 2025, aiming to onboard 300 data scientists and quantitative analysts by the end of the year.",
+      "source_url": "https://inc42.com/buzz/cred-hiring-300-data-scientists",
+      "source_name": "inc42",
+      "published_date": "2025-02-15",
+      "entities": {
+        "company_name": "CRED",
+        "company_name_normalized": "cred",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": null,
+        "funding_stage": null,
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-02-15"
+      },
+      "category": "hiring",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "ground_truth": {
+      "pair_id": "C-P05",
+      "expected_duplicate": false,
+      "rationale": "Distinct events: Series F funding round vs Hiring announcement for data scientists"
+    }
+  },
+  {
+    "pair_id": "C-P06",
+    "phase": 1,
+    "phase_1_eval": true,
+    "notes": "same_company_different_event_adjacent_dates · groww_funding",
+    "expected_duplicate": false,
+    "finding_a": {
+      "title": "Groww raises $50M to scale lending operations",
+      "summary": "Investment tech platform Groww secured $50 million in fresh funding on March 1, 2025. The capital is earmarked specifically for scaling its credit and personal lending operations across India.",
+      "source_url": "https://yourstory.com/2025/03/groww-50m-lending",
+      "source_name": "yourstory",
+      "published_date": "2025-03-01",
+      "entities": {
+        "company_name": "Groww",
+        "company_name_normalized": "groww",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 50000000,
+        "funding_stage": null,
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-03-01"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "finding_b": {
+      "title": "Groww acquires wealthtech startup FinSense in $15M cash deal",
+      "summary": "Just two weeks after its recent fundraise, Groww announced the acquisition of boutique wealthtech firm FinSense on March 15, 2025, strengthening its advisory capabilities.",
+      "source_url": "https://economictimes.indiatimes.com/tech/groww-acquires-finsense.cms",
+      "source_name": "economictimes",
+      "published_date": "2025-03-15",
+      "entities": {
+        "company_name": "Groww",
+        "company_name_normalized": "groww",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": null,
+        "funding_stage": null,
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-03-15"
+      },
+      "category": "funding",
+      "source_trust_score": 0.85,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.85,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "ground_truth": {
+      "pair_id": "C-P06",
+      "expected_duplicate": false,
+      "rationale": "Distinct events: Funding round for lending operations vs Acquisition of FinSense"
+    }
+  },
+  {
+    "pair_id": "C-P07",
+    "phase": 1,
+    "phase_1_eval": true,
+    "notes": "similar_sector_different_company · sarvam",
+    "expected_duplicate": false,
+    "finding_a": {
+      "title": "Sarvam AI closes $10M Series A to scale Indian language LLMs",
+      "summary": "Sarvam AI, a generative AI platform for Indian languages, announced a $10 million Series A round on March 1, 2025, to scale its proprietary large language models.",
+      "source_url": "https://inc42.com/buzz/sarvam-ai-10m",
+      "source_name": "inc42",
+      "published_date": "2025-03-01",
+      "entities": {
+        "company_name": "Sarvam AI",
+        "company_name_normalized": "sarvam ai",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 10000000,
+        "funding_stage": "series_a",
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-03-01"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "finding_b": {
+      "title": "Krutrim bags $10M Series A for foundational model infrastructure",
+      "summary": "Krutrim, the AI venture founded by Bhavish Aggarwal, secured a $10 million Series A round on March 10, 2025, to expand its foundational model compute infrastructure.",
+      "source_url": "https://yourstory.com/2025/03/krutrim-10m-series-a",
+      "source_name": "yourstory",
+      "published_date": "2025-03-10",
+      "entities": {
+        "company_name": "Krutrim",
+        "company_name_normalized": "krutrim",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 10000000,
+        "funding_stage": "series_a",
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-03-10"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "ground_truth": {
+      "pair_id": "C-P07",
+      "expected_duplicate": false,
+      "rationale": "Distinct events: Series A funding ($10M) vs Series A funding ($10M)"
+    }
+  },
+  {
+    "pair_id": "C-P08",
+    "phase": 1,
+    "phase_1_eval": true,
+    "notes": "same_company_different_corporate_event · swiggy_expansion",
+    "expected_duplicate": false,
+    "finding_a": {
+      "title": "Swiggy Instamart expands to 10 new tier-2 cities",
+      "summary": "Food delivery and quick commerce major Swiggy announced on January 5, 2025, that its Instamart service is now live in 10 additional tier-2 cities, aiming to capture growing non-metro demand.",
+      "source_url": "https://economictimes.indiatimes.com/tech/swiggy-instamart-expansion.cms",
+      "source_name": "economictimes",
+      "published_date": "2025-01-05",
+      "entities": {
+        "company_name": "Swiggy",
+        "company_name_normalized": "swiggy",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": null,
+        "funding_stage": null,
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-01-05"
+      },
+      "category": "funding",
+      "source_trust_score": 0.85,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.85,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "finding_b": {
+      "title": "Swiggy receives SEBI nod for $1.2B IPO",
+      "summary": "Swiggy has officially received approval from the market regulator SEBI for its highly anticipated $1.2 billion initial public offering, announced on February 20, 2025.",
+      "source_url": "https://inc42.com/buzz/swiggy-sebi-ipo-approval",
+      "source_name": "inc42",
+      "published_date": "2025-02-20",
+      "entities": {
+        "company_name": "Swiggy",
+        "company_name_normalized": "swiggy",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": null,
+        "funding_stage": "ipo",
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-02-20"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "ground_truth": {
+      "pair_id": "C-P08",
+      "expected_duplicate": false,
+      "rationale": "Distinct events: Instamart geographical expansion vs IPO SEBI approval"
+    }
+  },
+  {
+    "pair_id": "C-P09",
+    "phase": 1,
+    "phase_1_eval": true,
+    "notes": "overlapping_names_founder_vs_company · lenskart",
+    "expected_duplicate": false,
+    "finding_a": {
+      "title": "Lenskart raises $20M to expand Southeast Asia footprint",
+      "summary": "Omnichannel eyewear brand Lenskart, led by founder Peyush Bansal, announced a $20 million funding round on February 10, 2025, to accelerate its store rollouts across Southeast Asia.",
+      "source_url": "https://yourstory.com/2025/02/lenskart-20m-sea",
+      "source_name": "yourstory",
+      "published_date": "2025-02-10",
+      "entities": {
+        "company_name": "Lenskart",
+        "company_name_normalized": "lenskart",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": 20000000,
+        "funding_stage": null,
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-02-10"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "finding_b": {
+      "title": "Healthtech startup Arogya raises Seed round from Lenskart's Peyush Bansal",
+      "summary": "Pune-based health diagnostics startup Arogya announced on March 5, 2025, that it has raised an undisclosed seed round exclusively from Lenskart founder Peyush Bansal in his personal capacity.",
+      "source_url": "https://inc42.com/buzz/arogya-peyush-bansal-seed",
+      "source_name": "inc42",
+      "published_date": "2025-03-05",
+      "entities": {
+        "company_name": "Arogya",
+        "company_name_normalized": "arogya",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": null,
+        "funding_stage": "seed",
+        "sector": null,
+        "location": "Pune",
+        "announced_date": "2025-03-05"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "ground_truth": {
+      "pair_id": "C-P09",
+      "expected_duplicate": false,
+      "rationale": "Distinct events: Funding round for SEA expansion vs Seed funding from angel investor"
+    }
+  },
+  {
+    "pair_id": "C-P10",
+    "phase": 1,
+    "phase_1_eval": true,
+    "notes": "same_sector_opposite_events · dunzo_shutdown",
+    "expected_duplicate": false,
+    "finding_a": {
+      "title": "Dunzo officially ceases all B2B and B2C delivery operations",
+      "summary": "Once a pioneer in Indian quick commerce, Dunzo announced the complete shutdown of its delivery operations on March 1, 2025, following a prolonged inability to secure fresh capital.",
+      "source_url": "https://economictimes.indiatimes.com/tech/dunzo-shuts-down.cms",
+      "source_name": "economictimes",
+      "published_date": "2025-03-01",
+      "entities": {
+        "company_name": "Dunzo",
+        "company_name_normalized": "dunzo",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": null,
+        "funding_stage": null,
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-03-01"
+      },
+      "category": "shutdown",
+      "source_trust_score": 0.85,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.85,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "finding_b": {
+      "title": "Zepto doubles B2B delivery fleet as competitor exits market",
+      "summary": "Quick commerce player Zepto announced on March 1, 2025, that it is doubling its B2B logistics fleet to capture market share left vacant by recent industry consolidations and closures.",
+      "source_url": "https://inc42.com/buzz/zepto-doubles-b2b-fleet",
+      "source_name": "inc42",
+      "published_date": "2025-03-01",
+      "entities": {
+        "company_name": "Zepto",
+        "company_name_normalized": "zepto",
+        "founder_name": null,
+        "investor_names": [],
+        "investor_names_normalized": [],
+        "funding_amount_usd": null,
+        "funding_stage": null,
+        "sector": null,
+        "location": null,
+        "announced_date": "2025-03-01"
+      },
+      "category": "funding",
+      "source_trust_score": 0.9,
+      "freshness_penalty_applied": false,
+      "confidence_score": 0.9,
+      "is_duplicate": false,
+      "duplicate_reason": null
+    },
+    "ground_truth": {
+      "pair_id": "C-P10",
+      "expected_duplicate": false,
+      "rationale": "Distinct events: Company operations shutdown vs Logistics fleet expansion"
+    }
+  }
+]
