@@ -9,5 +9,7 @@ pydantic==2.9.2
 openai==1.54.0
 psycopg[binary]==3.2.3
 langgraph-checkpoint-postgres==2.0.25
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
 
 

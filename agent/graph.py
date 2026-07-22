@@ -11,11 +11,14 @@ from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
 from agent.nodes.config_loader import config_loader
+from agent.nodes.delivery import delivery
+from agent.nodes.discard_and_log import discard_and_log
 from agent.nodes.entity_extraction import entity_extraction
 from agent.nodes.episodic_memory_writer import episodic_memory_writer
 from agent.nodes.freshness_validation import freshness_validation
 from agent.nodes.google_news_rss import google_news_rss_node
 from agent.nodes.hn_algolia import hn_algolia_node
+from agent.nodes.hitl import hitl_node, route_after_hitl
 from agent.nodes.hybrid_dedup import hybrid_dedup
 from agent.nodes.reducer import reducer
 from agent.nodes.run_metrics_writer import run_metrics_writer
@@ -86,12 +89,16 @@ builder.add_node("scope_filter", scope_filter)
 builder.add_node("source_trust_scoring", source_trust_scoring)
 builder.add_node("hybrid_dedup", hybrid_dedup)
 builder.add_node("synthesis", synthesis)
+builder.add_node("hitl_node", hitl_node)
+builder.add_node("discard_and_log", discard_and_log)
 builder.add_node(
     "episodic_memory_writer", _compat_side_effect(episodic_memory_writer)
 )
+builder.add_node("delivery", delivery)
 builder.add_node("run_metrics_writer", _compat_side_effect(run_metrics_writer))
 
-# Edges in exact BUILD_SPEC order
+# Edges through Synthesis unchanged; HITL inserted after Synthesis (SIG-018).
+# Delivery on Approve/Edit path only (SIG-020A): episodic → delivery → metrics.
 builder.add_edge(START, "config_loader")
 builder.add_edge("config_loader", "search_planner")
 builder.add_edge("search_planner", "tavily_search")
@@ -105,8 +112,20 @@ builder.add_edge("entity_extraction", "scope_filter")
 builder.add_edge("scope_filter", "source_trust_scoring")
 builder.add_edge("source_trust_scoring", "hybrid_dedup")
 builder.add_edge("hybrid_dedup", "synthesis")
-builder.add_edge("synthesis", "episodic_memory_writer")
-builder.add_edge("episodic_memory_writer", "run_metrics_writer")
+builder.add_edge("synthesis", "hitl_node")
+builder.add_conditional_edges(
+    "hitl_node",
+    route_after_hitl,
+    {
+        "episodic_memory_writer": "episodic_memory_writer",
+        "discard_and_log": "discard_and_log",
+    },
+)
+# Approve/Edit: episodic → delivery → metrics (DEC-004 ordering)
+builder.add_edge("episodic_memory_writer", "delivery")
+builder.add_edge("delivery", "run_metrics_writer")
+# Reject: discard → metrics (DEC-004: no episodic write, no delivery)
+builder.add_edge("discard_and_log", "run_metrics_writer")
 builder.add_edge("run_metrics_writer", END)
 
 # Phase 2 persistence — PostgresSaver + PostgresStore.

@@ -41,28 +41,29 @@ PostgresSaver live, HITL interrupt working, conditional routing correct per DEC-
 # CURRENT TASK
 
 
-### SIG-P2-002 — PostgresSaver + PostgresStore Migration
+### SIG-022 — Feedback Collector
 **Tier:** 1 | **Owner:** Builder Agent | **Phase:** 2 | **Status:** TODO
-**Depends on:** SIG-P2-001
-**Spec ref:** BUILD_SPEC.md Section 17.1
+**Depends on:** SIG-P2-001, SIG-020A
+**Spec ref:** BUILD_SPEC.md Section 18 (feedback endpoint), PRD Section 7
 
 **Files in Scope:**
-- `agent/graph.py`
+- `agent/nodes/feedback_collector.py`
+- `agent/memory/feedback_store.py`
 
 **Acceptance criteria:**
-- `MemorySaver` replaced by `PostgresSaver` using `DATABASE_URL` from `.env`
-- `InMemoryStore` replaced by `PostgresStore` for all memory namespaces
-- `graph.compile(checkpointer=postgres_saver, store=postgres_store)`
-- `python scripts/run_agent.py` still runs end-to-end after migration
-- Kill process mid-run, restart → graph resumes from last checkpoint (verify via LangSmith)
+- `agent/memory/feedback_store.py` created with `fetch_all_feedback_for_user(user_id: str) -> list[dict]` function
+- `fetch_all_feedback_for_user` queries `user_feedback` table filtered by `user_id`, returns all rows as list of dicts
+- `user_feedback` table accepts inserts with: `user_id`, `briefing_item_id`, `category`, `source_name`, `feedback` (`"useful"` or `"not_relevant"`), `reason`
+- Direct Supabase INSERT from Python test script works
+- `SIG-023` imports `fetch_all_feedback_for_user` from `agent.memory.feedback_store` — no duplication
 
 **Stop conditions — escalate to human immediately if:**
-- `DATABASE_URL` missing from `.env`
-- `PostgresSaver` import fails — package not in `requirements.txt`
-- `graph.compile()` raises error with new checkpointer
-- Process restart does not resume from checkpoint (PostgresSaver not persisting correctly)
+- `user_feedback` table missing from Supabase (SIG-P2-001 not complete)
+- `fetch_all_feedback_for_user` returns non-list type
+- Supabase INSERT raises constraint violation — check schema column types
 
 ---
+
 
 
 # BUDGET GATE
@@ -126,24 +127,27 @@ Upon successful completion:
 
 Task:
 
-SIG-P2-002B
+SIG-P2-API
 
 Title:
 
-Config loader Supabase Upgrade
+FastAPI Backend
+
 
 Builder Agent must wait for human approval before work begins.
 
 # HUMAN NOTES
 
-Entity Extraction OpenAI client wrapped with langsmith.wrappers.wrap_openai to enable LangSmith LLM child spans and token/cost observability. No architecture or extraction logic changed.
+- Entity Extraction OpenAI client wrapped with langsmith.wrappers.wrap_openai to enable LangSmith LLM child spans and token/cost observability. No architecture or extraction logic changed.
+
+- The /config endpoint acceptance criterion is validated during the FastAPI implementation, not during the Config Loader upgrade.
 
 # EXECUTION TIMESTAMP
 
 Last Updated:
 
 
-2026-07-21 11:36
+2026-07-22 11:41
 
 Updated By:
 
