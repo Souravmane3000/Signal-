@@ -16,7 +16,7 @@ This file is the primary execution context for Builder Agent.
 
 Name:
 
-Vertical Slice 4 — Phase 2 Infrastructure + HITL
+Vertical Slice 5 — API, Frontend & Scheduler
 
 Status:
 
@@ -24,46 +24,49 @@ IN_PROGRESS
 
 Goal:
 
-PostgresSaver live, HITL interrupt working, conditional routing correct per DEC-004, delivery working, all memory and metrics writing to Supabase.
+Full system accessible via browser. User triggers runs, reviews briefings, approves/rejects from UI. Weekly scheduler runs autonomously.
 
 **Slice exit criteria:**
-- `MemorySaver` fully replaced by `PostgresSaver` — graph state persists across process restarts
-- `graph.invoke` pauses at `hitl_node` — confirmed via LangSmith interrupt span
-- Approve path: `episodic_memory_writer` executes → delivery proceeds → episode in PostgresStore
-- Reject path: `discard_and_log` executes → `episodic_memory_writer` does NOT execute → no episode in PostgresStore (DEC-004, EVAL.md Section 13)
-- `run_metrics_writer` executes on BOTH approve and reject paths
-- Approved briefing arrives in `delivery_email` inbox
-- `agent_run_metrics` table has one row per run with `graph_version` and `source_health` as separate columns
-- Embedding dedup (SIG-014B) catches fuzzy duplicate that stages 0–2 missed
-
-
+- `uvicorn api.main:app` starts without error
+- All 15 API endpoints in BUILD_SPEC.md Section 18 return 200 on valid requests
+- `POST /agent/run` triggers real graph invoke
+- `POST /briefings/{id}/approve` resumes interrupted graph on Approve/Edit branch
+- `POST /briefings/{id}/reject` resumes on Reject branch — no episodic memory written (DEC-004)
+- Frontend renders in browser: all 8 screens per PRD Section 21
+- APScheduler triggers weekly run autonomously — confirmed by waiting or mocking time
+- After ≥5 feedback signals: procedural memory updates, next run reflects changes (DEC-007)
+-  "Frontend and backend share a stable runtime contract (thread_id, run_id, status lifecycle) suitable for future scheduler integration."
 
 # CURRENT TASK
 
 
-### SIG-022 — Feedback Collector
-**Tier:** 1 | **Owner:** Builder Agent | **Phase:** 2 | **Status:** TODO
-**Depends on:** SIG-P2-001, SIG-020A
-**Spec ref:** BUILD_SPEC.md Section 18 (feedback endpoint), PRD Section 7
+### SIG-023 — Procedural Memory Updater
+**Tier:** 1 | **Owner:** Builder Agent | **Phase:** 3 | **Status:** TODO
+**Depends on:** SIG-022, SIG-P2-API
+**Spec ref:** BUILD_SPEC.md Section 17.6
 
 **Files in Scope:**
-- `agent/nodes/feedback_collector.py`
-- `agent/memory/feedback_store.py`
+- `agent/nodes/procedural_memory_updater.py`
+
+**Critical — DEC-007 compliance:** No LLM may rewrite procedural memory. Logic is deterministic aggregation only. Source weights floored at 0.3. Minimum 5 feedback signals before any update fires.
 
 **Acceptance criteria:**
-- `agent/memory/feedback_store.py` created with `fetch_all_feedback_for_user(user_id: str) -> list[dict]` function
-- `fetch_all_feedback_for_user` queries `user_feedback` table filtered by `user_id`, returns all rows as list of dicts
-- `user_feedback` table accepts inserts with: `user_id`, `briefing_item_id`, `category`, `source_name`, `feedback` (`"useful"` or `"not_relevant"`), `reason`
-- Direct Supabase INSERT from Python test script works
-- `SIG-023` imports `fetch_all_feedback_for_user` from `agent.memory.feedback_store` — no duplication
+- Imports `fetch_all_feedback_for_user` from `agent.memory.feedback_store` — no local redefinition
+- Returns `{}` immediately if `len(all_feedback) < 5` — no update fires
+- `high_signal_categories`: categories with >60% useful feedback ratio
+- `low_signal_categories`: categories with >60% not_relevant feedback ratio
+- `source_weights`: `max(0.3, ratio)` per source — no weight ever drops below 0.3 (DEC-007)
+- `store.put(namespace=("user", user_id, "procedural"), key="preferences", value=updated)` called
+- After ≥5 signals: `store.get` returns updated procedural memory with changed values
+- Next `run_graph()` call: `search_planner` reads updated `source_weights` from state — confirmed in run output
 
 **Stop conditions — escalate to human immediately if:**
-- `user_feedback` table missing from Supabase (SIG-P2-001 not complete)
-- `fetch_all_feedback_for_user` returns non-list type
-- Supabase INSERT raises constraint violation — check schema column types
+- Any LLM call detected in this node — hard DEC-007 violation, stop immediately
+- Source weight drops below 0.3 — hard DEC-007 violation
+- Update fires with fewer than 5 feedback signals — threshold logic broken
+- `fetch_all_feedback_for_user` import fails (SIG-022 not complete)
 
 ---
-
 
 
 # BUDGET GATE
@@ -121,17 +124,18 @@ Builder Agent may not self-advance.
 
 Builder Agent may not mark future tasks complete.
 
+
 # NEXT TASK
 
 Upon successful completion:
 
 Task:
 
-SIG-P2-API
+SIG-023-deploy
 
 Title:
 
-FastAPI Backend
+Northflank Deployment
 
 
 Builder Agent must wait for human approval before work begins.
@@ -147,7 +151,7 @@ Builder Agent must wait for human approval before work begins.
 Last Updated:
 
 
-2026-07-22 11:41
+2026-07-22 17:38
 
 Updated By:
 

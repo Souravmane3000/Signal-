@@ -155,6 +155,13 @@ def test_config_loader_missing_env_fails_fast():
     print("Config loader missing-env fail-fast test passed.")
 
 
+def test_config_loader_preserves_thread_id():
+    tid = "run_custom_123"
+    result = config_loader({"thread_id": tid})
+    assert result["thread_id"] == tid
+    print("Config loader preserve thread_id test passed.")
+
+
 if __name__ == "__main__":
     test_config_loader_fallback_defaults()
     test_config_loader_uses_state_user_id()
@@ -163,4 +170,5 @@ if __name__ == "__main__":
     test_config_loader_loads_memory_from_store()
     test_config_loader_does_not_write_memory()
     test_config_loader_missing_env_fails_fast()
+    test_config_loader_preserves_thread_id()
     print("All config loader tests passed.")

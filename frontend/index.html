@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Signal | Startup Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
+        .dark .glass { background: rgba(15, 23, 42, 0.7); }
+        .status-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300">
+    <!-- App Container -->
+    <div id="app" class="flex h-screen overflow-hidden relative">
+        
+        <!-- Mobile Sidebar Overlay -->
+        <div id="sidebar-overlay" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-950/50 z-20 hidden lg:hidden"></div>
+
+        <!-- Sidebar -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col z-30 transform -translate-x-full lg:translate-x-0 lg:static transition-transform duration-300 ease-in-out">
+            <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
+                        <i class="ph-fill ph-broadcast text-white text-xl"></i>
+                    </div>
+                    <h1 class="text-xl font-bold tracking-tight">Signal</h1>
+                </div>
+                <button onclick="toggleSidebar(false)" class="lg:hidden text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 p-1">
+                    <i class="ph ph-x text-2xl"></i>
+                </button>
+            </div>
+            
+            <nav class="flex-1 p-4 space-y-2">
+                <button onclick="setView('dashboard')" class="nav-item w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-all" data-view="dashboard">
+                    <i class="ph ph-squares-four text-xl"></i>
+                    <span class="font-medium">Dashboard</span>
+                </button>
+                <button onclick="setView('briefings')" class="nav-item w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-all" data-view="briefings">
+                    <i class="ph ph-article text-xl"></i>
+                    <span class="font-medium">Briefings</span>
+                </button>
+                <button onclick="setView('config')" class="nav-item w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-all text-slate-400 cursor-not-allowed" disabled>
+                    <i class="ph ph-gear text-xl"></i>
+                    <span class="font-medium">Configuration</span>
+                </button>
+            </nav>
+            
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+                <button onclick="toggleDarkMode()" class="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
+                    <i id="dark-mode-icon" class="ph ph-moon text-xl"></i>
+                    <span id="dark-mode-text" class="font-medium">Dark Mode</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col overflow-hidden relative">
+            
+            <!-- Header -->
+            <header class="h-16 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between px-4 md:px-8 z-10 shrink-0">
+                <div class="flex items-center gap-3 md:gap-4">
+                    <button onclick="toggleSidebar(true)" class="lg:hidden p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                        <i class="ph ph-list text-2xl"></i>
+                    </button>
+                    <div id="status-indicator" class="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] md:text-xs font-medium">
+                        <span class="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-slate-400"></span>
+                        <span id="status-text" class="uppercase tracking-wider truncate max-w-[80px] md:max-w-none">Checking Status...</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-2 md:gap-4">
+                    <button id="run-button" onclick="triggerRun()" class="bg-brand-600 hover:bg-brand-700 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-lg text-sm md:text-base font-medium transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="ph ph-play"></i>
+                        <span class="hidden sm:inline">Trigger Run</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Views -->
+            <div class="flex-1 overflow-y-auto p-4 md:p-8" id="view-container">
+                
+                <!-- Dashboard View -->
+                <div id="view-dashboard" class="view space-y-6 md:space-y-8">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                        <div class="p-4 md:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
+                            <p class="text-slate-500 dark:text-slate-400 text-xs md:text-sm font-medium">Active Agent</p>
+                            <h3 class="text-xl md:text-2xl font-bold mt-1">Signal v1.0</h3>
+                        </div>
+                        <div id="stats-findings" class="p-4 md:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl">
+                            <p class="text-slate-500 dark:text-slate-400 text-xs md:text-sm font-medium">Recent Findings</p>
+                            <h3 class="text-xl md:text-2xl font-bold mt-1" id="stat-count">0</h3>
+                        </div>
+                        <div class="p-4 md:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl sm:col-span-2 md:col-span-1">
+                            <p class="text-slate-500 dark:text-slate-400 text-xs md:text-sm font-medium">Last Run</p>
+                            <h3 class="text-xl md:text-2xl font-bold mt-1 text-sm truncate" id="stat-last-run">Never</h3>
+                        </div>
+                    </div>
+
+                    <div id="latest-run-container" class="hidden">
+                        <h2 class="text-lg md:text-xl font-bold mb-4">Latest Run Summary</h2>
+                        <div id="latest-run-card" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                            <div id="run-pending-alert" class="hidden bg-amber-50 dark:bg-amber-900/20 border-b border-amber-100 dark:border-amber-800 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                                <div class="flex items-center gap-3">
+                                    <i class="ph ph-warning-circle text-amber-600 text-xl"></i>
+                                    <span class="text-amber-800 dark:text-amber-200 font-medium">Attention: Briefing awaiting your review</span>
+                                </div>
+                                <button onclick="setView('hitl')" class="text-amber-600 dark:text-amber-400 font-bold hover:underline">Review Now →</button>
+                            </div>
+                            <div class="p-4 md:p-8 prose prose-sm md:prose-base dark:prose-invert max-w-none" id="briefing-summary-content">
+                                <!-- Markdown content will be rendered here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="empty-state" class="flex flex-col items-center justify-center py-20 text-center space-y-4">
+                        <div class="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center">
+                            <i class="ph ph-magnifying-glass text-4xl text-slate-400"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold">No runs found</h3>
+                            <p class="text-slate-500 max-w-xs mx-auto">Trigger your first research run to start tracking Indian startup intelligence.</p>
+                        </div>
+                        <button onclick="triggerRun()" class="text-brand-600 font-bold hover:underline">Trigger first run</button>
+                    </div>
+                </div>
+
+                <!-- HITL Review View -->
+                <div id="view-hitl" class="view hidden space-y-6 md:space-y-8">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <button onclick="setView('dashboard')" class="text-slate-500 hover:text-brand-600 flex items-center gap-2 mb-2 transition-colors text-sm">
+                                <i class="ph ph-arrow-left"></i>
+                                <span>Back to Dashboard</span>
+                            </button>
+                            <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Review Weekly Briefing</h2>
+                        </div>
+                        <div class="flex items-center gap-3 w-full md:w-auto">
+                            <button onclick="submitHITL('reject')" class="flex-1 md:flex-none px-4 md:px-6 py-2 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 font-bold rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-all text-sm md:text-base">Reject</button>
+                            <button onclick="submitHITL('approve')" class="flex-1 md:flex-none px-4 md:px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-all shadow-lg shadow-emerald-600/20 text-sm md:text-base">Approve & Deliver</button>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                        <div class="lg:col-span-2 space-y-4 md:space-y-6">
+                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 md:p-8 prose prose-sm md:prose-base dark:prose-invert max-w-none shadow-sm">
+                                <h3 class="mt-0">Draft Briefing</h3>
+                                <div id="hitl-briefing-text"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-4 md:space-y-6">
+                            <h3 class="text-lg font-bold">Extracted Findings (<span id="hitl-item-count">0</span>)</h3>
+                            <div id="hitl-items-list" class="space-y-4">
+                                <!-- Finding cards go here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Briefing Detail View (Final) -->
+                <div id="view-briefing-detail" class="view hidden space-y-6 md:space-y-8">
+                    <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div>
+                            <button onclick="setView('briefings')" class="text-slate-500 hover:text-brand-600 flex items-center gap-2 mb-2 transition-colors text-sm">
+                                <i class="ph ph-arrow-left"></i>
+                                <span>Back to Briefings</span>
+                            </button>
+                            <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Briefing Detail</h2>
+                            <p id="detail-meta" class="text-slate-500 text-sm mt-1"></p>
+                        </div>
+                        <div id="detail-status-badge" class="self-start px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"></div>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4" id="detail-metrics">
+                        <!-- runtime metrics chips -->
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+                        <div class="lg:col-span-2 space-y-4 md:space-y-6">
+                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 md:p-8 prose prose-sm md:prose-base dark:prose-invert max-w-none shadow-sm">
+                                <h3 class="mt-0">Final Briefing</h3>
+                                <div id="detail-briefing-text"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-4 md:space-y-6">
+                            <h3 class="text-lg font-bold">Findings (<span id="detail-item-count">0</span>)</h3>
+                            <div id="detail-items-list" class="space-y-4">
+                                <!-- Finding cards -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Briefings List View -->
+                <div id="view-briefings" class="view hidden space-y-6 md:space-y-8">
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Recent Briefings</h2>
+                        <button onclick="fetchBriefings()" class="p-2 text-slate-500 hover:text-brand-600 transition-colors">
+                            <i class="ph ph-arrows-clockwise text-2xl"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="briefings-list-loading" class="hidden py-20 flex flex-col items-center justify-center gap-4">
+                        <div class="w-10 h-10 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
+                        <p class="text-slate-500 font-medium">Fetching briefings...</p>
+                    </div>
+
+                    <div id="briefings-list-empty" class="hidden py-20 flex flex-col items-center justify-center text-center space-y-4 px-4">
+                        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
+                            <i class="ph ph-folder-open text-3xl text-slate-400"></i>
+                        </div>
+                        <p class="text-slate-500">No briefings found yet.</p>
+                    </div>
+
+                    <div id="briefings-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                        <!-- Briefing entries go here -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Toast / Notifications -->
+            <div id="toast-container" class="fixed bottom-8 right-8 z-50 flex flex-col gap-2"></div>
+            
+            <!-- Loading Overlay -->
+            <div id="loading-overlay" class="hidden absolute inset-0 bg-slate-950/20 backdrop-blur-[2px] z-40 flex items-center justify-center">
+                <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4 border border-slate-200 dark:border-slate-800">
+                    <div class="w-12 h-12 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
+                    <p class="font-medium animate-pulse">Running Intelligence Pipeline...</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        // Configuration
+        const API_BASE = 'http://localhost:8000';
+        
+        // UI State
+        let state = {
+            currentView: 'dashboard',
+            agentStatus: 'idle',
+            activeThreadId: null, // No default thread_id, wait for run or fetch
+            lastRun: null,
+            briefings: [],
+            pendingBriefing: null,
+            isDarkMode: false
+        };
+
+        // DOM Elements
+        const elements = {
+            app: document.getElementById('app'),
+            statusText: document.getElementById('status-text'),
+            statusIndicator: document.getElementById('status-indicator'),
+            runButton: document.getElementById('run-button'),
+            viewContainer: document.getElementById('view-container'),
+            toastContainer: document.getElementById('toast-container'),
+            loadingOverlay: document.getElementById('loading-overlay'),
+            briefingContent: document.getElementById('briefing-summary-content'),
+            latestRunContainer: document.getElementById('latest-run-container'),
+            emptyState: document.getElementById('empty-state'),
+            hitlBriefingText: document.getElementById('hitl-briefing-text'),
+            hitlItemsList: document.getElementById('hitl-items-list'),
+            hitlItemCount: document.getElementById('hitl-item-count'),
+            runPendingAlert: document.getElementById('run-pending-alert'),
+            statCount: document.getElementById('stat-count'),
+            statLastRun: document.getElementById('stat-last-run'),
+            briefingsList: document.getElementById('briefings-list'),
+            briefingsListLoading: document.getElementById('briefings-list-loading'),
+            briefingsListEmpty: document.getElementById('briefings-list-empty'),
+            detailMeta: document.getElementById('detail-meta'),
+            detailStatusBadge: document.getElementById('detail-status-badge'),
+            detailMetrics: document.getElementById('detail-metrics'),
+            detailBriefingText: document.getElementById('detail-briefing-text'),
+            detailItemsList: document.getElementById('detail-items-list'),
+            detailItemCount: document.getElementById('detail-item-count')
+        };
+
+        // Initialize
+        async function init() {
+            // Check system dark mode
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                toggleDarkMode(true);
+            }
+            
+            updateNav();
+            await pollStatus();
+            await refreshDashboard();
+            
+            // Start periodic polling
+            setInterval(pollStatus, 5000);
+        }
+
+        // View Management
+        function setView(viewName) {
+            state.currentView = viewName;
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            const activeView = document.getElementById(`view-${viewName}`);
+            if (activeView) activeView.classList.remove('hidden');
+            updateNav();
+            
+            // Close sidebar on mobile after view change
+            if (window.innerWidth < 1024) {
+                toggleSidebar(false);
+            }
+            
+            // View specific logic
+            if (viewName === 'briefings') {
+                fetchBriefings();
+            }
+            if (viewName === 'dashboard') {
+                refreshDashboard();
+            }
+            if (viewName === 'briefing-detail') {
+                // Keep briefings nav highlighted while viewing a detail
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    const view = item.getAttribute('data-view');
+                    if (view === 'briefings') {
+                        item.classList.add('bg-brand-50', 'text-brand-600', 'dark:bg-brand-900/20', 'dark:text-brand-400');
+                        item.classList.remove('text-slate-600', 'dark:text-slate-400');
+                    }
+                });
+            }
+            
+            // If viewing HITL, ensure we have the data
+            if (viewName === 'hitl' && !state.pendingBriefing) {
+                if (state.lastRun && state.lastRun.status === 'pending_hitl') {
+                    showHITLById(state.lastRun.run_id, state.lastRun.thread_id || state.activeThreadId);
+                } else {
+                    setView('dashboard');
+                    showToast('No briefing awaiting review', 'error');
+                }
+            }
+        }
+
+        function toggleSidebar(show) {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            
+            if (show) {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+        }
+
+        function updateNav() {
+            document.querySelectorAll('.nav-item').forEach(item => {
+                const view = item.getAttribute('data-view');
+                if (view === state.currentView) {
+                    item.classList.add('bg-brand-50', 'text-brand-600', 'dark:bg-brand-900/20', 'dark:text-brand-400');
+                    item.classList.remove('text-slate-600', 'dark:text-slate-400');
+                } else {
+                    item.classList.remove('bg-brand-50', 'text-brand-600', 'dark:bg-brand-900/20', 'dark:text-brand-400');
+                    item.classList.add('text-slate-600', 'dark:text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-800');
+                }
+            });
+        }
+
+        // API Calls
+        async function pollStatus() {
+            if (!state.activeThreadId) {
+                // Try to find if there's a recent thread to monitor
+                if (state.briefings.length > 0) {
+                    state.activeThreadId = state.briefings[0].thread_id;
+                } else {
+                    return; // Nothing to poll yet
+                }
+            }
+            
+            try {
+                const res = await fetch(`${API_BASE}/agent/status?thread_id=${state.activeThreadId}`);
+                if (!res.ok) throw new Error('Status endpoint unavailable');
+                
+                const data = await res.json();
+                updateStatus(data.status);
+                
+                // If it reached pending_hitl and we haven't shown it yet
+                if (data.status === 'pending_hitl' && (!state.lastRun || state.lastRun.status !== 'pending_hitl')) {
+                    // Prefer run_id + thread_id from the last run response (runtime contract)
+                    if (state.lastRun && state.lastRun.run_id) {
+                        await showHITLById(state.lastRun.run_id, state.activeThreadId);
+                    } else {
+                        await fetchLatestBriefingForThread(state.activeThreadId);
+                    }
+                }
+            } catch (err) {
+                console.log('Poll Status Failed:', err.message);
+            }
+        }
+
+        async function fetchLatestBriefingForThread(threadId) {
+            try {
+                const res = await fetch(`${API_BASE}/briefings?limit=1`);
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.briefings.length > 0 && data.briefings[0].thread_id === threadId && data.briefings[0].status === 'pending_hitl') {
+                    await showHITLById(data.briefings[0].run_id, threadId);
+                }
+            } catch (err) {
+                console.log('Failed to fetch latest briefing for thread');
+            }
+        }
+
+        function updateStatus(status) {
+            state.agentStatus = status;
+            elements.statusText.textContent = status.replace('_', ' ');
+            
+            const indicator = elements.statusIndicator.querySelector('span:first-child');
+            indicator.className = 'w-2 h-2 rounded-full'; // Reset
+            
+            if (status === 'idle') {
+                indicator.classList.add('bg-slate-400');
+                elements.runButton.disabled = false;
+                elements.loadingOverlay.classList.add('hidden');
+            } else if (status === 'running') {
+                indicator.classList.add('bg-blue-500', 'status-pulse');
+                elements.runButton.disabled = true;
+                elements.loadingOverlay.classList.remove('hidden');
+            } else if (status === 'pending_hitl') {
+                indicator.classList.add('bg-amber-500', 'status-pulse');
+                elements.runButton.disabled = true;
+                elements.runPendingAlert.classList.remove('hidden');
+                elements.loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        async function triggerRun() {
+            elements.loadingOverlay.classList.remove('hidden');
+            updateStatus('running');
+            
+            try {
+                const res = await fetch(`${API_BASE}/run`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({})
+                });
+                
+                if (!res.ok) throw new Error('Run failed');
+                
+                const data = await res.json();
+                state.lastRun = data;
+                if (data.thread_id) {
+                    state.activeThreadId = data.thread_id;
+                }
+                
+                if (data.status === 'pending_hitl') {
+                    await showHITLById(data.run_id, data.thread_id);
+                    showToast('Run reached HITL checkpoint', 'info');
+                } else if (data.status === 'completed') {
+                    await refreshDashboard();
+                    showToast('Run completed successfully', 'success');
+                } else {
+                    showToast('Run started in background', 'info');
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+                updateStatus('idle');
+            } finally {
+                elements.loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        async function fetchBriefings() {
+            elements.briefingsListLoading.classList.remove('hidden');
+            elements.briefingsListEmpty.classList.add('hidden');
+            elements.briefingsList.innerHTML = '';
+            
+            try {
+                const res = await fetch(`${API_BASE}/briefings`);
+                if (!res.ok) throw new Error('Failed to fetch briefings');
+                
+                const data = await res.json();
+                state.briefings = data.briefings || [];
+                renderBriefingsList();
+                syncDashboardFromList();
+                return state.briefings;
+            } catch (err) {
+                console.log('Fetch Briefings Failed:', err.message);
+                showToast('Failed to load briefings', 'error');
+                return [];
+            } finally {
+                elements.briefingsListLoading.classList.add('hidden');
+            }
+        }
+
+        function syncDashboardFromList() {
+            const briefings = state.briefings || [];
+            if (briefings.length === 0) {
+                elements.emptyState.classList.remove('hidden');
+                elements.latestRunContainer.classList.add('hidden');
+                elements.statCount.textContent = '0';
+                elements.statLastRun.textContent = 'Never';
+                return;
+            }
+
+            elements.emptyState.classList.add('hidden');
+            elements.latestRunContainer.classList.remove('hidden');
+
+            const latest = briefings[0];
+            const totalFindings = briefings.reduce((sum, b) => sum + (b.item_count || 0), 0);
+            elements.statCount.textContent = String(totalFindings);
+
+            if (latest.created_at) {
+                elements.statLastRun.textContent = new Date(latest.created_at).toLocaleString(undefined, {
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+            } else {
+                elements.statLastRun.textContent = 'Recent';
+            }
+
+            if (latest.status === 'pending_hitl') {
+                elements.runPendingAlert.classList.remove('hidden');
+            } else {
+                elements.runPendingAlert.classList.add('hidden');
+            }
+        }
+
+        async function refreshDashboard() {
+            const briefings = await fetchBriefings();
+            if (!briefings.length) return;
+
+            const latest = briefings[0];
+            if (latest.status === 'pending_hitl') {
+                // Keep pending alert; do not overwrite with completed markdown
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/briefings/${latest.run_id}`);
+                if (!res.ok) return;
+                const detail = await res.json();
+                const markdown = detail.briefing_final || detail.briefing_draft || '';
+                const rawHtml = marked.parse(markdown || '_No briefing text stored for this run._');
+                elements.briefingContent.innerHTML = DOMPurify.sanitize(rawHtml);
+                if (detail.runtime_metrics && typeof detail.runtime_metrics.findings_retrieved === 'number') {
+                    // Prefer item_count from list for "Recent Findings"; keep retrieved as fallback only if list empty
+                    if (!briefings.some(b => b.item_count > 0)) {
+                        elements.statCount.textContent = String(detail.runtime_metrics.findings_retrieved);
+                    }
+                }
+            } catch (err) {
+                console.log('Dashboard detail refresh failed:', err.message);
+            }
+        }
+
+        function renderBriefingsList() {
+            if (state.briefings.length === 0) {
+                elements.briefingsListEmpty.classList.remove('hidden');
+                return;
+            }
+            
+            state.briefings.forEach(briefing => {
+                const card = document.createElement('div');
+                card.className = 'p-4 md:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl hover:shadow-md transition-all cursor-pointer';
+                card.onclick = () => showBriefingDetail(briefing.run_id);
+                
+                const dateText = new Date(briefing.created_at).toLocaleDateString(undefined, {
+                    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+                
+                const header = document.createElement('div');
+                header.className = 'flex justify-between items-start mb-4';
+                
+                const status = document.createElement('span');
+                status.className = 'text-[10px] font-bold uppercase tracking-wider text-slate-400';
+                status.textContent = briefing.status.replace('_', ' ');
+                
+                const icon = document.createElement('i');
+                icon.className = 'ph ph-calendar text-slate-400';
+                
+                header.appendChild(status);
+                header.appendChild(icon);
+                
+                const date = document.createElement('h3');
+                date.className = 'font-bold text-base md:text-lg mb-1';
+                date.textContent = dateText;
+                
+                const findingsCount = document.createElement('p');
+                findingsCount.className = 'text-xs md:text-sm text-slate-500';
+                findingsCount.textContent = `${briefing.item_count} findings identified`;
+                
+                card.appendChild(header);
+                card.appendChild(date);
+                card.appendChild(findingsCount);
+                
+                elements.briefingsList.appendChild(card);
+            });
+        }
+
+        async function showHITLById(runId, threadId) {
+            elements.loadingOverlay.classList.remove('hidden');
+            try {
+                const tid = threadId || state.activeThreadId;
+                const qs = tid ? `?thread_id=${encodeURIComponent(tid)}` : '';
+                const res = await fetch(`${API_BASE}/briefings/${runId}${qs}`);
+                if (!res.ok) throw new Error('Failed to fetch briefing detail');
+                const data = await res.json();
+                showHITL(data);
+            } catch (err) {
+                showToast(err.message, 'error');
+                setView('dashboard');
+            } finally {
+                elements.loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        async function showBriefingDetail(runId) {
+            const briefing = state.briefings.find(b => b.run_id === runId);
+            if (briefing && briefing.status === 'pending_hitl') {
+                await showHITLById(runId, briefing.thread_id);
+                return;
+            }
+
+            elements.loadingOverlay.classList.remove('hidden');
+            try {
+                const tid = briefing && briefing.thread_id;
+                const qs = tid ? `?thread_id=${encodeURIComponent(tid)}` : '';
+                const res = await fetch(`${API_BASE}/briefings/${runId}${qs}`);
+                if (!res.ok) throw new Error('Failed to load briefing');
+                const data = await res.json();
+                renderBriefingDetail(data);
+                setView('briefing-detail');
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                elements.loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        function renderBriefingDetail(data) {
+            const status = (data.status || 'unknown').replace('_', ' ');
+            elements.detailStatusBadge.textContent = status;
+
+            const created = data.created_at
+                ? new Date(data.created_at).toLocaleString(undefined, {
+                    month: 'short', day: 'numeric', year: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                })
+                : 'Unknown time';
+            const runLabel = data.run_id ? `Run ${String(data.run_id).slice(0, 8)}…` : 'Run';
+            elements.detailMeta.textContent = `${runLabel} · ${created}`;
+
+            elements.detailMetrics.innerHTML = '';
+            const metrics = data.runtime_metrics || {};
+            const chips = [
+                ['Duration', metrics.run_duration_seconds != null ? `${Number(metrics.run_duration_seconds).toFixed(1)}s` : '—'],
+                ['Tokens', metrics.tokens_used != null ? String(metrics.tokens_used) : '—'],
+                ['Cost', metrics.estimated_cost_usd != null ? `$${Number(metrics.estimated_cost_usd).toFixed(4)}` : '—'],
+                ['Graph', metrics.graph_version || '—']
+            ];
+            chips.forEach(([label, value]) => {
+                const chip = document.createElement('div');
+                chip.className = 'p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl';
+                chip.innerHTML = `<p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium">${label}</p><p class="font-bold text-sm mt-1 truncate">${value}</p>`;
+                elements.detailMetrics.appendChild(chip);
+            });
+
+            const markdown = data.briefing_final || data.briefing_draft || '';
+            if (markdown.trim()) {
+                elements.detailBriefingText.innerHTML = DOMPurify.sanitize(marked.parse(markdown));
+            } else {
+                elements.detailBriefingText.innerHTML = '<p class="text-slate-500 italic">No final briefing text was stored for this run.</p>';
+            }
+
+            elements.detailItemsList.innerHTML = '';
+            const items = data.briefing_items || [];
+            elements.detailItemCount.textContent = String(items.length);
+
+            if (items.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'p-4 border border-dashed border-slate-200 dark:border-slate-700 rounded-xl text-center';
+                empty.innerHTML = `
+                    <p class="font-medium text-sm">No findings persisted</p>
+                    <p class="text-xs text-slate-500 mt-1">This briefing has no briefing_items rows. Re-run and approve to persist findings.</p>
+                `;
+                elements.detailItemsList.appendChild(empty);
+                return;
+            }
+
+            items.forEach(item => {
+                const itemCard = document.createElement('div');
+                itemCard.className = 'p-3 md:p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm space-y-2';
+
+                const header = document.createElement('div');
+                header.className = 'flex justify-between items-start gap-2';
+
+                const title = document.createElement('h4');
+                title.className = 'font-bold text-xs md:text-sm leading-tight';
+                title.textContent = item.title || 'Untitled finding';
+
+                const category = document.createElement('span');
+                category.className = 'text-[9px] md:text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-bold uppercase tracking-wider shrink-0';
+                category.textContent = item.category || 'n/a';
+
+                header.appendChild(title);
+                header.appendChild(category);
+
+                const summary = document.createElement('p');
+                summary.className = 'text-[11px] md:text-xs text-slate-500';
+                summary.textContent = item.summary || '';
+
+                const footer = document.createElement('div');
+                footer.className = 'flex items-center justify-between pt-1 md:pt-2 gap-2';
+
+                const source = document.createElement('a');
+                source.className = 'text-[9px] md:text-[10px] text-brand-600 font-medium truncate';
+                source.textContent = item.source_name || 'source';
+                if (item.source_url) {
+                    source.href = item.source_url;
+                    source.target = '_blank';
+                    source.rel = 'noopener noreferrer';
+                }
+
+                const confidence = document.createElement('span');
+                const score = Number(item.confidence_score || 0);
+                confidence.className = `text-[9px] md:text-[10px] font-bold ${score > 0.8 ? 'text-emerald-500' : 'text-amber-500'}`;
+                confidence.textContent = `${Math.round(score * 100)}%`;
+
+                footer.appendChild(source);
+                footer.appendChild(confidence);
+
+                itemCard.appendChild(header);
+                itemCard.appendChild(summary);
+
+                // Rich metadata from entities JSON — only fields already present.
+                const entities = item.entities && typeof item.entities === 'object' ? item.entities : {};
+                const metaBits = [];
+                const company = entities.company_name || entities.company || entities.company_name_normalized;
+                if (company) metaBits.push(`Company: ${company}`);
+                const fundingParts = [];
+                if (entities.funding_amount_usd != null && entities.funding_amount_usd !== '') {
+                    fundingParts.push(`$${Number(entities.funding_amount_usd).toLocaleString()}`);
+                }
+                if (entities.funding_stage) fundingParts.push(entities.funding_stage);
+                if (entities.funding && !fundingParts.length) fundingParts.push(String(entities.funding));
+                if (fundingParts.length) metaBits.push(`Funding: ${fundingParts.join(' · ')}`);
+                const investors = entities.investor_names || entities.investors;
+                if (Array.isArray(investors) && investors.length) {
+                    metaBits.push(`Investors: ${investors.join(', ')}`);
+                } else if (typeof investors === 'string' && investors.trim()) {
+                    metaBits.push(`Investors: ${investors}`);
+                }
+                if (entities.location) metaBits.push(`Location: ${entities.location}`);
+
+                if (metaBits.length) {
+                    const meta = document.createElement('p');
+                    meta.className = 'text-[10px] text-slate-400 leading-relaxed';
+                    meta.textContent = metaBits.join(' · ');
+                    itemCard.appendChild(meta);
+                }
+
+                itemCard.appendChild(footer);
+                elements.detailItemsList.appendChild(itemCard);
+            });
+        }
+
+        async function submitHITL(action) {
+            if (!state.pendingBriefing || !state.pendingBriefing.run_id) return;
+            
+            elements.loadingOverlay.classList.remove('hidden');
+            
+            try {
+                const tid = state.pendingBriefing.thread_id || state.activeThreadId;
+                const qs = tid ? `?thread_id=${encodeURIComponent(tid)}` : '';
+                const res = await fetch(`${API_BASE}/briefings/${state.pendingBriefing.run_id}/${action}${qs}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action })
+                });
+                
+                if (!res.ok) throw new Error(`${action} failed`);
+                
+                const result = await res.json();
+                
+                if (result.thread_id) {
+                    state.activeThreadId = result.thread_id;
+                }
+                
+                if (action === 'approve') {
+                    const msg = result.delivery_status === 'sent' 
+                        ? 'Briefing approved and delivered successfully.' 
+                        : `Briefing approved. Delivery status: ${result.delivery_status || 'unknown'}`;
+                    showToast(msg, 'success');
+                } else if (action === 'reject') {
+                    showToast('Briefing rejected. No email was sent.', 'info');
+                }
+                
+                setView('dashboard');
+                updateStatus('idle');
+                state.pendingBriefing = null;
+                elements.runPendingAlert.classList.add('hidden');
+                await refreshDashboard();
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                elements.loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        // Render Functions
+        function showDashboard(runData) {
+            // Legacy path for in-memory run payloads; prefer refreshDashboard().
+            elements.emptyState.classList.add('hidden');
+            elements.latestRunContainer.classList.remove('hidden');
+            
+            const rawHtml = marked.parse(runData.briefing_summary || '');
+            elements.briefingContent.innerHTML = DOMPurify.sanitize(rawHtml);
+            
+            elements.statCount.textContent = runData.runtime_metrics ? runData.runtime_metrics.findings_retrieved : '0';
+            elements.statLastRun.textContent = new Date().toLocaleTimeString();
+        }
+
+        function showHITL(runData) {
+            state.pendingBriefing = runData;
+            if (runData.thread_id) {
+                state.activeThreadId = runData.thread_id;
+            }
+            setView('hitl');
+            
+            const rawHtml = marked.parse(runData.briefing_draft || runData.briefing_summary || '');
+            elements.hitlBriefingText.innerHTML = DOMPurify.sanitize(rawHtml);
+            
+            elements.hitlItemsList.innerHTML = '';
+            
+            if (!runData.briefing_items || runData.briefing_items.length === 0) {
+                const emptyMsg = document.createElement('p');
+                emptyMsg.className = 'text-slate-500 italic';
+                emptyMsg.textContent = 'No individual items metadata available for this run.';
+                elements.hitlItemsList.appendChild(emptyMsg);
+                elements.hitlItemCount.textContent = '0';
+            } else {
+                elements.hitlItemCount.textContent = runData.briefing_items.length;
+                runData.briefing_items.forEach(item => {
+                    const itemCard = document.createElement('div');
+                    itemCard.className = 'p-3 md:p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm space-y-2';
+                    
+                    const header = document.createElement('div');
+                    header.className = 'flex justify-between items-start gap-2';
+                    
+                    const title = document.createElement('h4');
+                    title.className = 'font-bold text-xs md:text-sm leading-tight';
+                    title.textContent = item.title;
+                    
+                    const category = document.createElement('span');
+                    category.className = 'text-[9px] md:text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-bold uppercase tracking-wider shrink-0';
+                    category.textContent = item.category;
+                    
+                    header.appendChild(title);
+                    header.appendChild(category);
+                    
+                    const summary = document.createElement('p');
+                    summary.className = 'text-[11px] md:text-xs text-slate-500 line-clamp-2 md:line-clamp-3';
+                    summary.textContent = item.summary;
+                    
+                    const footer = document.createElement('div');
+                    footer.className = 'flex items-center justify-between pt-1 md:pt-2';
+                    
+                    const source = document.createElement('span');
+                    source.className = 'text-[9px] md:text-[10px] text-slate-400 font-medium';
+                    source.textContent = item.source_name;
+                    
+                    const confidence = document.createElement('div');
+                    confidence.className = 'flex items-center gap-1';
+                    const confidenceText = document.createElement('span');
+                    confidenceText.className = `text-[9px] md:text-[10px] font-bold ${item.confidence_score > 0.8 ? 'text-emerald-500' : 'text-amber-500'}`;
+                    confidenceText.textContent = `${Math.round(item.confidence_score * 100)}%`;
+                    confidence.appendChild(confidenceText);
+                    
+                    footer.appendChild(source);
+                    footer.appendChild(confidence);
+                    
+                    itemCard.appendChild(header);
+                    itemCard.appendChild(summary);
+                    itemCard.appendChild(footer);
+                    
+                    elements.hitlItemsList.appendChild(itemCard);
+                });
+            }
+        }
+
+        // Utils
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            const icons = {
+                info: 'ph-info',
+                success: 'ph-check-circle',
+                error: 'ph-x-circle'
+            };
+            const colors = {
+                info: 'text-blue-600 bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800',
+                success: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-100 dark:border-emerald-800',
+                error: 'text-rose-600 bg-rose-50 dark:bg-rose-900/20 border-rose-100 dark:border-rose-800'
+            };
+            
+            toast.className = `flex items-center gap-3 px-3 md:px-4 py-2 md:py-3 rounded-xl border shadow-lg animate-slide-in-right ${colors[type]} max-w-[calc(100vw-2rem)]`;
+            
+            const icon = document.createElement('i');
+            icon.className = `ph ${icons[type]} text-lg md:text-xl shrink-0`;
+            
+            const text = document.createElement('span');
+            text.className = 'font-medium text-xs md:text-sm';
+            text.textContent = message;
+            
+            toast.appendChild(icon);
+            toast.appendChild(text);
+            
+            elements.toastContainer.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.replace('animate-slide-in-right', 'animate-fade-out');
+                setTimeout(() => toast.remove(), 500);
+            }, 5000);
+        }
+
+        function toggleDarkMode(force) {
+            state.isDarkMode = force !== undefined ? force : !state.isDarkMode;
+            if (state.isDarkMode) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('dark-mode-icon').className = 'ph ph-sun text-xl';
+                document.getElementById('dark-mode-text').innerText = 'Light Mode';
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('dark-mode-icon').className = 'ph ph-moon text-xl';
+                document.getElementById('dark-mode-text').innerText = 'Dark Mode';
+            }
+        }
+
+        // Run Init
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+    
+    <style>
+        @keyframes slide-in-right {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fade-out {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+        .animate-slide-in-right { animation: slide-in-right 0.3s ease-out forwards; }
+        .animate-fade-out { animation: fade-out 0.5s ease-out forwards; }
+    </style>
+</body>
+</html>

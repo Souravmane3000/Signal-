@@ -786,7 +786,7 @@ YYYY-MM-DD
 \- After ≥5 feedback signals: procedural memory updates, next run reflects changes (DEC-007)  
 <br/>\---  
 <br/>\### SIG-P2-API - FastAPI Backend  
-\*\*Tier:\*\* 1 | \*\*Owner:\*\* Builder Agent | \*\*Phase:\*\* 2 | \*\*Status:\*\* TODO  
+\*\*Tier:\*\* 1 | \*\*Owner:\*\* Builder Agent | \*\*Phase:\*\* 2 | \*\*Status:\*\* DONE  
 \*\*Depends on:\*\* SIG-018, SIG-020A, SIG-021B, SIG-022  
 \*\*Spec ref:\*\* BUILD_SPEC.md Section 18  
 <br/>\*\*Files in Scope:\*\*  
@@ -807,7 +807,7 @@ YYYY-MM-DD
 \- Background thread raises unhandled exception - graph invoke must never crash the API process  
 <br/>\---  
 <br/>\### SIG-P2-Frontend - HTML/JS Frontend  
-\*\*Tier:\*\* 1 | \*\*Owner:\*\* Builder Agent | \*\*Phase:\*\* 2 | \*\*Status:\*\* TODO  
+\*\*Tier:\*\* 1 | \*\*Owner:\*\* Builder Agent | \*\*Phase:\*\* 2 | \*\*Status:\*\* DONE  
 \*\*Depends on:\*\* SIG-P2-API  
 \*\*Spec ref:\*\* PRD Section 21 (8 screens)  
 <br/>\*\*Files in Scope:\*\*  

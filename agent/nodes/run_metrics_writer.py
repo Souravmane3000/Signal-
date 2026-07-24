@@ -1,6 +1,6 @@
 """Run Metrics Writer — Phase 2 Supabase persistence (SIG-021B).
 
-Side-effect only: INSERT agent_run_metrics + UPDATE briefing_runs.graph_version.
+Side-effect only: INSERT briefing_runs, briefing_items, agent_run_metrics.
 Does not modify SignalState. Does not call an LLM. Does not write memory.
 """
 
@@ -19,13 +19,13 @@ _FALLBACK_AUTH_EMAIL = "signal-builder@local.test"
 
 def _get_pool():
     """Reuse the ConnectionPool from SIG-P2-002 — do not open a second connection."""
-    from agent.graph import _pool
+    from agent.graph import pool
 
-    if _pool is None:
+    if pool is None:
         raise RuntimeError(
             "Postgres ConnectionPool unavailable (SIG-P2-002 not complete)."
         )
-    return _pool
+    return pool
 
 
 def _as_uuid(value: str, *, field: str) -> uuid.UUID:
@@ -90,7 +90,7 @@ def _build_metrics(state: SignalState) -> dict[str, Any]:
         ),
         "findings_dropped_scope": int(state.get("findings_dropped_scope") or 0),
         "findings_dropped_dedup": int(state.get("findings_dropped_dedup") or 0),
-        "findings_in_briefing": len(state.get("new_findings") or []),
+        "findings_in_briefing": len(state.get("briefing_items") or []),
         "tokens_used": int(state.get("tokens_used") or 0),
         "estimated_cost_usd": float(state.get("estimated_cost_usd") or 0.0),
         "run_duration_seconds": float(state.get("run_duration_seconds") or 0.0),
@@ -98,8 +98,96 @@ def _build_metrics(state: SignalState) -> dict[str, Any]:
     }
 
 
+def _pgvector_literal(embedding: Any) -> str | None:
+    """Format a float list for Postgres vector(1536); None if unavailable."""
+    if not isinstance(embedding, (list, tuple)) or not embedding:
+        return None
+    try:
+        return "[" + ",".join(str(float(x)) for x in embedding) + "]"
+    except (TypeError, ValueError):
+        return None
+
+
+def _embedding_lookup(state: SignalState) -> dict[tuple[str, str], Any]:
+    """Map (title, source_url) → embedding from new_findings (hybrid_dedup)."""
+    lookup: dict[tuple[str, str], Any] = {}
+    for finding in state.get("new_findings") or []:
+        if not isinstance(finding, dict):
+            continue
+        key = (str(finding.get("title") or ""), str(finding.get("source_url") or ""))
+        if finding.get("embedding") is not None:
+            lookup[key] = finding["embedding"]
+    return lookup
+
+
+def _persist_briefing_items(conn, state: SignalState, run_id: uuid.UUID, user_id: uuid.UUID) -> int:
+    """INSERT one briefing_items row per state briefing_item. Returns row count.
+
+    Owns the DB write for findings after HITL. Synthesis only populates graph
+    state; hybrid_dedup preserves embeddings on new_findings for this INSERT.
+    """
+    items = state.get("briefing_items") or []
+    embeddings = _embedding_lookup(state)
+
+    # Idempotent on metrics re-run for the same briefing_run_id.
+    conn.execute(
+        "DELETE FROM briefing_items WHERE briefing_run_id = %s",
+        (str(run_id),),
+    )
+
+    written = 0
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title") or "")
+        source_url = str(item.get("source_url") or "")
+        emb = item.get("embedding")
+        if emb is None:
+            emb = embeddings.get((title, source_url))
+        emb_literal = _pgvector_literal(emb)
+
+        item_id = item.get("id") or str(uuid.uuid4())
+        try:
+            item_uuid = str(uuid.UUID(str(item_id)))
+        except (ValueError, TypeError, AttributeError):
+            item_uuid = str(uuid.uuid4())
+
+        entities = item.get("entities")
+        if not isinstance(entities, dict):
+            entities = {}
+
+        conn.execute(
+            """
+            INSERT INTO briefing_items (
+                id, briefing_run_id, user_id,
+                title, summary, source_url, source_name,
+                category, confidence_score, entities, embedding
+            ) VALUES (
+                %s, %s, %s,
+                %s, %s, %s, %s,
+                %s, %s, %s::jsonb, %s::vector
+            )
+            """,
+            (
+                item_uuid,
+                str(run_id),
+                str(user_id),
+                title,
+                str(item.get("summary") or ""),
+                source_url,
+                str(item.get("source_name") or ""),
+                str(item.get("category") or ""),
+                float(item.get("confidence_score") or 0.0),
+                json.dumps(entities),
+                emb_literal,
+            ),
+        )
+        written += 1
+    return written
+
+
 def _persist_metrics(state: SignalState, metrics: dict[str, Any]) -> None:
-    """INSERT agent_run_metrics and UPDATE briefing_runs.graph_version.
+    """INSERT briefing_runs, briefing_items, and agent_run_metrics.
 
     Uses the shared pool. Does not swallow DB errors.
     """
@@ -149,6 +237,12 @@ def _persist_metrics(state: SignalState, metrics: dict[str, Any]) -> None:
             """,
             (metrics["graph_version"], str(run_id)),
         )
+        items_written = _persist_briefing_items(conn, state, run_id, user_id)
+        # Idempotent metrics: one row per briefing_run_id (delete+replace).
+        conn.execute(
+            "DELETE FROM agent_run_metrics WHERE briefing_run_id = %s",
+            (str(run_id),),
+        )
         conn.execute(
             """
             INSERT INTO agent_run_metrics (
@@ -184,6 +278,36 @@ def _persist_metrics(state: SignalState, metrics: dict[str, Any]) -> None:
                 metrics["graph_version"],
                 json.dumps(metrics["source_health"]),
             ),
+        )
+        conn.commit()
+        print(f"briefing_items written: {items_written} for run {run_id}")
+
+
+def finalize_run_duration(run_id: str | None, duration_seconds: float) -> None:
+    """Patch agent_run_metrics after the outer runtime timer finishes.
+
+    run_metrics_writer may persist before execute_graph / HITL resume knows the
+    true elapsed wall time for the invoke segment(s). This updates the row in
+    place — does not insert a duplicate.
+    """
+    if not run_id:
+        return
+    try:
+        run_uuid = _as_uuid(run_id, field="run_id")
+    except ValueError:
+        return
+    if duration_seconds < 0:
+        return
+
+    pool = _get_pool()
+    with pool.connection() as conn:
+        conn.execute(
+            """
+            UPDATE agent_run_metrics
+            SET run_duration_seconds = %s
+            WHERE briefing_run_id = %s
+            """,
+            (float(duration_seconds), str(run_uuid)),
         )
         conn.commit()
 

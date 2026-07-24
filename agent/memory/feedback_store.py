@@ -25,13 +25,13 @@ _FALLBACK_AUTH_EMAIL = "signal-builder@local.test"
 
 def _get_pool():
     """Reuse the ConnectionPool from SIG-P2-002 — do not open a second connection."""
-    from agent.graph import _pool
+    from agent.graph import pool
 
-    if _pool is None:
+    if pool is None:
         raise RuntimeError(
             "Postgres ConnectionPool unavailable (SIG-P2-002 not complete)."
         )
-    return _pool
+    return pool
 
 
 def _resolve_user_uuid(conn, user_id: str) -> uuid.UUID:

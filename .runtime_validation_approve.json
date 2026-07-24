@@ -1,0 +1,18 @@
+﻿{
+    "run_id":  "ef259bc0-45b0-419a-ae1b-98822c3f29c0",
+    "thread_id":  "run_8c1b91319eeb",
+    "status":  "completed",
+    "briefing_summary":  "## Signal Weekly Briefing\n\n### Executive Summary\nThis week highlights significant funding activities and ecosystem developments within the Indian startup landscape. Notably, CARPL.ai secured a substantial Series A funding round, while the acceptance of Avoca Systems into Y Combinator underscores the ongoing global interest in Indian startups. Emerging trends include the resilience of Indian SaaS investments and the increasing investor focus on AI and semiconductors.\n\n### Funding Highlights\n- ...",
+    "delivery_status":  "sent",
+    "runtime_metrics":  {
+                            "run_duration_seconds":  183.63295010000002,
+                            "tokens_used":  31810,
+                            "estimated_cost_usd":  0.0119495,
+                            "findings_retrieved":  220,
+                            "findings_dropped_freshness":  30,
+                            "findings_dropped_scope":  3,
+                            "findings_dropped_dedup":  39,
+                            "graph_version":  "1.0"
+                        },
+    "error":  null
+}

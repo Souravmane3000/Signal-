@@ -163,7 +163,7 @@ def config_loader(state: SignalState) -> dict:
     return {
         "user_config": user_config,
         "user_id": user_id,
-        "thread_id": "run_" + str(int(datetime.now(timezone.utc).timestamp())),
+        "thread_id": state.get("thread_id") or "run_" + str(int(datetime.now(timezone.utc).timestamp())),
         "run_type": "manual",
         "graph_version": os.getenv("GRAPH_VERSION", "1.0"),
         "semantic_memory": semantic_memory,

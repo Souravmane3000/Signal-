@@ -1,5 +1,8 @@
 import os
 import re
+import time
+from dataclasses import dataclass
+from typing import Optional
 from urllib.parse import quote
 from uuid import uuid4
 
@@ -7,6 +10,7 @@ from dotenv import load_dotenv
 from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.store.postgres import PostgresStore
+from psycopg import OperationalError
 from psycopg.rows import dict_row
 from psycopg_pool import ConnectionPool
 
@@ -131,18 +135,57 @@ builder.add_edge("run_metrics_writer", END)
 # Phase 2 persistence — PostgresSaver + PostgresStore.
 # Official LangGraph pattern for long-lived graphs: ConnectionPool (not a raw
 # Connection held via ExitStack/from_conn_string). A single Connection goes idle
-# during multi-minute LLM nodes and is dropped by Supabase; the pool checks out
-# a healthy connection per checkpoint write and reconnects as needed.
+# during multi-minute LLM nodes / HITL waits and is dropped by Supabase; the pool
+# must discard those sockets on checkout and replace them before checkpoint writes.
 #
-# keepalives: prevent Supabase from silently dropping idle pooled connections
-# during long LLM nodes (SSL SYSCALL EOF / "connection is lost").
-# supports_pipeline=False: put() defaults to pipeline mode; a dropped mid-pipeline
-# connection surfaces as Pipeline[BAD]. Transaction mode recovers cleanly via the
-# pool's check/reconnect path instead.
-_pool = ConnectionPool(
+# Hardening (psycopg_pool + Supabase / PgBouncer):
+# - check: SELECT-ping on every checkout; close the socket if the ping fails so a
+#   half-dead SSL session is never returned to the idle pool.
+# - max_idle < Supabase idle kill window so unused conns are closed by the pool
+#   before the server/proxy silently tears them down (SSL SYSCALL EOF).
+# - max_lifetime: recycle long-lived sockets even if still "alive".
+# - TCP keepalives: detect middlebox/server drops while a conn sits in the pool.
+# - prepare_threshold=0: required for PgBouncer transaction pooling.
+# - supports_pipeline=False: pipeline mode surfaces half-closed sockets as
+#   Pipeline[BAD] / SSL framing errors instead of a clean OperationalError the
+#   pool can discard.
+def _check_pool_connection(conn) -> None:
+    """Checkout health check — discard the socket if the ping fails."""
+    try:
+        ConnectionPool.check_connection(conn)
+    except Exception:
+        try:
+            conn.close()
+        except Exception:
+            pass
+        raise
+
+
+def _log_pool_reconnect_failed(p: ConnectionPool) -> None:
+    """Surface prolonged reconnect failure without crashing the process."""
+    import logging
+
+    logging.getLogger(__name__).error(
+        "Postgres ConnectionPool %r failed to reconnect within reconnect_timeout",
+        getattr(p, "name", p),
+    )
+
+
+pool = ConnectionPool(
     conninfo=_DB_URL,
-    min_size=1,
+    # min_size=0 so max_idle can close *all* idle sockets (max_idle only
+    # shrinks above min_size). A sticky min_size=1 conn survives HITL/LLM
+    # waits and is the classic Supabase SSL EOF victim.
+    min_size=0,
     max_size=5,
+    open=True,
+    timeout=30.0,
+    # Close idle pooled connections before Supabase/PgBouncer drops them
+    # (~5–10 min typical). Default max_idle=600 is too long for cloud proxies.
+    max_idle=180.0,
+    max_lifetime=1800.0,
+    reconnect_timeout=60.0,
+    reconnect_failed=_log_pool_reconnect_failed,
     kwargs={
         "autocommit": True,
         "prepare_threshold": 0,
@@ -151,23 +194,125 @@ _pool = ConnectionPool(
         "keepalives_idle": 30,
         "keepalives_interval": 10,
         "keepalives_count": 5,
+        "connect_timeout": 10,
     },
-    check=ConnectionPool.check_connection,
+    check=_check_pool_connection,
 )
 
-_postgres_saver = PostgresSaver(_pool)
+# With min_size=0, wait() only confirms the pool is open (no pre-warm).
+pool.wait(timeout=30.0)
+
+_postgres_saver = PostgresSaver(pool)
 _postgres_saver.supports_pipeline = False
 _postgres_saver.setup()
 
-_postgres_store = PostgresStore(_pool)
+_postgres_store = PostgresStore(pool)
+_postgres_store.supports_pipeline = False
 _postgres_store.setup()
 
 graph = builder.compile(checkpointer=_postgres_saver, store=_postgres_store)
 
 
-def run_graph() -> dict:
-    initial_state = {
-        "run_id": str(uuid4()),
+def _ensure_pool_healthy() -> None:
+    """Discard broken idle connections before a long graph / checkpoint session."""
+    try:
+        pool.check()
+    except Exception:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "pool.check() raised; continuing — checkout check will replace bad conns",
+            exc_info=True,
+        )
+
+
+def _checkpoint_exists(config) -> bool:
+    """True when PostgresSaver already has state for this thread_id."""
+    snap = graph.get_state(config)
+    if not snap:
+        return False
+    if snap.values:
+        return True
+    if snap.next:
+        return True
+    if snap.tasks:
+        return True
+    return False
+
+
+def _pending_interrupt(config) -> bool:
+    """True when the thread is paused on an interrupt() (e.g. HITL)."""
+    snap = graph.get_state(config)
+    for task in getattr(snap, "tasks", ()) or ():
+        if getattr(task, "interrupts", None):
+            return True
+    return False
+
+
+def _recovery_input(original_input, config):
+    """Choose invoke input for a post-OperationalError retry.
+
+    Mid-run failures must NOT replay the original initial_state — that re-runs
+    completed nodes and duplicates LLM/research work. LangGraph resumes from the
+    last persisted checkpoint with ``invoke(None, config)`` (same contract as
+    ``execute_graph(resume=True)`` / scripts/test_hitl.py).
+
+    If the original call was ``Command(resume=...)`` and the interrupt is still
+    pending (failure before the resume was applied), re-send that Command.
+    Once past the interrupt, recover with ``None``.
+    """
+    from langgraph.types import Command
+
+    if not _checkpoint_exists(config):
+        # Nothing persisted yet — safe to retry the original first-start input.
+        return original_input
+
+    if isinstance(original_input, Command) and _pending_interrupt(config):
+        return original_input
+
+    return None
+
+
+def _invoke_with_stale_conn_retry(invoke_input, config):
+    """Invoke once; on SSL/pool OperationalError refresh pool and resume checkpoint."""
+    _ensure_pool_healthy()
+    try:
+        return graph.invoke(invoke_input, config)
+    except OperationalError:
+        import logging
+
+        recovery_input = _recovery_input(invoke_input, config)
+        logging.getLogger(__name__).warning(
+            "graph.invoke hit OperationalError (likely stale pooled conn); "
+            "refreshing pool and resuming from checkpoint "
+            "(recovery_input=%s, not replaying initial_state)",
+            type(recovery_input).__name__
+            if recovery_input is not None
+            else None,
+            exc_info=True,
+        )
+        _ensure_pool_healthy()
+        return graph.invoke(recovery_input, config)
+
+
+@dataclass(frozen=True)
+class GraphRunResult:
+    """Result of a single graph.invoke, including checkpoint metadata for API status."""
+
+    state: dict
+    checkpoint_next: tuple[str, ...] = ()
+
+
+def build_initial_state(
+    *,
+    run_id: Optional[str] = None,
+    user_id: str = "",
+    thread_id: str = "",
+    run_type: str = "manual",
+) -> dict:
+    """Canonical SignalState initializer shared by CLI, API, and scheduler."""
+    return {
+        "run_id": run_id or str(uuid4()),
         "raw_findings": [],
         "scored_findings": [],
         "new_findings": [],
@@ -187,9 +332,9 @@ def run_graph() -> dict:
         "procedural_memory": {},
         "query_plan": {},
         "user_config": {},
-        "user_id": "",
-        "thread_id": "",
-        "run_type": "manual",
+        "user_id": user_id,
+        "thread_id": thread_id,
+        "run_type": run_type,
         "graph_version": os.getenv("GRAPH_VERSION", "1.0"),
         "hitl_decision": None,
         "hitl_edits": None,
@@ -197,7 +342,59 @@ def run_graph() -> dict:
         "briefing_draft": "",
         "briefing_final": "",
     }
-    return graph.invoke(
-        initial_state,
-        config={"configurable": {"thread_id": "run_001"}},
-    )
+
+
+def execute_graph(
+    *,
+    user_id: Optional[str] = None,
+    run_type: str = "manual",
+    thread_id: Optional[str] = None,
+    run_id: Optional[str] = None,
+    resume: bool = False,
+) -> GraphRunResult:
+    """Canonical pipeline execution entry point."""
+    tid = thread_id or f"run_{uuid4().hex[:12]}"
+    config = {"configurable": {"thread_id": tid}}
+
+    if resume:
+        invoke_input = None
+    else:
+        invoke_input = build_initial_state(
+            run_id=run_id,
+            user_id=user_id or "",
+            thread_id=tid,
+            run_type=run_type,
+        )
+
+    # Discard idle sockets killed by Supabase/PgBouncer before checkpoint I/O.
+    start = time.perf_counter()
+    final_state = _invoke_with_stale_conn_retry(invoke_input, config)
+    elapsed = time.perf_counter() - start
+
+    # Accumulate graph-compute time across HITL pause/resume segments.
+    # run_metrics_writer may have already written with a stale/zero duration;
+    # finalize_run_duration patches agent_run_metrics after the outer timer.
+    from agent.nodes.run_metrics_writer import finalize_run_duration
+
+    prev = float(final_state.get("run_duration_seconds") or 0.0)
+    # On the first segment, state still has 0.0 — use measured elapsed.
+    # On resume, checkpoint holds prior segment time; add this segment.
+    total_duration = elapsed if prev <= 0.0 else prev + elapsed
+
+    try:
+        graph.update_state(config, {"run_duration_seconds": total_duration})
+    except Exception:
+        pass
+
+    finalize_run_duration(final_state.get("run_id"), total_duration)
+    final_state = {**final_state, "run_duration_seconds": total_duration}
+
+    graph_state = graph.get_state(config)
+    checkpoint_next = tuple(graph_state.next or ())
+
+    return GraphRunResult(state=final_state, checkpoint_next=checkpoint_next)
+
+
+def run_graph() -> dict:
+    """CLI / scheduler convenience wrapper — returns final state dict only."""
+    return execute_graph().state

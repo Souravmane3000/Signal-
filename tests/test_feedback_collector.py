@@ -6,7 +6,7 @@ from io import StringIO
 from unittest.mock import patch
 from uuid import uuid4
 
-from agent.graph import _pool
+from agent.graph import pool
 from agent.memory.feedback_store import (
     fetch_all_feedback_for_user,
     insert_feedback,
@@ -20,7 +20,7 @@ def _cleanup_user_feedback(user_key: str = "user_001") -> None:
     if not rows:
         return
     ids = [str(r["id"]) for r in rows]
-    with _pool.connection() as conn:
+    with pool.connection() as conn:
         conn.execute(
             "DELETE FROM user_feedback WHERE id = ANY(%s::uuid[])",
             (ids,),
