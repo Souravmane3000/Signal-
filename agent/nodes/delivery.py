@@ -6,6 +6,7 @@ Episodic memory is already written before this node executes.
 
 from __future__ import annotations
 
+import logging
 import smtplib
 import time
 from datetime import datetime
@@ -15,6 +16,8 @@ from dotenv import load_dotenv
 import os
 
 from agent.state import ErrorCode, SignalState
+
+logger = logging.getLogger(__name__)
 
 _SMTP_HOST = "smtp.gmail.com"
 _SMTP_PORT = 465
@@ -75,6 +78,17 @@ def _is_auth_failure(exc: BaseException) -> bool:
 
 def delivery(state: SignalState) -> dict:
     """Email briefing_final via Gmail SMTP. Never regenerates content."""
+    # TEMP DEBUG SIG-024C — before Gmail env / SMTP work
+    load_dotenv()
+    logger.warning(
+        "[SIG-024C DEBUG] BEFORE delivery state.keys=%s delivery_status=%s "
+        "GMAIL_ADDRESS_present=%s GMAIL_APP_PASSWORD_present=%s pid=%s",
+        sorted(state.keys()) if hasattr(state, "keys") else type(state),
+        state.get("delivery_status"),
+        bool((os.getenv("GMAIL_ADDRESS") or "").strip()),
+        bool((os.getenv("GMAIL_APP_PASSWORD") or "").strip()),
+        os.getpid(),
+    )
     sender, password = _require_gmail_env()
 
     try:

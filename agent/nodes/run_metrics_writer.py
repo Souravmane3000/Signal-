@@ -7,10 +7,14 @@ Does not modify SignalState. Does not call an LLM. Does not write memory.
 from __future__ import annotations
 
 import json
+import logging
+import os
 import uuid
 from typing import Any
 
 from agent.state import SignalState
+
+logger = logging.getLogger(__name__)
 
 # Dev fallback when state.user_id is still the Phase-1 string (e.g. "user_001")
 # before FastAPI/auth wires real auth.users UUIDs into state.
@@ -313,6 +317,12 @@ def finalize_run_duration(run_id: str | None, duration_seconds: float) -> None:
 
 
 def run_metrics_writer(state: SignalState) -> dict:
+    # TEMP DEBUG SIG-024C
+    logger.warning(
+        "[SIG-024C DEBUG] BEFORE run_metrics_writer state.keys=%s pid=%s",
+        sorted(state.keys()) if hasattr(state, "keys") else type(state),
+        os.getpid(),
+    )
     metrics = _build_metrics(state)
     source_health = metrics["source_health"]
 

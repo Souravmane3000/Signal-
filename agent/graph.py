@@ -295,6 +295,31 @@ def _invoke_with_stale_conn_retry(invoke_input, config):
         return graph.invoke(recovery_input, config)
 
 
+def _get_state_with_stale_conn_retry(config):
+    """Best-effort get_state using the same pool refresh + OperationalError retry as invoke.
+
+    Diagnostics only: returns None instead of raising so callers never fail the request.
+    """
+    _ensure_pool_healthy()
+    try:
+        return graph.get_state(config)
+    except OperationalError:
+        import logging
+
+        logging.getLogger(__name__).warning(
+            "graph.get_state hit OperationalError (likely stale pooled conn); "
+            "refreshing pool and retrying get_state",
+            exc_info=True,
+        )
+        _ensure_pool_healthy()
+        try:
+            return graph.get_state(config)
+        except Exception:
+            return None
+    except Exception:
+        return None
+
+
 @dataclass(frozen=True)
 class GraphRunResult:
     """Result of a single graph.invoke, including checkpoint metadata for API status."""

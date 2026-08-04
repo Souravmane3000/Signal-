@@ -1,6 +1,10 @@
+import logging
+import os
 from datetime import datetime, timezone
 
 from agent.state import SignalState
+
+logger = logging.getLogger(__name__)
 
 
 def _get_postgres_store():
@@ -13,6 +17,12 @@ def _get_postgres_store():
 
 
 def episodic_memory_writer(state: SignalState) -> dict:
+    # TEMP DEBUG SIG-024C
+    logger.warning(
+        "[SIG-024C DEBUG] BEFORE episodic_memory_writer state.keys=%s pid=%s",
+        sorted(state.keys()) if hasattr(state, "keys") else type(state),
+        os.getpid(),
+    )
     new_findings = state["new_findings"]
     run_id = state.get("run_id", "")
     thread_id = state.get("thread_id", "")

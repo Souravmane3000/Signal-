@@ -30,6 +30,33 @@ class BriefingItemSchema(BaseModel):
     category: str
     confidence_score: float
     entities: dict[str, Any]
+    feedback: Optional[Literal["useful", "not_relevant"]] = None
+    feedback_reason: Optional[str] = None
+    feedback_at: Optional[str] = None
+
+
+class FeedbackRequest(BaseModel):
+    """POST /items/{id}/feedback body (PRD §19)."""
+
+    feedback: Literal["useful", "not_relevant"]
+    reason: Optional[
+        Literal[
+            "already_knew",
+            "wrong_stage",
+            "wrong_sector",
+            "too_generic",
+            "great_find",
+        ]
+    ] = None
+
+
+class FeedbackResponse(BaseModel):
+    id: str
+    briefing_item_id: str
+    feedback: Literal["useful", "not_relevant"]
+    reason: Optional[str] = None
+    created_at: str
+    duplicate: bool = False
 
 
 class BriefingResponse(BaseModel):

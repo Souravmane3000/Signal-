@@ -11,7 +11,12 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, HTTPException, Query
 from langgraph.types import Command
 
-from agent.graph import _invoke_with_stale_conn_retry, execute_graph, graph, pool
+from agent.graph import (
+    _invoke_with_stale_conn_retry,
+    execute_graph,
+    graph,
+    pool,
+)
 from agent.nodes.run_metrics_writer import finalize_run_duration
 from api.schemas import (
     AgentStatusResponse,
@@ -19,6 +24,8 @@ from api.schemas import (
     BriefingListEntry,
     BriefingListResponse,
     BriefingResponse,
+    FeedbackRequest,
+    FeedbackResponse,
     HealthResponse,
     RunRequest,
     RunResponse,
@@ -71,6 +78,15 @@ def _is_pending_hitl(graph_state: Any) -> bool:
     return False
 
 
+def _feedback_at_str(value: Any) -> Optional[str]:
+    if value is None:
+        return None
+    if hasattr(value, "isoformat"):
+        return value.isoformat()
+    text = str(value).strip()
+    return text or None
+
+
 def _briefing_items_from_state(raw_items: Any) -> list[BriefingItemSchema]:
     items: list[BriefingItemSchema] = []
     for item in raw_items or []:
@@ -79,6 +95,8 @@ def _briefing_items_from_state(raw_items: Any) -> list[BriefingItemSchema]:
         entities = item.get("entities")
         if not isinstance(entities, dict):
             entities = {}
+        fb = item.get("feedback")
+        feedback_val = fb if fb in ("useful", "not_relevant") else None
         items.append(
             BriefingItemSchema(
                 id=str(item.get("id") or ""),
@@ -89,6 +107,9 @@ def _briefing_items_from_state(raw_items: Any) -> list[BriefingItemSchema]:
                 category=str(item.get("category") or ""),
                 confidence_score=float(item.get("confidence_score") or 0.0),
                 entities=entities,
+                feedback=feedback_val,
+                feedback_reason=item.get("feedback_reason"),
+                feedback_at=_feedback_at_str(item.get("feedback_at")),
             )
         )
     return items
@@ -187,7 +208,8 @@ def _briefing_from_db(run_id: str) -> BriefingResponse:
             cur.execute(
                 """
                 SELECT id, title, summary, source_url, source_name,
-                       category, confidence_score, entities
+                       category, confidence_score, entities,
+                       feedback, feedback_reason, feedback_at
                 FROM briefing_items
                 WHERE briefing_run_id = %s
                 """,
@@ -195,19 +217,29 @@ def _briefing_from_db(run_id: str) -> BriefingResponse:
             )
             item_rows = cur.fetchall()
 
-            items = [
-                BriefingItemSchema(
-                    id=str(row["id"]),
-                    title=row["title"] or "",
-                    summary=row["summary"] or "",
-                    source_url=row["source_url"] or "",
-                    source_name=row["source_name"] or "",
-                    category=row["category"] or "",
-                    confidence_score=float(row["confidence_score"] or 0.0),
-                    entities=row["entities"] if isinstance(row["entities"], dict) else {},
+            items = []
+            for row in item_rows:
+                fb = row.get("feedback")
+                feedback_val = fb if fb in ("useful", "not_relevant") else None
+                items.append(
+                    BriefingItemSchema(
+                        id=str(row["id"]),
+                        title=row["title"] or "",
+                        summary=row["summary"] or "",
+                        source_url=row["source_url"] or "",
+                        source_name=row["source_name"] or "",
+                        category=row["category"] or "",
+                        confidence_score=float(row["confidence_score"] or 0.0),
+                        entities=(
+                            row["entities"]
+                            if isinstance(row["entities"], dict)
+                            else {}
+                        ),
+                        feedback=feedback_val,
+                        feedback_reason=row.get("feedback_reason"),
+                        feedback_at=_feedback_at_str(row.get("feedback_at")),
+                    )
                 )
-                for row in item_rows
-            ]
 
             cur.execute(
                 """
@@ -384,6 +416,121 @@ def get_briefing(
     except Exception as exc:
         logger.exception("Failed to get briefing detail")
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.post("/items/{item_id}/feedback", response_model=FeedbackResponse)
+def submit_item_feedback(
+    item_id: str, body: FeedbackRequest
+) -> FeedbackResponse:
+    """Persist feedback atomically into user_feedback + briefing_items."""
+    item_uuid = _as_uuid_or_none(item_id)
+    if item_uuid is None:
+        raise HTTPException(status_code=404, detail="Briefing item not found")
+
+    try:
+        with pool.connection() as conn:
+            try:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        SELECT id, user_id, category, source_name, feedback
+                        FROM briefing_items
+                        WHERE id = %s
+                        """,
+                        (str(item_uuid),),
+                    )
+                    item_row = cur.fetchone()
+                    if not item_row:
+                        raise HTTPException(
+                            status_code=404, detail="Briefing item not found"
+                        )
+
+                    cur.execute(
+                        """
+                        SELECT id
+                        FROM user_feedback
+                        WHERE briefing_item_id = %s
+                        LIMIT 1
+                        """,
+                        (str(item_uuid),),
+                    )
+                    existing = cur.fetchone()
+                    if existing or item_row.get("feedback") in (
+                        "useful",
+                        "not_relevant",
+                    ):
+                        raise HTTPException(
+                            status_code=409,
+                            detail="Already submitted.",
+                        )
+
+                    now = datetime.now(timezone.utc)
+                    cur.execute(
+                        """
+                        INSERT INTO user_feedback (
+                            user_id, briefing_item_id, category, source_name,
+                            feedback, reason
+                        ) VALUES (
+                            %s, %s, %s, %s, %s, %s
+                        )
+                        RETURNING
+                            id, user_id, briefing_item_id, category, source_name,
+                            feedback, reason, created_at
+                        """,
+                        (
+                            str(item_row["user_id"]),
+                            str(item_uuid),
+                            item_row.get("category"),
+                            item_row.get("source_name"),
+                            body.feedback,
+                            body.reason,
+                        ),
+                    )
+                    inserted = cur.fetchone()
+                    if not inserted:
+                        raise RuntimeError("user_feedback insert returned no row")
+
+                    cur.execute(
+                        """
+                        UPDATE briefing_items
+                        SET feedback = %s,
+                            feedback_reason = %s,
+                            feedback_at = %s
+                        WHERE id = %s
+                        """,
+                        (
+                            body.feedback,
+                            body.reason,
+                            now,
+                            str(item_uuid),
+                        ),
+                    )
+
+                conn.commit()
+            except HTTPException:
+                conn.rollback()
+                raise
+            except Exception:
+                conn.rollback()
+                raise
+
+        created_at = _feedback_at_str(inserted.get("created_at")) or now.isoformat()
+        return FeedbackResponse(
+            id=str(inserted["id"]),
+            briefing_item_id=str(item_uuid),
+            feedback=body.feedback,
+            reason=body.reason,
+            created_at=created_at,
+            duplicate=False,
+        )
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Failed to submit item feedback")
+        raise HTTPException(
+            status_code=500,
+            detail="Couldn't save feedback. Please try again.",
+        )
 
 
 @router.post("/briefings/{run_id}/approve", response_model=RunResponse)

@@ -709,7 +709,7 @@
 
             items.forEach(item => {
                 const itemCard = document.createElement('div');
-                itemCard.className = 'p-3 md:p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm space-y-2';
+                itemCard.className = 'p-3 md:p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm space-y-2 min-w-0 overflow-hidden';
 
                 const header = document.createElement('div');
                 header.className = 'flex justify-between items-start gap-2';
@@ -780,8 +780,318 @@
                 }
 
                 itemCard.appendChild(footer);
+                itemCard.appendChild(buildFeedbackControls(item));
                 elements.detailItemsList.appendChild(itemCard);
             });
+        }
+
+        const FEEDBACK_REASON_OPTIONS = [
+            ['', 'Select a reason'],
+            ['already_knew', 'Already knew this'],
+            ['wrong_stage', 'Wrong funding stage'],
+            ['wrong_sector', 'Wrong sector'],
+            ['too_generic', 'Too generic'],
+            ['great_find', 'Very useful']
+        ];
+
+        function closeAllFeedbackReasonMenus(exceptWrap) {
+            document.querySelectorAll('.feedback-reason-wrap.is-open').forEach(wrap => {
+                if (exceptWrap && wrap === exceptWrap) return;
+                wrap.classList.remove('is-open');
+                const trigger = wrap.querySelector('.feedback-reason-trigger');
+                const menu = wrap.querySelector('.feedback-reason-menu');
+                if (trigger) trigger.setAttribute('aria-expanded', 'false');
+                if (menu) menu.classList.add('hidden');
+            });
+        }
+
+        function buildReasonDropdown(initialValue) {
+            const wrap = document.createElement('div');
+            wrap.className = 'feedback-reason-wrap w-full min-w-0 relative';
+
+            const hidden = document.createElement('input');
+            hidden.type = 'hidden';
+            hidden.className = 'feedback-reason';
+            hidden.value = initialValue || '';
+
+            const trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = 'feedback-reason-trigger w-full max-w-full min-w-0 flex items-center justify-between gap-2 text-left text-[11px] md:text-xs px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-brand-500 disabled:opacity-50 disabled:cursor-not-allowed';
+            trigger.setAttribute('aria-haspopup', 'listbox');
+            trigger.setAttribute('aria-expanded', 'false');
+
+            const triggerLabel = document.createElement('span');
+            triggerLabel.className = 'feedback-reason-trigger-label truncate';
+            const triggerIcon = document.createElement('i');
+            triggerIcon.className = 'ph ph-caret-down text-sm text-slate-400 shrink-0';
+            trigger.appendChild(triggerLabel);
+            trigger.appendChild(triggerIcon);
+
+            const menu = document.createElement('ul');
+            menu.className = 'feedback-reason-menu hidden mt-1 w-full max-w-full min-w-0 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm overflow-hidden';
+            menu.setAttribute('role', 'listbox');
+
+            function labelFor(value) {
+                const match = FEEDBACK_REASON_OPTIONS.find(([v]) => v === value);
+                return match ? match[1] : 'Select a reason';
+            }
+
+            function setValue(value, { close = true } = {}) {
+                const next = value || '';
+                hidden.value = next;
+                triggerLabel.textContent = labelFor(next);
+                menu.querySelectorAll('[role="option"]').forEach(opt => {
+                    const selected = opt.dataset.value === next;
+                    opt.setAttribute('aria-selected', selected ? 'true' : 'false');
+                    opt.classList.toggle('bg-brand-50', selected);
+                    opt.classList.toggle('dark:bg-brand-900/20', selected);
+                    opt.classList.toggle('text-brand-700', selected);
+                    opt.classList.toggle('dark:text-brand-300', selected);
+                });
+                if (close) closeMenu();
+            }
+
+            function openMenu() {
+                if (trigger.disabled) return;
+                closeAllFeedbackReasonMenus(wrap);
+                wrap.classList.add('is-open');
+                menu.classList.remove('hidden');
+                trigger.setAttribute('aria-expanded', 'true');
+            }
+
+            function closeMenu() {
+                wrap.classList.remove('is-open');
+                menu.classList.add('hidden');
+                trigger.setAttribute('aria-expanded', 'false');
+            }
+
+            function toggleMenu() {
+                if (wrap.classList.contains('is-open')) closeMenu();
+                else openMenu();
+            }
+
+            FEEDBACK_REASON_OPTIONS.forEach(([value, label]) => {
+                const option = document.createElement('li');
+                option.setAttribute('role', 'option');
+                option.dataset.value = value;
+                option.tabIndex = -1;
+                option.className = 'feedback-reason-option px-2 py-1.5 text-[11px] md:text-xs text-slate-700 dark:text-slate-200 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors';
+                option.textContent = label;
+                option.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    setValue(value);
+                });
+                menu.appendChild(option);
+            });
+
+            trigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMenu();
+            });
+            trigger.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeMenu();
+                    return;
+                }
+                if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (!wrap.classList.contains('is-open')) openMenu();
+                    const first = menu.querySelector('[role="option"]');
+                    if (first) first.focus();
+                }
+            });
+            menu.addEventListener('keydown', (e) => {
+                const options = [...menu.querySelectorAll('[role="option"]')];
+                const idx = options.indexOf(document.activeElement);
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeMenu();
+                    trigger.focus();
+                    return;
+                }
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    const next = options[Math.min(options.length - 1, idx + 1)] || options[0];
+                    next.focus();
+                    return;
+                }
+                if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    const prev = options[Math.max(0, idx - 1)] || options[0];
+                    prev.focus();
+                    return;
+                }
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    if (document.activeElement && document.activeElement.dataset) {
+                        setValue(document.activeElement.dataset.value || '');
+                        trigger.focus();
+                    }
+                }
+            });
+
+            wrap.appendChild(hidden);
+            wrap.appendChild(trigger);
+            wrap.appendChild(menu);
+            setValue(initialValue || '', { close: true });
+
+            wrap._feedbackReason = {
+                getValue: () => hidden.value || '',
+                setValue,
+                setDisabled: (disabled) => {
+                    trigger.disabled = !!disabled;
+                    if (disabled) closeMenu();
+                },
+                close: closeMenu
+            };
+
+            return wrap;
+        }
+
+        if (!window.__feedbackReasonOutsideCloseBound) {
+            window.__feedbackReasonOutsideCloseBound = true;
+            document.addEventListener('click', () => closeAllFeedbackReasonMenus());
+        }
+
+        function buildFeedbackControls(item) {
+            const wrap = document.createElement('div');
+            wrap.className = 'feedback-controls w-full min-w-0 max-w-full pt-2 mt-1 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-1.5 md:gap-2';
+            wrap.dataset.itemId = item.id || '';
+
+            const status = document.createElement('p');
+            status.className = 'feedback-status text-[10px] md:text-[11px] font-medium text-slate-500 min-h-[1rem]';
+
+            const stack = document.createElement('div');
+            stack.className = 'feedback-stack w-full min-w-0 max-w-full flex flex-col gap-1.5 md:gap-2';
+
+            const reasonLabel = document.createElement('div');
+            reasonLabel.className = 'feedback-reason-label block w-full min-w-0';
+            const reasonCaption = document.createElement('span');
+            reasonCaption.className = 'feedback-reason-caption block text-[10px] uppercase tracking-wider text-slate-400 font-medium mb-1';
+            reasonCaption.textContent = 'Reason (optional)';
+            const reasonDropdown = buildReasonDropdown(item.feedback_reason || '');
+            reasonLabel.appendChild(reasonCaption);
+            reasonLabel.appendChild(reasonDropdown);
+
+            const actions = document.createElement('div');
+            actions.className = 'feedback-actions w-full min-w-0 flex items-center gap-2';
+
+            const usefulBtn = document.createElement('button');
+            usefulBtn.type = 'button';
+            usefulBtn.className = 'feedback-btn feedback-useful flex-1 min-w-0 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px] md:text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-200 dark:hover:border-emerald-800 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+            usefulBtn.textContent = '👍 Useful';
+
+            const notRelevantBtn = document.createElement('button');
+            notRelevantBtn.type = 'button';
+            notRelevantBtn.className = 'feedback-btn feedback-not-relevant flex-1 min-w-0 px-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px] md:text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:border-rose-200 dark:hover:border-rose-800 hover:text-rose-700 dark:hover:text-rose-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+            notRelevantBtn.textContent = '👎 Not Relevant';
+
+            actions.appendChild(usefulBtn);
+            actions.appendChild(notRelevantBtn);
+
+            stack.appendChild(actions);
+            stack.appendChild(reasonLabel);
+            wrap.appendChild(stack);
+            wrap.appendChild(status);
+
+            const reasonApi = reasonDropdown._feedbackReason;
+
+            if (!item.id) {
+                usefulBtn.disabled = true;
+                notRelevantBtn.disabled = true;
+                reasonApi.setDisabled(true);
+                status.textContent = "Couldn't save feedback. Please try again.";
+                return wrap;
+            }
+
+            if (item.feedback === 'useful' || item.feedback === 'not_relevant') {
+                if (item.feedback_reason) reasonApi.setValue(item.feedback_reason);
+                usefulBtn.disabled = true;
+                notRelevantBtn.disabled = true;
+                reasonApi.setDisabled(true);
+                status.className = 'feedback-status text-[10px] md:text-[11px] font-medium text-emerald-600 dark:text-emerald-400 min-h-[1rem]';
+                status.textContent = 'Already submitted.';
+                if (item.feedback === 'useful') {
+                    usefulBtn.classList.add('bg-emerald-50', 'dark:bg-emerald-900/20', 'border-emerald-200', 'dark:border-emerald-800', 'text-emerald-700', 'dark:text-emerald-300');
+                } else {
+                    notRelevantBtn.classList.add('bg-rose-50', 'dark:bg-rose-900/20', 'border-rose-200', 'dark:border-rose-800', 'text-rose-700', 'dark:text-rose-300');
+                }
+                return wrap;
+            }
+
+            usefulBtn.onclick = (e) => {
+                e.stopPropagation();
+                submitItemFeedback(wrap, item, 'useful');
+            };
+            notRelevantBtn.onclick = (e) => {
+                e.stopPropagation();
+                submitItemFeedback(wrap, item, 'not_relevant');
+            };
+
+            return wrap;
+        }
+
+        async function submitItemFeedback(wrap, item, feedbackValue) {
+            const usefulBtn = wrap.querySelector('.feedback-useful');
+            const notRelevantBtn = wrap.querySelector('.feedback-not-relevant');
+            const reasonWrap = wrap.querySelector('.feedback-reason-wrap');
+            const reasonApi = reasonWrap && reasonWrap._feedbackReason;
+            const status = wrap.querySelector('.feedback-status');
+
+            const reason = ((reasonApi && reasonApi.getValue()) || '').trim() || null;
+
+            usefulBtn.disabled = true;
+            notRelevantBtn.disabled = true;
+            if (reasonApi) reasonApi.setDisabled(true);
+            status.className = 'feedback-status text-[10px] md:text-[11px] font-medium text-slate-500 min-h-[1rem]';
+            status.textContent = 'Submitting…';
+
+            try {
+                const payload = { feedback: feedbackValue };
+                if (reason) payload.reason = reason;
+
+                const res = await fetch(`${API_BASE}/items/${encodeURIComponent(item.id)}/feedback`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.status === 409) {
+                    status.className = 'feedback-status text-[10px] md:text-[11px] font-medium text-amber-600 dark:text-amber-400 min-h-[1rem]';
+                    status.textContent = 'Already submitted.';
+                    showToast('Already submitted.', 'info');
+                    item.feedback = feedbackValue;
+                    return;
+                }
+
+                if (!res.ok) {
+                    throw new Error("Couldn't save feedback. Please try again.");
+                }
+
+                let body = null;
+                try { body = await res.json(); } catch (_) { /* non-JSON */ }
+
+                item.feedback = (body && body.feedback) || feedbackValue;
+                item.feedback_reason = (body && body.reason) || reason;
+                item.feedback_at = (body && body.created_at) || new Date().toISOString();
+
+                status.className = 'feedback-status text-[10px] md:text-[11px] font-medium text-emerald-600 dark:text-emerald-400 min-h-[1rem]';
+                status.textContent = 'Feedback submitted successfully.';
+                if (item.feedback === 'useful') {
+                    usefulBtn.classList.add('bg-emerald-50', 'dark:bg-emerald-900/20', 'border-emerald-200', 'dark:border-emerald-800', 'text-emerald-700', 'dark:text-emerald-300');
+                } else {
+                    notRelevantBtn.classList.add('bg-rose-50', 'dark:bg-rose-900/20', 'border-rose-200', 'dark:border-rose-800', 'text-rose-700', 'dark:text-rose-300');
+                }
+                showToast('Feedback submitted successfully.', 'success');
+            } catch (err) {
+                usefulBtn.disabled = false;
+                notRelevantBtn.disabled = false;
+                if (reasonApi) reasonApi.setDisabled(false);
+                status.className = 'feedback-status text-[10px] md:text-[11px] font-medium text-rose-600 dark:text-rose-400 min-h-[1rem]';
+                status.textContent = "Couldn't save feedback. Please try again.";
+                showToast("Couldn't save feedback. Please try again.", 'error');
+            }
         }
 
         async function submitHITL(action) {
@@ -969,6 +1279,51 @@
         }
         .animate-slide-in-right { animation: slide-in-right 0.3s ease-out forwards; }
         .animate-fade-out { animation: fade-out 0.5s ease-out forwards; }
+
+        /* Feedback controls: one cohesive column inside finding cards */
+        #detail-items-list {
+            min-width: 0;
+            max-width: 100%;
+        }
+        .feedback-controls,
+        .feedback-stack,
+        .feedback-actions,
+        .feedback-reason-label,
+        .feedback-reason-wrap,
+        .feedback-reason-trigger,
+        .feedback-reason-menu {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+        .feedback-reason-menu {
+            list-style: none;
+            margin: 0.25rem 0 0;
+            padding: 0;
+        }
+        .feedback-reason-option:focus {
+            outline: none;
+            background: rgba(14, 165, 233, 0.12);
+        }
+
+        /* Mobile-only: tighter vertical rhythm; desktop gaps unchanged via md: utilities */
+        @media (max-width: 767px) {
+            .feedback-controls {
+                gap: 0.375rem;
+                padding-top: 0.5rem;
+                margin-top: 0.25rem;
+            }
+            .feedback-stack {
+                gap: 0.375rem;
+            }
+            .feedback-reason-caption {
+                margin-bottom: 0.25rem;
+            }
+            .feedback-status {
+                min-height: 0.875rem;
+            }
+        }
     </style>
 </body>
 </html>
