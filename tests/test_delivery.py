@@ -38,6 +38,20 @@ def test_subject_includes_signal_weekly_briefing():
     assert msg["Subject"].startswith("Signal Weekly Briefing - ")
 
 
+def _plain_text_payload(parsed) -> str:
+    """Extract plain-text body from simple or multipart MIME message."""
+    if parsed.is_multipart():
+        for part in parsed.walk():
+            if part.get_content_type() == "text/plain":
+                payload = part.get_payload(decode=True)
+                if payload is not None:
+                    return payload.decode("utf-8")
+        raise AssertionError("multipart message missing text/plain part")
+    payload = parsed.get_payload(decode=True)
+    assert payload is not None
+    return payload.decode("utf-8")
+
+
 def test_delivery_success_returns_sent():
     from email import message_from_string
 
@@ -61,8 +75,11 @@ def test_delivery_success_returns_sent():
     assert args[1] == ["recipient@example.com"]
     parsed = message_from_string(args[2])
     assert "Signal Weekly Briefing - " in parsed["Subject"]
-    payload = parsed.get_payload(decode=True).decode("utf-8")
-    assert "Test body" in payload
+    assert "Test body" in _plain_text_payload(parsed)
+    # HTML presentation part present; synthesis content unchanged in plain text.
+    types = {part.get_content_type() for part in parsed.walk()}
+    assert "text/html" in types
+    assert "text/plain" in types
 
 
 def test_delivery_uses_briefing_final_no_llm():
@@ -84,8 +101,7 @@ def test_delivery_uses_briefing_final_no_llm():
 
     assert result["delivery_status"] == "sent"
     parsed = message_from_string(mock_smtp.sendmail.call_args[0][2])
-    payload = parsed.get_payload(decode=True).decode("utf-8")
-    assert body in payload
+    assert body in _plain_text_payload(parsed)
     assert not hasattr(delivery_mod, "OpenAI")
     src = open(delivery_mod.__file__, encoding="utf-8").read()
     assert "openai" not in src.lower()

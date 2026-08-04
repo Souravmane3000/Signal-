@@ -1,32 +1,26 @@
-# CURRENT_PHASE.md
-
 ## Active Slice
-
-Slice 5+ — Config Delivery Email Persistence Fix (SIG-027C)
+Slice 5-Auth — Supabase Auth Flow Completion
 
 ## Active Tasks
-
-- SIG-027C: Persist Delivery Email via aligned GET/PUT UUID path — PENDING VALIDATION
-
-## Blocked Tasks
-
-- None
+- Auth flow (signup/login/JWT/RLS/guards) — PENDING VALIDATION
 
 ## Files In Scope This Slice
-
+- api/main.py
+- api/routes.py (and auth modules as needed)
 - frontend/index.html
-- api/routes.py
-- api/schemas.py
-- tests/test_config_memory_api.py
+- frontend/config.js
+- supabase migrations / RLS policies
+- tests/test_auth*.py (and related)
 
 ## Slice Exit Criteria
-
-- PUT updates or creates user_configs row under auth UUID
-- GET reads same UUID key via pool (not REST user_001)
-- Defaults only when no row exists
-- Frontend reloads config from GET after save
-- Persistence tests pass
+- Signup → JWT → Onboarding (first-time) / Dashboard (returning)
+- JWT in memory only; Bearer on all protected calls
+- FastAPI JWT middleware; 401 without valid token
+- RLS audited on all custom tables
+- Auth + RLS tests pass
 
 ## Last Updated
-
 2026-08-04
+
+## Blocker / Human Action Required
+- Add `SUPABASE_JWT_SECRET` to `.env` (Supabase Dashboard → Project Settings → API → JWT Secret). Without it, protected routes fail closed (500), never open.

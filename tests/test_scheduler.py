@@ -8,6 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
+from tests.conftest import attach_default_auth
 
 from agent.graph import GraphRunResult
 from api import scheduler as sched
@@ -138,6 +139,7 @@ def test_manual_post_run_still_works_with_scheduler_lifecycle():
             checkpoint_next=(),
         )
         with TestClient(app) as client:
+            attach_default_auth(client)
             # Lifespan starts scheduler (enabled in this module via fixture)
             assert is_running() or not sched.scheduler_enabled()
             response = client.post("/run", json={"run_type": "manual"})

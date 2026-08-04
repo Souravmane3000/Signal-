@@ -14,6 +14,172 @@
         .dark .glass { background: rgba(15, 23, 42, 0.7); }
         .status-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+
+        /* Briefing Detail — executive report */
+        .briefing-report { max-width: 42rem; }
+        .briefing-report-title {
+            font-size: 1.5rem;
+            line-height: 1.25;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            margin: 0 0 1.25rem;
+        }
+        @media (min-width: 768px) {
+            .briefing-report-title { font-size: 1.875rem; }
+        }
+        .briefing-section {
+            border: 1px solid rgb(226 232 240);
+            border-radius: 0.75rem;
+            background: #fff;
+            padding: 1.25rem 1.25rem 1.35rem;
+            margin-bottom: 1rem;
+        }
+        .dark .briefing-section {
+            border-color: rgb(30 41 59);
+            background: rgb(15 23 42);
+        }
+        @media (min-width: 768px) {
+            .briefing-section { padding: 1.5rem 1.75rem 1.65rem; margin-bottom: 1.25rem; }
+        }
+        .briefing-section-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin: 0 0 0.85rem;
+            color: rgb(15 23 42);
+        }
+        .dark .briefing-section-title { color: rgb(248 250 252); }
+        .briefing-summary-body {
+            font-size: 0.975rem;
+            line-height: 1.7;
+            color: rgb(51 65 85);
+            max-width: 38rem;
+        }
+        .dark .briefing-summary-body { color: rgb(203 213 225); }
+        .briefing-summary-body p { margin: 0 0 0.75rem; }
+        .briefing-summary-body p:last-child { margin-bottom: 0; }
+        .funding-card {
+            border-top: 1px solid rgb(241 245 249);
+            padding: 1rem 0 0.15rem;
+        }
+        .funding-card:first-of-type { border-top: 0; padding-top: 0; }
+        .dark .funding-card { border-top-color: rgb(30 41 59); }
+        .funding-company {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -0.015em;
+            color: rgb(15 23 42);
+            margin: 0 0 0.35rem;
+            word-break: break-word;
+        }
+        .dark .funding-company { color: rgb(248 250 252); }
+        .funding-amount {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: rgb(2 132 199);
+            margin: 0 0 0.45rem;
+        }
+        .dark .funding-amount { color: rgb(56 189 248); }
+        .funding-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem 0.75rem;
+            align-items: center;
+            margin-bottom: 0.55rem;
+        }
+        .funding-stage {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: rgb(71 85 105);
+        }
+        .dark .funding-stage { color: rgb(148 163 184); }
+        .briefing-source {
+            font-size: 0.7rem;
+            color: rgb(100 116 139);
+        }
+        .dark .briefing-source { color: rgb(148 163 184); }
+        .briefing-source a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+        .confidence-badge {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            padding: 0.15rem 0.45rem;
+            border-radius: 9999px;
+            background: rgb(241 245 249);
+            color: rgb(71 85 105);
+        }
+        .dark .confidence-badge {
+            background: rgb(30 41 59);
+            color: rgb(203 213 225);
+        }
+        .confidence-badge.is-high {
+            background: rgb(236 253 245);
+            color: rgb(4 120 87);
+        }
+        .dark .confidence-badge.is-high {
+            background: rgba(6, 78, 59, 0.35);
+            color: rgb(110 231 183);
+        }
+        .funding-summary {
+            font-size: 0.875rem;
+            line-height: 1.55;
+            color: rgb(71 85 105);
+            margin: 0;
+        }
+        .dark .funding-summary { color: rgb(148 163 184); }
+        .ecosystem-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .ecosystem-list li {
+            position: relative;
+            padding: 0.7rem 0 0.7rem 1rem;
+            border-bottom: 1px solid rgb(241 245 249);
+            font-size: 0.9rem;
+            line-height: 1.55;
+            color: rgb(51 65 85);
+        }
+        .ecosystem-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+        .ecosystem-list li:first-child { padding-top: 0; }
+        .dark .ecosystem-list li {
+            border-bottom-color: rgb(30 41 59);
+            color: rgb(203 213 225);
+        }
+        .ecosystem-list li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 1.15rem;
+            width: 0.35rem;
+            height: 0.35rem;
+            border-radius: 9999px;
+            background: rgb(14 165 233);
+        }
+        .ecosystem-list li:first-child::before { top: 0.45rem; }
+        .trend-card {
+            border-left: 2px solid rgb(14 165 233);
+            padding: 0.65rem 0 0.65rem 0.9rem;
+            margin-bottom: 0.65rem;
+        }
+        .trend-card:last-child { margin-bottom: 0; }
+        .trend-card p {
+            margin: 0;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: rgb(51 65 85);
+        }
+        .dark .trend-card p { color: rgb(203 213 225); }
+        .briefing-fallback.prose { max-width: 42rem; }
+        @media (max-width: 374px) {
+            .briefing-section { padding: 1rem; }
+            .funding-company { font-size: 0.95rem; }
+            .funding-amount { font-size: 0.95rem; }
+        }
     </style>
     <script>
         tailwind.config = {
@@ -35,8 +201,123 @@
     </script>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300">
-    <!-- App Container -->
-    <div id="app" class="flex h-screen overflow-hidden relative">
+    <!-- Auth Screen (public) -->
+    <div id="auth-screen" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 via-sky-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        <div class="w-full max-w-md">
+            <div class="flex flex-col items-center mb-8">
+                <div class="w-12 h-12 bg-brand-600 rounded-xl flex items-center justify-center mb-4 shadow-lg shadow-brand-600/20">
+                    <i class="ph-fill ph-broadcast text-white text-2xl"></i>
+                </div>
+                <h1 class="text-3xl font-bold tracking-tight">Signal</h1>
+                <p class="text-slate-500 text-sm mt-2 text-center">Indian startup intelligence, delivered weekly</p>
+            </div>
+
+            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl shadow-slate-200/50 dark:shadow-none">
+                <div class="flex rounded-lg bg-slate-100 dark:bg-slate-800 p-1 mb-6">
+                    <button type="button" id="auth-tab-login" onclick="setAuthMode('login')" class="flex-1 py-2 text-sm font-semibold rounded-md bg-white dark:bg-slate-900 text-brand-600 shadow-sm">Login</button>
+                    <button type="button" id="auth-tab-signup" onclick="setAuthMode('signup')" class="flex-1 py-2 text-sm font-semibold rounded-md text-slate-500">Sign up</button>
+                </div>
+
+                <form id="auth-form" class="space-y-4" onsubmit="submitAuth(event)">
+                    <div>
+                        <label for="auth-email" class="block text-xs font-medium uppercase tracking-wider text-slate-500 mb-1.5">Email</label>
+                        <input id="auth-email" type="email" autocomplete="email" required
+                            class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                            placeholder="you@example.com" />
+                    </div>
+                    <div>
+                        <label for="auth-password" class="block text-xs font-medium uppercase tracking-wider text-slate-500 mb-1.5">Password</label>
+                        <div class="relative">
+                            <input id="auth-password" type="password" autocomplete="current-password" required minlength="6"
+                                class="w-full px-3 py-2.5 pr-11 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                                placeholder="••••••••" />
+                            <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 px-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200" aria-label="Toggle password visibility">
+                                <i id="auth-password-toggle-icon" class="ph ph-eye text-xl"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="auth-error" class="hidden rounded-lg border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-900/20 px-3 py-2 text-sm text-rose-600 dark:text-rose-300"></div>
+
+                    <button id="auth-submit" type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                        <span id="auth-submit-label">Log in</span>
+                        <span id="auth-submit-spinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    </button>
+                </form>
+
+                <p class="mt-4 text-center text-xs text-slate-400">
+                    <button type="button" class="underline underline-offset-2 cursor-not-allowed opacity-60" disabled title="Password reset is not available yet">Forgot password?</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Onboarding Screen (first-time users) -->
+    <div id="onboarding-screen" class="hidden min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 via-sky-50 to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        <div class="w-full max-w-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center">
+                    <i class="ph-fill ph-broadcast text-white text-xl"></i>
+                </div>
+                <div>
+                    <h2 class="text-xl font-bold tracking-tight">Welcome to Signal</h2>
+                    <p class="text-slate-500 text-sm">Set your briefing preferences to continue</p>
+                </div>
+            </div>
+
+            <form id="onboarding-form" class="space-y-5" onsubmit="submitOnboarding(event)">
+                <div>
+                    <label for="onboard-email" class="block text-xs font-medium uppercase tracking-wider text-slate-500 mb-1.5">Delivery email</label>
+                    <input id="onboard-email" type="email" required
+                        class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        placeholder="you@example.com" />
+                </div>
+                <div>
+                    <label for="onboard-keywords" class="block text-xs font-medium uppercase tracking-wider text-slate-500 mb-1.5">Keywords</label>
+                    <input id="onboard-keywords" type="text"
+                        class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                        placeholder="Indian startup, Series A, AI" value="Indian startup" />
+                    <p class="text-[11px] text-slate-400 mt-1">Comma-separated</p>
+                </div>
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wider text-slate-500 mb-2">Verticals</p>
+                    <div id="onboard-verticals" class="flex flex-wrap gap-2">
+                        <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm cursor-pointer"><input type="checkbox" value="AI" checked class="rounded border-slate-300 text-brand-600 focus:ring-brand-500" /> AI</label>
+                        <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm cursor-pointer"><input type="checkbox" value="fintech" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500" /> fintech</label>
+                        <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm cursor-pointer"><input type="checkbox" value="healthtech" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500" /> healthtech</label>
+                        <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm cursor-pointer"><input type="checkbox" value="B2B SaaS" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500" /> B2B SaaS</label>
+                        <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm cursor-pointer"><input type="checkbox" value="climate" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500" /> climate</label>
+                        <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm cursor-pointer"><input type="checkbox" value="edtech" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500" /> edtech</label>
+                    </div>
+                </div>
+                <div>
+                    <p class="text-xs font-medium uppercase tracking-wider text-slate-500 mb-2">Stage filter</p>
+                    <div id="onboard-stages" class="flex flex-wrap gap-2">
+                        <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm cursor-pointer"><input type="checkbox" value="Seed" checked class="rounded border-slate-300 text-brand-600 focus:ring-brand-500" /> Seed</label>
+                        <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm cursor-pointer"><input type="checkbox" value="Series A" checked class="rounded border-slate-300 text-brand-600 focus:ring-brand-500" /> Series A</label>
+                        <label class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-sm cursor-pointer"><input type="checkbox" value="Series B" class="rounded border-slate-300 text-brand-600 focus:ring-brand-500" /> Series B</label>
+                    </div>
+                </div>
+                <div>
+                    <label for="onboard-schedule" class="block text-xs font-medium uppercase tracking-wider text-slate-500 mb-1.5">Schedule</label>
+                    <select id="onboard-schedule" class="w-full px-3 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <option value="weekly" selected>Weekly</option>
+                        <option value="daily">Daily</option>
+                    </select>
+                </div>
+
+                <div id="onboarding-error" class="hidden rounded-lg border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-900/20 px-3 py-2 text-sm text-rose-600 dark:text-rose-300"></div>
+
+                <button id="onboarding-submit" type="submit" class="w-full bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                    <span>Continue to dashboard</span>
+                    <span id="onboarding-spinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- App Container (protected) -->
+    <div id="app" class="hidden flex h-screen overflow-hidden relative">
         
         <!-- Mobile Sidebar Overlay -->
         <div id="sidebar-overlay" onclick="toggleSidebar(false)" class="fixed inset-0 bg-slate-950/50 z-20 hidden lg:hidden"></div>
@@ -78,10 +359,14 @@
                 </button>
             </nav>
             
-            <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+            <div class="p-4 border-t border-slate-200 dark:border-slate-800 space-y-1">
                 <button onclick="toggleDarkMode()" class="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-all">
                     <i id="dark-mode-icon" class="ph ph-moon text-xl"></i>
                     <span id="dark-mode-text" class="font-medium">Dark Mode</span>
+                </button>
+                <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-900/20 text-rose-600 dark:text-rose-400 transition-all">
+                    <i class="ph ph-sign-out text-xl"></i>
+                    <span class="font-medium">Logout</span>
                 </button>
             </div>
         </aside>
@@ -192,7 +477,7 @@
                 <!-- Briefing Detail View (Final) -->
                 <div id="view-briefing-detail" class="view hidden space-y-6 md:space-y-8">
                     <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                        <div>
+                        <div class="min-w-0">
                             <button onclick="setView('briefings')" class="text-slate-500 hover:text-brand-600 flex items-center gap-2 mb-2 transition-colors text-sm">
                                 <i class="ph ph-arrow-left"></i>
                                 <span>Back to Briefings</span>
@@ -208,13 +493,10 @@
                     </div>
 
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-                        <div class="lg:col-span-2 space-y-4 md:space-y-6">
-                            <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 md:p-8 prose prose-sm md:prose-base dark:prose-invert max-w-none shadow-sm">
-                                <h3 class="mt-0">Final Briefing</h3>
-                                <div id="detail-briefing-text"></div>
-                            </div>
+                        <div class="lg:col-span-2 min-w-0">
+                            <div id="detail-briefing-text" class="briefing-report"></div>
                         </div>
-                        <div class="space-y-4 md:space-y-6">
+                        <div class="space-y-4 md:space-y-6 min-w-0">
                             <h3 class="text-lg font-bold">Findings (<span id="detail-item-count">0</span>)</h3>
                             <div id="detail-items-list" class="space-y-4">
                                 <!-- Finding cards -->
@@ -412,6 +694,11 @@
     <script>
         // Configuration
         const API_BASE = window.API_BASE_URL || 'http://localhost:8000';
+
+        // JWT lives in memory only (PRD §20) — never localStorage / sessionStorage / cookies.
+        let accessToken = null;
+        let authUser = null;
+        let authMode = 'login';
         
         // UI State
         let state = {
@@ -428,7 +715,9 @@
             memoryTab: 'semantic',
             editingDeliveryEmail: false,
             pendingBriefing: null,
-            isDarkMode: false
+            isDarkMode: false,
+            authReady: false,
+            needsOnboarding: false
         };
 
         // DOM Elements
@@ -480,19 +769,273 @@
             detailItemCount: document.getElementById('detail-item-count')
         };
 
-        // Initialize
-        async function init() {
-            // Check system dark mode
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-                toggleDarkMode(true);
+        function showAuthScreen() {
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('onboarding-screen').classList.add('hidden');
+            document.getElementById('app').classList.add('hidden');
+        }
+
+        function showOnboardingScreen() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('onboarding-screen').classList.remove('hidden');
+            document.getElementById('app').classList.add('hidden');
+            const emailInput = document.getElementById('onboard-email');
+            if (emailInput && authUser && authUser.email) {
+                emailInput.value = authUser.email;
             }
-            
+        }
+
+        function showAppShell() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('onboarding-screen').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
+        }
+
+        function setAuthMode(mode) {
+            authMode = mode === 'signup' ? 'signup' : 'login';
+            const loginTab = document.getElementById('auth-tab-login');
+            const signupTab = document.getElementById('auth-tab-signup');
+            const label = document.getElementById('auth-submit-label');
+            const pwd = document.getElementById('auth-password');
+            if (authMode === 'signup') {
+                loginTab.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-slate-500';
+                signupTab.className = 'flex-1 py-2 text-sm font-semibold rounded-md bg-white dark:bg-slate-900 text-brand-600 shadow-sm';
+                label.textContent = 'Create account';
+                if (pwd) pwd.autocomplete = 'new-password';
+            } else {
+                signupTab.className = 'flex-1 py-2 text-sm font-semibold rounded-md text-slate-500';
+                loginTab.className = 'flex-1 py-2 text-sm font-semibold rounded-md bg-white dark:bg-slate-900 text-brand-600 shadow-sm';
+                label.textContent = 'Log in';
+                if (pwd) pwd.autocomplete = 'current-password';
+            }
+            setAuthError('');
+        }
+
+        function setAuthError(message) {
+            const el = document.getElementById('auth-error');
+            if (!el) return;
+            if (!message) {
+                el.classList.add('hidden');
+                el.textContent = '';
+                return;
+            }
+            el.textContent = message;
+            el.classList.remove('hidden');
+        }
+
+        function togglePasswordVisibility() {
+            const input = document.getElementById('auth-password');
+            const icon = document.getElementById('auth-password-toggle-icon');
+            if (!input) return;
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            if (icon) {
+                icon.className = show ? 'ph ph-eye-slash text-xl' : 'ph ph-eye text-xl';
+            }
+        }
+
+        function setAuthLoading(loading) {
+            const btn = document.getElementById('auth-submit');
+            const spinner = document.getElementById('auth-submit-spinner');
+            if (btn) btn.disabled = !!loading;
+            if (spinner) spinner.classList.toggle('hidden', !loading);
+        }
+
+        async function apiFetch(path, options = {}) {
+            const headers = Object.assign(
+                { 'Content-Type': 'application/json' },
+                options.headers || {}
+            );
+            if (accessToken) {
+                headers['Authorization'] = `Bearer ${accessToken}`;
+            }
+            let res;
+            try {
+                res = await fetch(`${API_BASE}${path}`, { ...options, headers });
+            } catch (err) {
+                const error = new Error('Network error. Check your connection and try again.');
+                error.cause = err;
+                error.network = true;
+                throw error;
+            }
+            if (res.status === 401) {
+                accessToken = null;
+                authUser = null;
+                showAuthScreen();
+                const error = new Error('Session expired. Please log in again.');
+                error.status = 401;
+                throw error;
+            }
+            return res;
+        }
+
+        async function routeAfterAuth(needsOnboardingHint) {
+            // Detect first-time users via existing configuration row (from_defaults / missing).
+            let needsOnboarding = !!needsOnboardingHint;
+            try {
+                const res = await apiFetch('/config');
+                if (res.ok) {
+                    const cfg = await res.json();
+                    state.userConfig = cfg;
+                    needsOnboarding = cfg.from_defaults === true;
+                }
+            } catch (_) {
+                // Keep signup hint if config probe fails.
+            }
+            state.needsOnboarding = needsOnboarding;
+            if (needsOnboarding) {
+                showOnboardingScreen();
+                return;
+            }
+            await enterAuthenticatedApp();
+        }
+
+        async function enterAuthenticatedApp() {
+            showAppShell();
+            state.authReady = true;
             updateNav();
             await pollStatus();
             await refreshDashboard();
-            
-            // Start periodic polling
-            setInterval(pollStatus, 5000);
+            if (!window._signalStatusPoll) {
+                window._signalStatusPoll = setInterval(pollStatus, 5000);
+            }
+        }
+
+        async function submitAuth(event) {
+            event.preventDefault();
+            setAuthError('');
+            const email = (document.getElementById('auth-email').value || '').trim();
+            const password = document.getElementById('auth-password').value || '';
+            if (!email || !email.includes('@')) {
+                setAuthError('Enter a valid email address.');
+                return;
+            }
+            if (!password || password.length < 6) {
+                setAuthError('Password must be at least 6 characters.');
+                return;
+            }
+            setAuthLoading(true);
+            const path = authMode === 'signup' ? '/auth/signup' : '/auth/login';
+            try {
+                const res = await fetch(`${API_BASE}${path}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password }),
+                });
+                let body = {};
+                try { body = await res.json(); } catch (_) {}
+                if (!res.ok) {
+                    const detail = body && body.detail ? String(body.detail) : '';
+                    if (res.status === 401) {
+                        setAuthError('Invalid email or password.');
+                    } else if (res.status >= 500) {
+                        setAuthError(detail || 'Auth service unavailable. Please try again.');
+                    } else {
+                        setAuthError(detail || (authMode === 'signup' ? 'Signup failed.' : 'Login failed.'));
+                    }
+                    return;
+                }
+                accessToken = body.access_token || null;
+                authUser = body.user || { id: null, email };
+                if (!accessToken) {
+                    setAuthError('No session token returned. Please try again.');
+                    return;
+                }
+                await routeAfterAuth(body.needs_onboarding === true);
+            } catch (err) {
+                setAuthError(err.network ? err.message : 'Network error. Check your connection and try again.');
+            } finally {
+                setAuthLoading(false);
+            }
+        }
+
+        async function submitOnboarding(event) {
+            event.preventDefault();
+            const errEl = document.getElementById('onboarding-error');
+            const spinner = document.getElementById('onboarding-spinner');
+            const btn = document.getElementById('onboarding-submit');
+            if (errEl) { errEl.classList.add('hidden'); errEl.textContent = ''; }
+            const delivery_email = (document.getElementById('onboard-email').value || '').trim();
+            const keywords = (document.getElementById('onboard-keywords').value || '')
+                .split(',')
+                .map(s => s.trim())
+                .filter(Boolean);
+            const verticals = Array.from(document.querySelectorAll('#onboard-verticals input:checked')).map(el => el.value);
+            const stage_filter = Array.from(document.querySelectorAll('#onboard-stages input:checked')).map(el => el.value);
+            const schedule_freq = document.getElementById('onboard-schedule').value || 'weekly';
+            if (!delivery_email || !delivery_email.includes('@')) {
+                if (errEl) {
+                    errEl.textContent = 'Enter a valid delivery email.';
+                    errEl.classList.remove('hidden');
+                }
+                return;
+            }
+            if (btn) btn.disabled = true;
+            if (spinner) spinner.classList.remove('hidden');
+            try {
+                const res = await apiFetch('/config', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        delivery_email,
+                        keywords: keywords.length ? keywords : ['Indian startup'],
+                        verticals: verticals.length ? verticals : ['AI'],
+                        stage_filter: stage_filter.length ? stage_filter : ['Seed'],
+                        schedule_freq,
+                    }),
+                });
+                if (!res.ok) {
+                    let detail = 'Could not save configuration.';
+                    try {
+                        const body = await res.json();
+                        if (body && body.detail) detail = String(body.detail);
+                    } catch (_) {}
+                    throw new Error(detail);
+                }
+                state.userConfig = await res.json();
+                state.needsOnboarding = false;
+                await enterAuthenticatedApp();
+                showToast('Configuration saved', 'success');
+            } catch (err) {
+                if (errEl) {
+                    errEl.textContent = err.message || 'Could not save configuration.';
+                    errEl.classList.remove('hidden');
+                }
+            } finally {
+                if (btn) btn.disabled = false;
+                if (spinner) spinner.classList.add('hidden');
+            }
+        }
+
+        function logout() {
+            accessToken = null;
+            authUser = null;
+            state.authReady = false;
+            state.needsOnboarding = false;
+            state.userConfig = null;
+            state.lastRun = null;
+            state.briefings = [];
+            state.pendingBriefing = null;
+            if (window._signalStatusPoll) {
+                clearInterval(window._signalStatusPoll);
+                window._signalStatusPoll = null;
+            }
+            showAuthScreen();
+            setAuthMode('login');
+            showToast('Logged out', 'info');
+        }
+
+        // Initialize — JWT is memory-only, so reload always requires login again.
+        async function init() {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                toggleDarkMode(true);
+            }
+            // Auth guard: no in-memory token after reload → login.
+            if (!accessToken) {
+                showAuthScreen();
+                setAuthMode('login');
+                return;
+            }
+            await routeAfterAuth(false);
         }
 
         // View Management
@@ -584,7 +1127,7 @@
             }
             
             try {
-                const res = await fetch(`${API_BASE}/agent/status?thread_id=${state.activeThreadId}`);
+                const res = await apiFetch(`/agent/status?thread_id=${state.activeThreadId}`);
                 if (!res.ok) throw new Error('Status endpoint unavailable');
                 
                 const data = await res.json();
@@ -606,7 +1149,7 @@
 
         async function fetchLatestBriefingForThread(threadId) {
             try {
-                const res = await fetch(`${API_BASE}/briefings?limit=1`);
+                const res = await apiFetch(`/briefings?limit=1`);
                 if (!res.ok) return;
                 const data = await res.json();
                 if (data.briefings.length > 0 && data.briefings[0].thread_id === threadId && data.briefings[0].status === 'pending_hitl') {
@@ -645,7 +1188,7 @@
             updateStatus('running');
             
             try {
-                const res = await fetch(`${API_BASE}/run`, {
+                const res = await apiFetch(`/run`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({})
@@ -682,7 +1225,7 @@
             elements.briefingsList.innerHTML = '';
             
             try {
-                const res = await fetch(`${API_BASE}/briefings`);
+                const res = await apiFetch(`/briefings`);
                 if (!res.ok) throw new Error('Failed to fetch briefings');
                 
                 const data = await res.json();
@@ -706,7 +1249,7 @@
             elements.metricsList.innerHTML = '';
 
             try {
-                const res = await fetch(`${API_BASE}/metrics/runs?limit=5`);
+                const res = await apiFetch(`/metrics/runs?limit=5`);
                 if (!res.ok) throw new Error('Failed to fetch metrics');
 
                 const data = await res.json();
@@ -731,7 +1274,7 @@
             elements.configContent.classList.add('hidden');
 
             try {
-                const res = await fetch(`${API_BASE}/config`);
+                const res = await apiFetch(`/config`);
                 if (!res.ok) throw new Error('Failed to fetch configuration');
                 const data = await res.json();
                 state.userConfig = data;
@@ -847,7 +1390,7 @@
             }
             if (saveBtn) saveBtn.disabled = true;
             try {
-                const res = await fetch(`${API_BASE}/config`, {
+                const res = await apiFetch(`/config`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ delivery_email: email }),
@@ -919,9 +1462,9 @@
 
             try {
                 const [semRes, epRes, prRes] = await Promise.all([
-                    fetch(`${API_BASE}/memory/semantic`),
-                    fetch(`${API_BASE}/memory/episodic?limit=50`),
-                    fetch(`${API_BASE}/memory/procedural`),
+                    apiFetch(`/memory/semantic`),
+                    apiFetch(`/memory/episodic?limit=50`),
+                    apiFetch(`/memory/procedural`),
                 ]);
                 if (!semRes.ok || !epRes.ok || !prRes.ok) throw new Error('Failed to fetch memory');
 
@@ -1337,7 +1880,7 @@
             }
 
             try {
-                const res = await fetch(`${API_BASE}/briefings/${latest.run_id}`);
+                const res = await apiFetch(`/briefings/${latest.run_id}`);
                 if (!res.ok) return;
                 const detail = await res.json();
                 const markdown = detail.briefing_final || detail.briefing_draft || '';
@@ -1403,7 +1946,7 @@
             try {
                 const tid = threadId || state.activeThreadId;
                 const qs = tid ? `?thread_id=${encodeURIComponent(tid)}` : '';
-                const res = await fetch(`${API_BASE}/briefings/${runId}${qs}`);
+                const res = await apiFetch(`/briefings/${runId}${qs}`);
                 if (!res.ok) throw new Error('Failed to fetch briefing detail');
                 const data = await res.json();
                 showHITL(data);
@@ -1426,7 +1969,7 @@
             try {
                 const tid = briefing && briefing.thread_id;
                 const qs = tid ? `?thread_id=${encodeURIComponent(tid)}` : '';
-                const res = await fetch(`${API_BASE}/briefings/${runId}${qs}`);
+                const res = await apiFetch(`/briefings/${runId}${qs}`);
                 if (!res.ok) throw new Error('Failed to load briefing');
                 const data = await res.json();
                 renderBriefingDetail(data);
@@ -1467,14 +2010,16 @@
             });
 
             const markdown = data.briefing_final || data.briefing_draft || '';
+            const items = data.briefing_items || [];
             if (markdown.trim()) {
-                elements.detailBriefingText.innerHTML = DOMPurify.sanitize(marked.parse(markdown));
+                elements.detailBriefingText.innerHTML = DOMPurify.sanitize(
+                    renderExecutiveBriefingHtml(markdown, items)
+                );
             } else {
-                elements.detailBriefingText.innerHTML = '<p class="text-slate-500 italic">No final briefing text was stored for this run.</p>';
+                elements.detailBriefingText.innerHTML = '<div class="briefing-section"><p class="text-slate-500 italic m-0">No final briefing text was stored for this run.</p></div>';
             }
 
             elements.detailItemsList.innerHTML = '';
-            const items = data.briefing_items || [];
             elements.detailItemCount.textContent = String(items.length);
 
             if (items.length === 0) {
@@ -1490,7 +2035,7 @@
 
             items.forEach(item => {
                 const itemCard = document.createElement('div');
-                itemCard.className = 'p-3 md:p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm space-y-2 min-w-0 overflow-hidden';
+                itemCard.className = 'p-3 md:p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl space-y-2 min-w-0 overflow-hidden';
 
                 const header = document.createElement('div');
                 header.className = 'flex justify-between items-start gap-2';
@@ -1514,18 +2059,18 @@
                 footer.className = 'flex items-center justify-between pt-1 md:pt-2 gap-2';
 
                 const source = document.createElement('a');
-                source.className = 'text-[9px] md:text-[10px] text-brand-600 font-medium truncate';
-                source.textContent = item.source_name || 'source';
+                source.className = 'briefing-source truncate';
+                source.textContent = item.source_name ? `Source: ${item.source_name}` : 'Source: —';
                 if (item.source_url) {
                     source.href = item.source_url;
                     source.target = '_blank';
                     source.rel = 'noopener noreferrer';
                 }
 
-                const confidence = document.createElement('span');
                 const score = Number(item.confidence_score || 0);
-                confidence.className = `text-[9px] md:text-[10px] font-bold ${score > 0.8 ? 'text-emerald-500' : 'text-amber-500'}`;
-                confidence.textContent = `${Math.round(score * 100)}%`;
+                const confidence = document.createElement('span');
+                confidence.className = `confidence-badge${score > 0.8 ? ' is-high' : ''}`;
+                confidence.textContent = `Confidence ${Math.round(score * 100)}%`;
 
                 footer.appendChild(source);
                 footer.appendChild(confidence);
@@ -1564,6 +2109,219 @@
                 itemCard.appendChild(buildFeedbackControls(item));
                 elements.detailItemsList.appendChild(itemCard);
             });
+        }
+
+        function _escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function _stripMdInline(text) {
+            return String(text || '')
+                .replace(/\*\*(.*?)\*\*/g, '$1')
+                .replace(/__(.*?)__/g, '$1')
+                .replace(/`([^`]+)`/g, '$1')
+                .replace(/\[(.*?)\]\((.*?)\)/g, '$1')
+                .trim();
+        }
+
+        function _splitBriefingSections(markdown) {
+            const lines = String(markdown || '').replace(/\r\n/g, '\n').split('\n');
+            const sections = {};
+            let current = '_preamble';
+            sections[current] = [];
+            lines.forEach(line => {
+                const h3 = line.match(/^###\s+(.+?)\s*$/);
+                const h2 = line.match(/^##\s+(.+?)\s*$/);
+                if (h3) {
+                    current = h3[1].trim().toLowerCase();
+                    sections[current] = sections[current] || [];
+                    return;
+                }
+                if (h2) {
+                    // Keep title separately; content still flows under preamble until ###
+                    sections._title = h2[1].trim();
+                    return;
+                }
+                sections[current] = sections[current] || [];
+                sections[current].push(line);
+            });
+            Object.keys(sections).forEach(key => {
+                if (key === '_title') return;
+                sections[key] = (sections[key] || []).join('\n').trim();
+            });
+            return sections;
+        }
+
+        function _sectionBodyToParagraphs(body) {
+            return String(body || '')
+                .split(/\n\s*\n/)
+                .map(p => p.replace(/\n/g, ' ').trim())
+                .filter(Boolean);
+        }
+
+        function _sectionBodyToBullets(body) {
+            const lines = String(body || '').split('\n').map(l => l.trim()).filter(Boolean);
+            const bullets = [];
+            lines.forEach(line => {
+                const m = line.match(/^[-*•]\s+(.+)$/) || line.match(/^\d+\.\s+(.+)$/);
+                if (m) bullets.push(_stripMdInline(m[1]));
+                else if (!line.startsWith('#')) bullets.push(_stripMdInline(line));
+            });
+            return bullets.filter(Boolean);
+        }
+
+        function _formatUsd(amount) {
+            const n = Number(amount);
+            if (!Number.isFinite(n)) return '';
+            if (n >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(n % 1_000_000_000 === 0 ? 0 : 1)}B`;
+            if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M`;
+            if (n >= 1_000) return `$${(n / 1_000).toFixed(n % 1_000 === 0 ? 0 : 1)}K`;
+            return `$${n.toLocaleString()}`;
+        }
+
+        function _fundingCardsFromItems(items) {
+            return (items || [])
+                .filter(item => String(item.category || '').toLowerCase() === 'funding')
+                .map(item => {
+                    const entities = item.entities && typeof item.entities === 'object' ? item.entities : {};
+                    const company = entities.company_name || item.title || 'Unknown company';
+                    const amount = entities.funding_amount_usd != null
+                        ? _formatUsd(entities.funding_amount_usd)
+                        : '';
+                    const stage = entities.funding_stage
+                        ? String(entities.funding_stage).replace(/_/g, ' ')
+                        : '';
+                    return {
+                        company,
+                        amount,
+                        stage,
+                        source: item.source_name || '',
+                        sourceUrl: item.source_url || '',
+                        confidence: item.confidence_score,
+                        summary: item.summary || '',
+                    };
+                });
+        }
+
+        function _fundingCardsFromMarkdown(body) {
+            const bullets = _sectionBodyToBullets(body);
+            return bullets.map(text => {
+                // Best-effort parse: "Company — $8M Series A ..." or plain sentence
+                let company = text;
+                let amount = '';
+                let stage = '';
+                const money = text.match(/\$[\d.,]+\s*[MBKmbk]?/);
+                if (money) amount = money[0].toUpperCase().replace(/\s+/g, '');
+                const stageMatch = text.match(/\b(pre[-\s]?seed|seed|series\s*[a-d]|series_[a-d]|grant|accelerator)\b/i);
+                if (stageMatch) stage = stageMatch[1].replace(/_/g, ' ');
+                const split = text.split(/\s+[—\-–:]\s+/);
+                if (split.length > 1) company = split[0];
+                else {
+                    const raiseIdx = text.search(/\braises?\b|\braised\b|\bcloses?\b|\bclosed\b/i);
+                    if (raiseIdx > 0) company = text.slice(0, raiseIdx).trim();
+                }
+                return {
+                    company: company.slice(0, 120),
+                    amount,
+                    stage,
+                    source: '',
+                    sourceUrl: '',
+                    confidence: null,
+                    summary: text,
+                };
+            });
+        }
+
+        function _renderFundingCardsHtml(cards) {
+            if (!cards.length) {
+                return '<p class="funding-summary">No funding highlights this week.</p>';
+            }
+            return cards.map(card => {
+                const conf = card.confidence != null && card.confidence !== ''
+                    ? Number(card.confidence)
+                    : null;
+                const confBadge = conf != null
+                    ? `<span class="confidence-badge${conf > 0.8 ? ' is-high' : ''}">Confidence ${Math.round(conf * 100)}%</span>`
+                    : '';
+                const sourceHtml = card.source
+                    ? (card.sourceUrl
+                        ? `<span class="briefing-source">Source: <a href="${_escapeHtml(card.sourceUrl)}" target="_blank" rel="noopener noreferrer">${_escapeHtml(card.source)}</a></span>`
+                        : `<span class="briefing-source">Source: ${_escapeHtml(card.source)}</span>`)
+                    : '';
+                return `
+                    <article class="funding-card">
+                        <h4 class="funding-company">${_escapeHtml(card.company)}</h4>
+                        ${card.amount ? `<p class="funding-amount">${_escapeHtml(card.amount)}</p>` : ''}
+                        <div class="funding-meta">
+                            ${card.stage ? `<span class="funding-stage">${_escapeHtml(card.stage)}</span>` : ''}
+                            ${sourceHtml}
+                            ${confBadge}
+                        </div>
+                        ${card.summary ? `<p class="funding-summary">${_escapeHtml(card.summary)}</p>` : ''}
+                    </article>
+                `;
+            }).join('');
+        }
+
+        function renderExecutiveBriefingHtml(markdown, items) {
+            const sections = _splitBriefingSections(markdown);
+            const hasStructured = [
+                'executive summary',
+                'funding highlights',
+                'ecosystem moves',
+                'trends to watch',
+            ].some(key => sections[key]);
+
+            if (!hasStructured) {
+                const raw = marked.parse(markdown);
+                return `<div class="briefing-fallback prose prose-sm md:prose-base dark:prose-invert">${raw}</div>`;
+            }
+
+            const title = sections._title || 'Signal Weekly Briefing';
+            const summaryParas = _sectionBodyToParagraphs(sections['executive summary'] || '')
+                .map(p => `<p>${_escapeHtml(_stripMdInline(p))}</p>`)
+                .join('');
+
+            let fundingCards = _fundingCardsFromItems(items);
+            if (!fundingCards.length) {
+                fundingCards = _fundingCardsFromMarkdown(sections['funding highlights'] || '');
+            }
+
+            const ecosystem = _sectionBodyToBullets(sections['ecosystem moves'] || '');
+            const trends = _sectionBodyToBullets(sections['trends to watch'] || '');
+
+            const ecosystemHtml = ecosystem.length
+                ? `<ul class="ecosystem-list">${ecosystem.map(b => `<li>${_escapeHtml(b)}</li>`).join('')}</ul>`
+                : '<p class="funding-summary">No ecosystem moves this week.</p>';
+
+            const trendsHtml = trends.length
+                ? trends.map(t => `<div class="trend-card"><p>${_escapeHtml(t)}</p></div>`).join('')
+                : '<p class="funding-summary">No trends highlighted this week.</p>';
+
+            return `
+                <h3 class="briefing-report-title">${_escapeHtml(title)}</h3>
+                <section class="briefing-section">
+                    <h4 class="briefing-section-title">Executive Summary</h4>
+                    <div class="briefing-summary-body">${summaryParas || '<p>No executive summary.</p>'}</div>
+                </section>
+                <section class="briefing-section">
+                    <h4 class="briefing-section-title">Funding Highlights</h4>
+                    ${_renderFundingCardsHtml(fundingCards)}
+                </section>
+                <section class="briefing-section">
+                    <h4 class="briefing-section-title">Ecosystem Moves</h4>
+                    ${ecosystemHtml}
+                </section>
+                <section class="briefing-section">
+                    <h4 class="briefing-section-title">Trends to Watch</h4>
+                    ${trendsHtml}
+                </section>
+            `;
         }
 
         const FEEDBACK_REASON_OPTIONS = [
@@ -1832,7 +2590,7 @@
                 const payload = { feedback: feedbackValue };
                 if (reason) payload.reason = reason;
 
-                const res = await fetch(`${API_BASE}/items/${encodeURIComponent(item.id)}/feedback`, {
+                const res = await apiFetch(`/items/${encodeURIComponent(item.id)}/feedback`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
@@ -1883,7 +2641,7 @@
             try {
                 const tid = state.pendingBriefing.thread_id || state.activeThreadId;
                 const qs = tid ? `?thread_id=${encodeURIComponent(tid)}` : '';
-                const res = await fetch(`${API_BASE}/briefings/${state.pendingBriefing.run_id}/${action}${qs}`, {
+                const res = await apiFetch(`/briefings/${state.pendingBriefing.run_id}/${action}${qs}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action })

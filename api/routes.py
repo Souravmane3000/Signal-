@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from langgraph.types import Command
 
 from agent.graph import (
@@ -19,8 +19,17 @@ from agent.graph import (
     pool,
 )
 from agent.nodes.run_metrics_writer import finalize_run_duration
+from api.auth import (
+    AuthUser,
+    get_current_user,
+    login_with_password,
+    signup_with_password,
+)
 from api.schemas import (
     AgentStatusResponse,
+    AuthCredentialsRequest,
+    AuthResponse,
+    AuthUserSchema,
     BriefingItemSchema,
     BriefingListEntry,
     BriefingListResponse,
@@ -131,7 +140,9 @@ def _as_uuid_or_none(value: str) -> Optional[UUID]:
         return None
 
 
-def _thread_id_from_briefing_runs(run_id: str) -> Optional[str]:
+def _thread_id_from_briefing_runs(
+    run_id: str, user_id: Optional[str] = None
+) -> Optional[str]:
     """Resolve thread_id from persisted briefing_runs.id (post-HITL only)."""
     run_uuid = _as_uuid_or_none(run_id)
     if run_uuid is None:
@@ -139,10 +150,19 @@ def _thread_id_from_briefing_runs(run_id: str) -> Optional[str]:
     try:
         with pool.connection() as conn:
             with conn.cursor() as cur:
-                cur.execute(
-                    "SELECT thread_id FROM briefing_runs WHERE id = %s",
-                    (str(run_uuid),),
-                )
+                if user_id:
+                    cur.execute(
+                        """
+                        SELECT thread_id FROM briefing_runs
+                        WHERE id = %s AND user_id = %s
+                        """,
+                        (str(run_uuid), str(user_id)),
+                    )
+                else:
+                    cur.execute(
+                        "SELECT thread_id FROM briefing_runs WHERE id = %s",
+                        (str(run_uuid),),
+                    )
                 row = cur.fetchone()
                 if row and row.get("thread_id"):
                     return str(row["thread_id"])
@@ -151,8 +171,39 @@ def _thread_id_from_briefing_runs(run_id: str) -> Optional[str]:
     return None
 
 
+def _user_needs_onboarding(user_id: str) -> bool:
+    """True when no user_configs row exists for this auth user."""
+    try:
+        with pool.connection() as conn:
+            row = _fetch_user_config_row_db(conn, user_id)
+            return row is None
+    except Exception:
+        logger.exception("Failed to check onboarding state for user_id=%s", user_id)
+        return True
+
+
+def _auth_response_from_session(session: dict[str, Any]) -> AuthResponse:
+    user_id = str(session["user_id"])
+    return AuthResponse(
+        access_token=str(session["access_token"]),
+        token_type="bearer",
+        expires_in=(
+            int(session["expires_in"])
+            if session.get("expires_in") is not None
+            else None
+        ),
+        user=AuthUserSchema(
+            id=user_id,
+            email=str(session.get("email") or ""),
+        ),
+        needs_onboarding=_user_needs_onboarding(user_id),
+    )
+
+
 def _briefing_from_checkpoint(
-    run_id: str, thread_id: str
+    run_id: str,
+    thread_id: str,
+    user_id: Optional[str] = None,
 ) -> Optional[BriefingResponse]:
     """Serve HITL draft from checkpointed graph state when paused at HITL.
 
@@ -173,6 +224,11 @@ def _briefing_from_checkpoint(
     values = graph_state.values or {}
     if str(values.get("run_id") or "") != str(run_id):
         return None
+    if user_id is not None:
+        owner = str(values.get("user_id") or "")
+        # Reject only when the checkpoint carries a different owner.
+        if owner and owner != str(user_id):
+            return None
     if not _is_pending_hitl(graph_state):
         return None
 
@@ -194,7 +250,9 @@ def _briefing_from_checkpoint(
     )
 
 
-def _briefing_from_db(run_id: str) -> BriefingResponse:
+def _briefing_from_db(
+    run_id: str, user_id: Optional[str] = None
+) -> BriefingResponse:
     """Serve completed/rejected briefing from briefing_runs + related tables."""
     run_uuid = _as_uuid_or_none(run_id)
     if run_uuid is None:
@@ -202,14 +260,24 @@ def _briefing_from_db(run_id: str) -> BriefingResponse:
 
     with pool.connection() as conn:
         with conn.cursor() as cur:
-            cur.execute(
-                """
-                SELECT id, thread_id, status, run_at, final_briefing, graph_version
-                FROM briefing_runs
-                WHERE id = %s
-                """,
-                (str(run_uuid),),
-            )
+            if user_id:
+                cur.execute(
+                    """
+                    SELECT id, thread_id, status, run_at, final_briefing, graph_version
+                    FROM briefing_runs
+                    WHERE id = %s AND user_id = %s
+                    """,
+                    (str(run_uuid), str(user_id)),
+                )
+            else:
+                cur.execute(
+                    """
+                    SELECT id, thread_id, status, run_at, final_briefing, graph_version
+                    FROM briefing_runs
+                    WHERE id = %s
+                    """,
+                    (str(run_uuid),),
+                )
             run_row = cur.fetchone()
             if not run_row:
                 raise HTTPException(status_code=404, detail="Briefing not found")
@@ -221,8 +289,13 @@ def _briefing_from_db(run_id: str) -> BriefingResponse:
                        feedback, feedback_reason, feedback_at
                 FROM briefing_items
                 WHERE briefing_run_id = %s
+                  AND (%s::uuid IS NULL OR user_id = %s::uuid)
                 """,
-                (str(run_uuid),),
+                (
+                    str(run_uuid),
+                    str(user_id) if user_id else None,
+                    str(user_id) if user_id else None,
+                ),
             )
             item_rows = cur.fetchall()
 
@@ -331,8 +404,45 @@ def health() -> HealthResponse:
     return HealthResponse()
 
 
+def _normalize_email(value: str) -> str:
+    email = (value or "").strip().lower()
+    if not email or "@" not in email or "." not in email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="Invalid email")
+    if len(email) > 320:
+        raise HTTPException(status_code=400, detail="Invalid email")
+    return email
+
+
+@router.post("/auth/signup", response_model=AuthResponse)
+def auth_signup(body: AuthCredentialsRequest) -> AuthResponse:
+    """Create an account via Supabase Auth (email/password)."""
+    email = _normalize_email(body.email)
+    password = body.password or ""
+    if len(password) < 6:
+        raise HTTPException(
+            status_code=400,
+            detail="Password must be at least 6 characters",
+        )
+    session = signup_with_password(email, password)
+    return _auth_response_from_session(session)
+
+
+@router.post("/auth/login", response_model=AuthResponse)
+def auth_login(body: AuthCredentialsRequest) -> AuthResponse:
+    """Sign in via Supabase Auth (email/password)."""
+    email = _normalize_email(body.email)
+    password = body.password or ""
+    if not password:
+        raise HTTPException(status_code=400, detail="Password is required")
+    session = login_with_password(email, password)
+    return _auth_response_from_session(session)
+
+
 @router.get("/agent/status", response_model=AgentStatusResponse)
-def get_agent_status(thread_id: str = "run_001") -> AgentStatusResponse:
+def get_agent_status(
+    thread_id: str = "run_001",
+    _user: AuthUser = Depends(get_current_user),
+) -> AgentStatusResponse:
     """Check the current status of the agent for a given thread."""
     try:
         config = {"configurable": {"thread_id": thread_id}}
@@ -347,6 +457,13 @@ def get_agent_status(thread_id: str = "run_001") -> AgentStatusResponse:
         elif _is_pending_hitl(graph_state):
             status = "pending_hitl"
 
+        # Scope pending HITL status to the authenticated user's run when known.
+        values = getattr(graph_state, "values", None)
+        if isinstance(values, dict):
+            owner = str(values.get("user_id") or "")
+            if owner and owner != _user.user_id and status != "idle":
+                return AgentStatusResponse(status="idle", thread_id=thread_id)
+
         return AgentStatusResponse(status=status, thread_id=thread_id)
     except Exception as exc:
         logger.exception("Failed to get agent status")
@@ -354,7 +471,10 @@ def get_agent_status(thread_id: str = "run_001") -> AgentStatusResponse:
 
 
 @router.get("/briefings", response_model=BriefingListResponse)
-def list_briefings(limit: int = Query(10, ge=1, le=100)) -> BriefingListResponse:
+def list_briefings(
+    limit: int = Query(10, ge=1, le=100),
+    user: AuthUser = Depends(get_current_user),
+) -> BriefingListResponse:
     """List recent briefing runs from the database."""
     try:
         with pool.connection() as conn:
@@ -369,12 +489,14 @@ def list_briefings(limit: int = Query(10, ge=1, le=100)) -> BriefingListResponse
                                SELECT count(*)
                                FROM briefing_items bi
                                WHERE bi.briefing_run_id = br.id
+                                 AND bi.user_id = br.user_id
                            ) AS item_count
                     FROM briefing_runs br
+                    WHERE br.user_id = %s
                     ORDER BY br.run_at DESC
                     LIMIT %s
                     """,
-                    (limit,),
+                    (user.user_id, limit),
                 )
                 rows = cur.fetchall()
 
@@ -422,7 +544,10 @@ def _source_health_dict(value: Any) -> dict[str, Any]:
 
 
 @router.get("/metrics/runs", response_model=RunMetricsListResponse)
-def list_run_metrics(limit: int = Query(5, ge=1, le=50)) -> RunMetricsListResponse:
+def list_run_metrics(
+    limit: int = Query(5, ge=1, le=50),
+    user: AuthUser = Depends(get_current_user),
+) -> RunMetricsListResponse:
     """Return recent agent_run_metrics rows for the Run Metrics screen."""
     try:
         with pool.connection() as conn:
@@ -450,10 +575,11 @@ def list_run_metrics(limit: int = Query(5, ge=1, le=50)) -> RunMetricsListRespon
                            br.status AS run_status
                     FROM agent_run_metrics m
                     LEFT JOIN briefing_runs br ON br.id = m.briefing_run_id
+                    WHERE m.user_id = %s
                     ORDER BY m.run_at DESC
                     LIMIT %s
                     """,
-                    (limit,),
+                    (user.user_id, limit),
                 )
                 rows = cur.fetchall()
 
@@ -519,6 +645,7 @@ def get_briefing(
         None,
         description="LangGraph thread_id from POST /run; required for pending_hitl.",
     ),
+    user: AuthUser = Depends(get_current_user),
 ) -> BriefingResponse:
     """Get briefing detail.
 
@@ -527,10 +654,12 @@ def get_briefing(
     """
     try:
         if thread_id:
-            pending = _briefing_from_checkpoint(run_id, thread_id)
+            pending = _briefing_from_checkpoint(
+                run_id, thread_id, user_id=user.user_id
+            )
             if pending is not None:
                 return pending
-        return _briefing_from_db(run_id)
+        return _briefing_from_db(run_id, user_id=user.user_id)
     except HTTPException:
         raise
     except Exception as exc:
@@ -540,7 +669,9 @@ def get_briefing(
 
 @router.post("/items/{item_id}/feedback", response_model=FeedbackResponse)
 def submit_item_feedback(
-    item_id: str, body: FeedbackRequest
+    item_id: str,
+    body: FeedbackRequest,
+    user: AuthUser = Depends(get_current_user),
 ) -> FeedbackResponse:
     """Persist feedback atomically into user_feedback + briefing_items."""
     item_uuid = _as_uuid_or_none(item_id)
@@ -555,9 +686,9 @@ def submit_item_feedback(
                         """
                         SELECT id, user_id, category, source_name, feedback
                         FROM briefing_items
-                        WHERE id = %s
+                        WHERE id = %s AND user_id = %s
                         """,
-                        (str(item_uuid),),
+                        (str(item_uuid), user.user_id),
                     )
                     item_row = cur.fetchone()
                     if not item_row:
@@ -660,9 +791,12 @@ def approve_briefing(
         None,
         description="LangGraph thread_id from POST /run; required during pending_hitl.",
     ),
+    user: AuthUser = Depends(get_current_user),
 ) -> RunResponse:
     """Resume the graph with 'approve' action for a given run."""
-    return _resume_hitl(run_id, "approve", thread_id=thread_id)
+    return _resume_hitl(
+        run_id, "approve", thread_id=thread_id, user_id=user.user_id
+    )
 
 
 @router.post("/briefings/{run_id}/reject", response_model=RunResponse)
@@ -672,9 +806,12 @@ def reject_briefing(
         None,
         description="LangGraph thread_id from POST /run; required during pending_hitl.",
     ),
+    user: AuthUser = Depends(get_current_user),
 ) -> RunResponse:
     """Resume the graph with 'reject' action for a given run."""
-    return _resume_hitl(run_id, "reject", thread_id=thread_id)
+    return _resume_hitl(
+        run_id, "reject", thread_id=thread_id, user_id=user.user_id
+    )
 
 
 def _resume_hitl(
@@ -682,6 +819,7 @@ def _resume_hitl(
     action: str,
     edits: dict | None = None,
     thread_id: Optional[str] = None,
+    user_id: Optional[str] = None,
 ) -> RunResponse:
     """Helper to resume the graph from HITL interrupt.
 
@@ -689,11 +827,23 @@ def _resume_hitl(
     Do not pass a plain dict — LangGraph treats that as a SignalState update.
     """
     try:
-        tid = thread_id or _thread_id_from_briefing_runs(run_id)
+        tid = thread_id or _thread_id_from_briefing_runs(run_id, user_id=user_id)
         if not tid:
             raise HTTPException(status_code=404, detail="Run not found")
 
         config = {"configurable": {"thread_id": tid}}
+        if user_id:
+            try:
+                graph_state = graph.get_state(config)
+                values = getattr(graph_state, "values", None) or {}
+                owner = str(values.get("user_id") or "")
+                if owner and owner != str(user_id):
+                    raise HTTPException(status_code=404, detail="Run not found")
+            except HTTPException:
+                raise
+            except Exception:
+                # If checkpoint lookup fails, fall through to invoke path.
+                pass
 
         # Same contract as scripts/test_hitl.py and hitl_node interrupt resume.
         # HITL waits can outlive Supabase idle timeouts — retry path refreshes pool.
@@ -766,11 +916,11 @@ def _get_store():
 
 @router.get("/config", response_model=UserConfigResponse)
 def get_config(
-    user_id: str = Query("user_001", description="User namespace key"),
+    user: AuthUser = Depends(get_current_user),
 ) -> UserConfigResponse:
     """Read existing user_configs (+ read-only graph_version / max findings)."""
     try:
-        return _build_config_response(user_id)
+        return _build_config_response(user.user_id)
     except HTTPException:
         raise
     except Exception as exc:
@@ -779,42 +929,21 @@ def get_config(
 
 
 def _resolve_config_user_uuid(conn, user_id: str) -> Any:
-    """Map Phase-1 string user_id to auth.users UUID (same approach as metrics writer)."""
+    """Require a real auth.users UUID from the validated JWT subject."""
     import uuid as uuid_mod
 
-    from agent.nodes.run_metrics_writer import _FALLBACK_AUTH_EMAIL
-
     raw = (user_id or "").strip()
-    if raw:
-        try:
-            return uuid_mod.UUID(raw)
-        except ValueError:
-            pass
-    with conn.cursor() as cur:
-        cur.execute(
-            "SELECT id FROM auth.users WHERE email = %s LIMIT 1",
-            (_FALLBACK_AUTH_EMAIL,),
-        )
-        row = cur.fetchone()
-    if row:
-        raw_id = row["id"] if isinstance(row, dict) else row[0]
-        if raw_id:
-            return (
-                raw_id
-                if isinstance(raw_id, uuid_mod.UUID)
-                else uuid_mod.UUID(str(raw_id))
-            )
-    raise HTTPException(
-        status_code=500,
-        detail=(
-            "Cannot resolve auth user for config write. "
-            f"Got user_id={raw!r}."
-        ),
-    )
+    try:
+        return uuid_mod.UUID(raw)
+    except (ValueError, TypeError, AttributeError) as exc:
+        raise HTTPException(
+            status_code=401,
+            detail="Authenticated user id is invalid",
+        ) from exc
 
 
 def _try_resolve_config_user_uuid(conn, user_id: str) -> Any | None:
-    """Soft resolve for GET — missing auth user means defaults, not a 500."""
+    """Soft resolve for GET — invalid UUID means defaults, not a 500."""
     try:
         return _resolve_config_user_uuid(conn, user_id)
     except HTTPException:
@@ -918,29 +1047,109 @@ def _normalize_delivery_email(value: str) -> str:
 @router.put("/config", response_model=UserConfigResponse)
 def update_config(
     body: UserConfigUpdateRequest,
-    user_id: str = Query("user_001", description="User namespace key"),
+    user: AuthUser = Depends(get_current_user),
 ) -> UserConfigResponse:
-    """Update delivery_email only. Creates user_configs row when missing."""
+    """Update config / complete onboarding. Creates user_configs row when missing."""
     from agent.nodes.config_loader import _DEFAULT_USER_CONFIG
 
-    email = _normalize_delivery_email(body.delivery_email)
+    has_any = any(
+        [
+            body.delivery_email is not None,
+            body.keywords is not None,
+            body.verticals is not None,
+            body.stage_filter is not None,
+            body.schedule_freq is not None,
+        ]
+    )
+    if not has_any:
+        raise HTTPException(status_code=400, detail="No config fields provided")
+
+    email = (
+        _normalize_delivery_email(body.delivery_email)
+        if body.delivery_email is not None
+        else None
+    )
 
     try:
         with pool.connection() as conn:
-            user_uuid = _resolve_config_user_uuid(conn, user_id)
+            user_uuid = _resolve_config_user_uuid(conn, user.user_id)
             now = datetime.now(timezone.utc)
+            existing = _fetch_user_config_row_db(conn, user_uuid)
+
+            keywords = (
+                list(body.keywords)
+                if body.keywords is not None
+                else (
+                    list(existing["keywords"])
+                    if existing and existing.get("keywords") is not None
+                    else list(_DEFAULT_USER_CONFIG["keywords"])
+                )
+            )
+            verticals = (
+                list(body.verticals)
+                if body.verticals is not None
+                else (
+                    list(existing["verticals"])
+                    if existing and existing.get("verticals") is not None
+                    else list(_DEFAULT_USER_CONFIG["verticals"])
+                )
+            )
+            stage_filter = (
+                list(body.stage_filter)
+                if body.stage_filter is not None
+                else (
+                    list(existing["stage_filter"])
+                    if existing and existing.get("stage_filter") is not None
+                    else list(_DEFAULT_USER_CONFIG["stage_filter"])
+                )
+            )
+            schedule_freq = (
+                str(body.schedule_freq)
+                if body.schedule_freq is not None
+                else (
+                    str(existing["schedule_freq"])
+                    if existing and existing.get("schedule_freq") is not None
+                    else str(_DEFAULT_USER_CONFIG["schedule_freq"])
+                )
+            )
+            delivery_email = (
+                email
+                if email is not None
+                else (
+                    str(existing["delivery_email"])
+                    if existing and existing.get("delivery_email") is not None
+                    else str(_DEFAULT_USER_CONFIG["delivery_email"])
+                )
+            )
+            if not delivery_email:
+                raise HTTPException(
+                    status_code=400,
+                    detail="delivery_email is required to create configuration",
+                )
+
             with conn.cursor() as cur:
-                # Prefer UPDATE … RETURNING so we never silently no-op.
                 cur.execute(
                     """
                     UPDATE user_configs
                     SET delivery_email = %s,
+                        keywords = %s,
+                        verticals = %s,
+                        stage_filter = %s,
+                        schedule_freq = %s,
                         updated_at = %s
                     WHERE user_id = %s
                     RETURNING user_id, keywords, verticals, stage_filter,
                               schedule_freq, delivery_email
                     """,
-                    (email, now, str(user_uuid)),
+                    (
+                        delivery_email,
+                        keywords,
+                        verticals,
+                        stage_filter,
+                        schedule_freq,
+                        now,
+                        str(user_uuid),
+                    ),
                 )
                 updated = cur.fetchone()
                 if updated is None:
@@ -957,11 +1166,11 @@ def update_config(
                         """,
                         (
                             str(user_uuid),
-                            list(_DEFAULT_USER_CONFIG["keywords"]),
-                            list(_DEFAULT_USER_CONFIG["verticals"]),
-                            list(_DEFAULT_USER_CONFIG["stage_filter"]),
-                            str(_DEFAULT_USER_CONFIG["schedule_freq"]),
-                            email,
+                            keywords,
+                            verticals,
+                            stage_filter,
+                            schedule_freq,
+                            delivery_email,
                             now,
                             now,
                         ),
@@ -969,13 +1178,11 @@ def update_config(
                     updated = cur.fetchone()
                 if updated is None:
                     raise RuntimeError(
-                        "user_configs write returned no row — delivery email not persisted"
+                        "user_configs write returned no row — configuration not persisted"
                     )
-                persisted = dict(updated) if not isinstance(updated, dict) else updated
             conn.commit()
 
-        # Re-read from DB so response reflects persisted state (no client-side override).
-        return _build_config_response(user_id)
+        return _build_config_response(user.user_id)
     except HTTPException:
         raise
     except Exception as exc:
@@ -1016,14 +1223,14 @@ def _episode_source(value: dict[str, Any]) -> Optional[str]:
 
 @router.get("/memory/semantic", response_model=SemanticMemoryResponse)
 def get_semantic_memory(
-    user_id: str = Query("user_001", description="User namespace key"),
+    user: AuthUser = Depends(get_current_user),
 ) -> SemanticMemoryResponse:
     """Read-only semantic memory inspector (no embeddings)."""
     from agent.nodes.config_loader import _SEMANTIC_KEY
 
     try:
         store = _get_store()
-        item = store.get(("user", user_id, "semantic"), _SEMANTIC_KEY)
+        item = store.get(("user", user.user_id, "semantic"), _SEMANTIC_KEY)
         if item is None or not isinstance(getattr(item, "value", None), dict):
             return SemanticMemoryResponse(memory={}, updated_at=None, empty=True)
 
@@ -1063,13 +1270,13 @@ def get_semantic_memory(
 
 @router.get("/memory/episodic", response_model=EpisodicMemoryResponse)
 def get_episodic_memory(
-    user_id: str = Query("user_001", description="User namespace key"),
     limit: int = Query(50, ge=1, le=200),
+    user: AuthUser = Depends(get_current_user),
 ) -> EpisodicMemoryResponse:
     """Read-only episodic memory inspector (no embeddings)."""
     try:
         store = _get_store()
-        items = list(store.search(("user", user_id, "episodic"), limit=limit))
+        items = list(store.search(("user", user.user_id, "episodic"), limit=limit))
         episodes: list[EpisodicMemoryEntry] = []
         for item in items:
             raw = item.value if isinstance(getattr(item, "value", None), dict) else {}
@@ -1120,14 +1327,14 @@ def get_episodic_memory(
 
 @router.get("/memory/procedural", response_model=ProceduralMemoryResponse)
 def get_procedural_memory(
-    user_id: str = Query("user_001", description="User namespace key"),
+    user: AuthUser = Depends(get_current_user),
 ) -> ProceduralMemoryResponse:
     """Read-only procedural preference profile (no LLM, no embeddings)."""
     from agent.nodes.config_loader import _PROCEDURAL_KEY
 
     try:
         store = _get_store()
-        item = store.get(("user", user_id, "procedural"), _PROCEDURAL_KEY)
+        item = store.get(("user", user.user_id, "procedural"), _PROCEDURAL_KEY)
         if item is None or not isinstance(getattr(item, "value", None), dict):
             return ProceduralMemoryResponse(preferences={}, updated_at=None, empty=True)
 
@@ -1161,8 +1368,13 @@ def get_procedural_memory(
 
 
 @router.post("/run", response_model=RunResponse)
-def run_pipeline(request: RunRequest | None = None) -> RunResponse:
+def run_pipeline(
+    request: RunRequest | None = None,
+    user: AuthUser = Depends(get_current_user),
+) -> RunResponse:
     body = request or RunRequest()
+    # Identity always comes from the validated JWT — never from the request body.
+    body = body.model_copy(update={"user_id": user.user_id})
     try:
         return execute_pipeline(body)
     except ValueError as exc:

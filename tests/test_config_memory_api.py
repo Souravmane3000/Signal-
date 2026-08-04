@@ -5,13 +5,17 @@ from __future__ import annotations
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from fastapi.testclient import TestClient
+from tests.conftest import TEST_USER_ID, attach_default_auth
 
 from api.main import app
 
 client = TestClient(app, raise_server_exceptions=False)
+attach_default_auth(client)
+
+_AUTH_UUID = UUID(TEST_USER_ID)
 
 FRONTEND = Path("frontend/index.html")
 
@@ -118,7 +122,7 @@ def test_config_and_memory_endpoints_exist():
 
 
 def test_config_loads_from_database_row():
-    user_uuid = uuid4()
+    user_uuid = _AUTH_UUID
     shared = {
         "calls": [],
         "auth_user": {"id": user_uuid},
@@ -149,7 +153,7 @@ def test_config_loads_from_database_row():
 
 
 def test_config_empty_falls_back_to_defaults_silently():
-    user_uuid = uuid4()
+    user_uuid = _AUTH_UUID
     shared = {
         "calls": [],
         "auth_user": {"id": user_uuid},
@@ -200,7 +204,7 @@ def test_config_api_failure_state():
 
 
 def test_put_config_updates_delivery_email():
-    user_uuid = uuid4()
+    user_uuid = _AUTH_UUID
     shared = {
         "calls": [],
         "auth_user": {"id": user_uuid},
@@ -228,7 +232,7 @@ def test_put_config_updates_delivery_email():
 
 
 def test_put_config_creates_row_when_missing():
-    user_uuid = uuid4()
+    user_uuid = _AUTH_UUID
     shared = {
         "calls": [],
         "auth_user": {"id": user_uuid},
@@ -254,7 +258,7 @@ def test_put_config_creates_row_when_missing():
 
 def test_put_then_get_returns_persisted_email():
     """Round-trip: PUT must leave a row that GET reads back (no model_copy mask)."""
-    user_uuid = uuid4()
+    user_uuid = _AUTH_UUID
     shared = {
         "calls": [],
         "auth_user": {"id": user_uuid},
@@ -279,7 +283,7 @@ def test_put_then_get_returns_persisted_email():
 
 
 def test_get_does_not_always_return_defaults_when_row_exists():
-    user_uuid = uuid4()
+    user_uuid = _AUTH_UUID
     shared = {
         "calls": [],
         "auth_user": {"id": user_uuid},

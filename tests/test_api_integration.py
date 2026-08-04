@@ -7,6 +7,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
+from tests.conftest import attach_default_auth
 
 from agent.graph import execute_graph, graph
 from api.main import app
@@ -17,6 +18,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 client = TestClient(app, raise_server_exceptions=False)
+attach_default_auth(client)
 
 
 def _seed_after_synthesis(thread_id: str, run_id: str) -> dict:

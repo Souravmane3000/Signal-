@@ -8,10 +8,12 @@ from unittest.mock import patch
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
+from tests.conftest import attach_default_auth
 
 from api.main import app
 
 client = TestClient(app, raise_server_exceptions=False)
+attach_default_auth(client)
 
 ITEM_ID = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
 USER_ID = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
@@ -207,7 +209,10 @@ def test_feedback_item_not_found():
 
 def test_frontend_uses_correct_feedback_endpoint():
     html = Path("frontend/index.html").read_text(encoding="utf-8")
-    assert "${API_BASE}/items/${encodeURIComponent(item.id)}/feedback" in html
+    assert (
+        "`/items/${encodeURIComponent(item.id)}/feedback`" in html
+        or "/items/${encodeURIComponent(item.id)}/feedback" in html
+    )
     assert "buildReasonDropdown" in html
     assert "feedback-reason-trigger" in html
     assert "createElement('select')" not in html

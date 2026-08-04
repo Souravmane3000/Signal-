@@ -11,6 +11,24 @@ class HealthResponse(BaseModel):
     status: Literal["ok"] = "ok"
 
 
+class AuthCredentialsRequest(BaseModel):
+    email: str = Field(..., min_length=3, max_length=320)
+    password: str = Field(..., min_length=6, max_length=128)
+
+
+class AuthUserSchema(BaseModel):
+    id: str
+    email: str
+
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: Literal["bearer"] = "bearer"
+    expires_in: Optional[int] = None
+    user: AuthUserSchema
+    needs_onboarding: bool = False
+
+
 class AgentStatusResponse(BaseModel):
     status: Literal["idle", "running", "pending_hitl"]
     thread_id: Optional[str] = None
@@ -160,9 +178,13 @@ class UserConfigResponse(BaseModel):
 
 
 class UserConfigUpdateRequest(BaseModel):
-    """PUT /config — only delivery_email is writable."""
+    """PUT /config — delivery email + optional onboarding fields."""
 
-    delivery_email: str = Field(..., min_length=1, max_length=320)
+    delivery_email: Optional[str] = Field(default=None, min_length=1, max_length=320)
+    keywords: Optional[list[str]] = None
+    verticals: Optional[list[str]] = None
+    stage_filter: Optional[list[str]] = None
+    schedule_freq: Optional[Literal["daily", "weekly"]] = None
 
 
 class EpisodicMemoryEntry(BaseModel):

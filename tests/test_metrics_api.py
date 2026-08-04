@@ -7,10 +7,12 @@ from pathlib import Path
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
+from tests.conftest import attach_default_auth
 
 from api.main import app
 
 client = TestClient(app, raise_server_exceptions=False)
+attach_default_auth(client)
 
 RUN_ID = "22222222-2222-2222-2222-222222222222"
 METRICS_ID = "33333333-3333-3333-3333-333333333333"

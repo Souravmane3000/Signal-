@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
+from tests.conftest import attach_default_auth
 
 from agent.graph import GraphRunResult
 from api.main import app
@@ -12,6 +13,7 @@ from api.schemas import RunRequest
 from api.routes import execute_pipeline
 
 client = TestClient(app, raise_server_exceptions=False)
+attach_default_auth(client)
 
 
 def test_health_returns_ok():

@@ -235,3 +235,27 @@ CREATE POLICY user_feedback_user_scope ON user_feedback
     FOR ALL
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
+
+-- ---------------------------------------------------------------------------
+-- agent_memory
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS agent_memory (
+    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id uuid REFERENCES auth.users NOT NULL,
+    memory_type text,
+    namespace_key text,
+    content jsonb,
+    created_at timestamptz DEFAULT now(),
+    updated_at timestamptz DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_agent_memory_user_id ON agent_memory (user_id);
+CREATE INDEX IF NOT EXISTS idx_agent_memory_type ON agent_memory (user_id, memory_type);
+
+ALTER TABLE agent_memory ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS agent_memory_user_scope ON agent_memory;
+CREATE POLICY agent_memory_user_scope ON agent_memory
+    FOR ALL
+    USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
