@@ -64,6 +64,10 @@
                     <i class="ph ph-article text-xl"></i>
                     <span class="font-medium">Briefings</span>
                 </button>
+                <button onclick="setView('metrics')" class="nav-item w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-all" data-view="metrics">
+                    <i class="ph ph-chart-line-up text-xl"></i>
+                    <span class="font-medium">Run Metrics</span>
+                </button>
                 <button onclick="setView('config')" class="nav-item w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-all text-slate-400 cursor-not-allowed" disabled>
                     <i class="ph ph-gear text-xl"></i>
                     <span class="font-medium">Configuration</span>
@@ -241,6 +245,43 @@
                     </div>
                 </div>
 
+                <!-- Run Metrics View -->
+                <div id="view-metrics" class="view hidden space-y-6 md:space-y-8">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Run Metrics</h2>
+                            <p class="text-slate-500 text-sm mt-1">Data quality for the last 5 completed runs</p>
+                        </div>
+                        <button onclick="fetchRunMetrics()" class="p-2 text-slate-500 hover:text-brand-600 transition-colors" aria-label="Refresh metrics">
+                            <i class="ph ph-arrows-clockwise text-2xl"></i>
+                        </button>
+                    </div>
+
+                    <div id="metrics-list-loading" class="hidden py-20 flex flex-col items-center justify-center gap-4">
+                        <div class="w-10 h-10 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
+                        <p class="text-slate-500 font-medium">Loading metrics...</p>
+                    </div>
+
+                    <div id="metrics-list-empty" class="hidden py-20 flex flex-col items-center justify-center text-center space-y-4 px-4">
+                        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
+                            <i class="ph ph-chart-line-up text-3xl text-slate-400"></i>
+                        </div>
+                        <p class="text-slate-500">No run metrics yet. Complete a briefing run to see quality stats.</p>
+                    </div>
+
+                    <div id="metrics-list-error" class="hidden py-12 flex flex-col items-center justify-center text-center space-y-3 px-4">
+                        <div class="w-16 h-16 bg-rose-50 dark:bg-rose-900/20 rounded-full flex items-center justify-center mx-auto">
+                            <i class="ph ph-warning-circle text-3xl text-rose-500"></i>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-300 font-medium">Couldn't load metrics. Please try again.</p>
+                        <button onclick="fetchRunMetrics()" class="text-brand-600 font-bold hover:underline text-sm">Retry</button>
+                    </div>
+
+                    <div id="metrics-list" class="space-y-4 md:space-y-6">
+                        <!-- Metric cards go here -->
+                    </div>
+                </div>
+
             </div>
 
             <!-- Toast / Notifications -->
@@ -270,6 +311,7 @@
             activeThreadId: null, // No default thread_id, wait for run or fetch
             lastRun: null,
             briefings: [],
+            runMetrics: [],
             pendingBriefing: null,
             isDarkMode: false
         };
@@ -295,6 +337,10 @@
             briefingsList: document.getElementById('briefings-list'),
             briefingsListLoading: document.getElementById('briefings-list-loading'),
             briefingsListEmpty: document.getElementById('briefings-list-empty'),
+            metricsList: document.getElementById('metrics-list'),
+            metricsListLoading: document.getElementById('metrics-list-loading'),
+            metricsListEmpty: document.getElementById('metrics-list-empty'),
+            metricsListError: document.getElementById('metrics-list-error'),
             detailMeta: document.getElementById('detail-meta'),
             detailStatusBadge: document.getElementById('detail-status-badge'),
             detailMetrics: document.getElementById('detail-metrics'),
@@ -334,6 +380,9 @@
             // View specific logic
             if (viewName === 'briefings') {
                 fetchBriefings();
+            }
+            if (viewName === 'metrics') {
+                fetchRunMetrics();
             }
             if (viewName === 'dashboard') {
                 refreshDashboard();
@@ -511,6 +560,165 @@
             } finally {
                 elements.briefingsListLoading.classList.add('hidden');
             }
+        }
+
+        async function fetchRunMetrics() {
+            elements.metricsListLoading.classList.remove('hidden');
+            elements.metricsListEmpty.classList.add('hidden');
+            elements.metricsListError.classList.add('hidden');
+            elements.metricsList.innerHTML = '';
+
+            try {
+                const res = await fetch(`${API_BASE}/metrics/runs?limit=5`);
+                if (!res.ok) throw new Error('Failed to fetch metrics');
+
+                const data = await res.json();
+                state.runMetrics = data.runs || [];
+                renderRunMetrics();
+                return state.runMetrics;
+            } catch (err) {
+                console.log('Fetch Run Metrics Failed:', err.message);
+                state.runMetrics = [];
+                elements.metricsListError.classList.remove('hidden');
+                showToast("Couldn't load metrics. Please try again.", 'error');
+                return [];
+            } finally {
+                elements.metricsListLoading.classList.add('hidden');
+            }
+        }
+
+        function _pct(part, whole) {
+            const w = Number(whole) || 0;
+            if (w <= 0) return '—';
+            return `${Math.round((Number(part) || 0) / w * 100)}%`;
+        }
+
+        function renderRunMetrics() {
+            elements.metricsList.innerHTML = '';
+            elements.metricsListEmpty.classList.add('hidden');
+            elements.metricsListError.classList.add('hidden');
+
+            if (!state.runMetrics.length) {
+                elements.metricsListEmpty.classList.remove('hidden');
+                return;
+            }
+
+            state.runMetrics.forEach(run => {
+                const card = document.createElement('div');
+                card.className = 'p-4 md:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl space-y-4 min-w-0';
+
+                const dropped =
+                    (Number(run.findings_dropped_freshness) || 0) +
+                    (Number(run.findings_dropped_scope) || 0) +
+                    (Number(run.findings_dropped_dedup) || 0);
+                const retrieved = Number(run.findings_retrieved) || 0;
+                const accepted = Number(run.findings_in_briefing) || 0;
+                const duration = Number(run.run_duration_seconds) || 0;
+
+                const when = run.run_at
+                    ? new Date(run.run_at).toLocaleString(undefined, {
+                        month: 'short', day: 'numeric', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    })
+                    : 'Unknown time';
+
+                const header = document.createElement('div');
+                header.className = 'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2';
+                const headerLeft = document.createElement('div');
+                headerLeft.className = 'min-w-0';
+                const tsLabel = document.createElement('p');
+                tsLabel.className = 'text-[10px] uppercase tracking-wider text-slate-400 font-medium';
+                tsLabel.textContent = 'Run timestamp';
+                const tsValue = document.createElement('h3');
+                tsValue.className = 'font-bold text-sm md:text-base truncate';
+                tsValue.textContent = when;
+                headerLeft.appendChild(tsLabel);
+                headerLeft.appendChild(tsValue);
+                const statusBadge = document.createElement('span');
+                statusBadge.className = 'self-start text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
+                statusBadge.textContent = (run.status || 'unknown').replace(/_/g, ' ');
+                header.appendChild(headerLeft);
+                header.appendChild(statusBadge);
+
+                const grid = document.createElement('div');
+                grid.className = 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3';
+
+                const chips = [
+                    ['Duration', `${duration.toFixed(1)}s`],
+                    ['Latency', `${duration.toFixed(1)}s`],
+                    ['Total findings', String(retrieved)],
+                    ['Accepted findings', String(accepted)],
+                    ['Rejected findings', String(dropped)],
+                    ['Tokens', String(run.tokens_used ?? 0)],
+                    ['Est. cost', `$${Number(run.estimated_cost_usd || 0).toFixed(4)}`],
+                    ['Graph', run.graph_version || '—']
+                ];
+                chips.forEach(([label, value]) => {
+                    const chip = document.createElement('div');
+                    chip.className = 'p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 min-w-0';
+                    chip.innerHTML = `<p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium">${label}</p><p class="font-bold text-sm mt-1 truncate">${value}</p>`;
+                    grid.appendChild(chip);
+                });
+
+                const quality = document.createElement('div');
+                quality.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3';
+
+                const dropBox = document.createElement('div');
+                dropBox.className = 'p-3 rounded-xl border border-slate-100 dark:border-slate-800 min-w-0';
+                dropBox.innerHTML = `<p class="text-[10px] uppercase tracking-wider text-slate-500 font-medium mb-2">Drop rates</p>`;
+                [
+                    ['Freshness', run.findings_dropped_freshness],
+                    ['Scope', run.findings_dropped_scope],
+                    ['Dedup', run.findings_dropped_dedup]
+                ].forEach(([label, count]) => {
+                    const line = document.createElement('p');
+                    line.className = 'text-xs text-slate-600 dark:text-slate-300';
+                    line.textContent = `${label} ${count || 0} (${_pct(count, retrieved)})`;
+                    dropBox.appendChild(line);
+                });
+
+                const healthBox = document.createElement('div');
+                healthBox.className = 'p-3 rounded-xl border border-slate-100 dark:border-slate-800 min-w-0';
+                const healthTitle = document.createElement('p');
+                healthTitle.className = 'text-[10px] uppercase tracking-wider text-slate-500 font-medium mb-2';
+                healthTitle.textContent = 'Source health';
+                healthBox.appendChild(healthTitle);
+                const healthList = document.createElement('div');
+                healthList.className = 'space-y-1 metrics-source-health';
+                const health = (run.source_health && typeof run.source_health === 'object')
+                    ? run.source_health
+                    : {};
+                const healthLabels = { tavily: 'Tavily', yc: 'YC', hn: 'HN', rss: 'RSS' };
+                const healthKeys = Object.keys(healthLabels).filter(k => Object.prototype.hasOwnProperty.call(health, k));
+                // Also show any extra keys present in persistence
+                Object.keys(health).forEach(k => {
+                    if (!healthKeys.includes(k)) healthKeys.push(k);
+                });
+                if (healthKeys.length === 0) {
+                    const empty = document.createElement('p');
+                    empty.className = 'text-xs text-slate-500';
+                    empty.textContent = 'No source health recorded';
+                    healthList.appendChild(empty);
+                } else {
+                    healthKeys.forEach(key => {
+                        const failed = !!health[key];
+                        const line = document.createElement('p');
+                        line.className = 'text-xs text-slate-600 dark:text-slate-300';
+                        const label = healthLabels[key] || key;
+                        line.textContent = failed ? `✗ ${label}` : `✓ ${label}`;
+                        healthList.appendChild(line);
+                    });
+                }
+                healthBox.appendChild(healthList);
+
+                quality.appendChild(dropBox);
+                quality.appendChild(healthBox);
+
+                card.appendChild(header);
+                card.appendChild(grid);
+                card.appendChild(quality);
+                elements.metricsList.appendChild(card);
+            });
         }
 
         function syncDashboardFromList() {

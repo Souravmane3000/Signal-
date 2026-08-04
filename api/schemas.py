@@ -107,6 +107,34 @@ class RuntimeMetrics(BaseModel):
     graph_version: str = ""
 
 
+class RunMetricsEntry(BaseModel):
+    """One agent_run_metrics row for the Run Metrics screen (PRD Screen 6)."""
+
+    id: str
+    run_id: str
+    status: str
+    run_at: str
+    run_duration_seconds: float = 0.0
+    findings_retrieved: int = 0
+    findings_in_briefing: int = 0
+    findings_dropped_freshness: int = 0
+    findings_dropped_scope: int = 0
+    findings_dropped_dedup: int = 0
+    tokens_used: int = 0
+    estimated_cost_usd: float = 0.0
+    graph_version: str = ""
+    tavily_result_count: Optional[int] = None
+    yc_result_count: Optional[int] = None
+    hn_result_count: Optional[int] = None
+    rss_result_count: Optional[int] = None
+    sources_queried: list[str] = Field(default_factory=list)
+    source_health: dict[str, Any] = Field(default_factory=dict)
+
+
+class RunMetricsListResponse(BaseModel):
+    runs: list[RunMetricsEntry]
+
+
 class RunResponse(BaseModel):
     run_id: str
     thread_id: str

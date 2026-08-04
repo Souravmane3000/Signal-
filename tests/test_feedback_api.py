@@ -208,8 +208,9 @@ def test_feedback_item_not_found():
 def test_frontend_uses_correct_feedback_endpoint():
     html = Path("frontend/index.html").read_text(encoding="utf-8")
     assert "${API_BASE}/items/${encodeURIComponent(item.id)}/feedback" in html
-    assert "createElement('select')" in html
-    assert "createElement('datalist')" not in html
+    assert "buildReasonDropdown" in html
+    assert "feedback-reason-trigger" in html
+    assert "createElement('select')" not in html
     assert "Already knew this" in html
     assert "Wrong funding stage" in html
     assert "Wrong sector" in html

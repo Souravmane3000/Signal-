@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import json
 import time
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -27,6 +28,8 @@ from api.schemas import (
     FeedbackRequest,
     FeedbackResponse,
     HealthResponse,
+    RunMetricsEntry,
+    RunMetricsListResponse,
     RunRequest,
     RunResponse,
     RuntimeMetrics,
@@ -389,6 +392,117 @@ def list_briefings(limit: int = Query(10, ge=1, le=100)) -> BriefingListResponse
         # Return empty list if table doesn't exist yet (graceful degradation)
         if "does not exist" in str(exc):
             return BriefingListResponse(briefings=[])
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+def _optional_int(value: Any) -> Optional[int]:
+    """Preserve NULL from DB; do not coerce missing counts to fabricated zeros."""
+    if value is None:
+        return None
+    return int(value)
+
+
+def _source_health_dict(value: Any) -> dict[str, Any]:
+    if isinstance(value, dict):
+        return dict(value)
+    if isinstance(value, str) and value.strip():
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, dict):
+                return parsed
+        except Exception:
+            return {}
+    return {}
+
+
+@router.get("/metrics/runs", response_model=RunMetricsListResponse)
+def list_run_metrics(limit: int = Query(5, ge=1, le=50)) -> RunMetricsListResponse:
+    """Return recent agent_run_metrics rows for the Run Metrics screen."""
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT m.id,
+                           m.briefing_run_id,
+                           m.run_at,
+                           m.findings_retrieved,
+                           m.findings_dropped_freshness,
+                           m.findings_dropped_scope,
+                           m.findings_dropped_dedup,
+                           m.findings_in_briefing,
+                           m.tokens_used,
+                           m.estimated_cost_usd,
+                           m.run_duration_seconds,
+                           m.tavily_result_count,
+                           m.yc_result_count,
+                           m.hn_result_count,
+                           m.rss_result_count,
+                           m.sources_queried,
+                           m.graph_version,
+                           m.source_health,
+                           br.status AS run_status
+                    FROM agent_run_metrics m
+                    LEFT JOIN briefing_runs br ON br.id = m.briefing_run_id
+                    ORDER BY m.run_at DESC
+                    LIMIT %s
+                    """,
+                    (limit,),
+                )
+                rows = cur.fetchall()
+
+                runs: list[RunMetricsEntry] = []
+                for row in rows:
+                    run_at = row.get("run_at")
+                    sources = row.get("sources_queried") or []
+                    if not isinstance(sources, list):
+                        sources = list(sources) if sources else []
+                    runs.append(
+                        RunMetricsEntry(
+                            id=str(row["id"]),
+                            run_id=str(row["briefing_run_id"]),
+                            status=str(row.get("run_status") or "completed"),
+                            run_at=(
+                                run_at.isoformat()
+                                if run_at is not None and hasattr(run_at, "isoformat")
+                                else str(run_at or "")
+                            ),
+                            run_duration_seconds=float(
+                                row.get("run_duration_seconds") or 0.0
+                            ),
+                            findings_retrieved=int(row.get("findings_retrieved") or 0),
+                            findings_in_briefing=int(
+                                row.get("findings_in_briefing") or 0
+                            ),
+                            findings_dropped_freshness=int(
+                                row.get("findings_dropped_freshness") or 0
+                            ),
+                            findings_dropped_scope=int(
+                                row.get("findings_dropped_scope") or 0
+                            ),
+                            findings_dropped_dedup=int(
+                                row.get("findings_dropped_dedup") or 0
+                            ),
+                            tokens_used=int(row.get("tokens_used") or 0),
+                            estimated_cost_usd=float(
+                                row.get("estimated_cost_usd") or 0.0
+                            ),
+                            graph_version=str(row.get("graph_version") or ""),
+                            tavily_result_count=_optional_int(
+                                row.get("tavily_result_count")
+                            ),
+                            yc_result_count=_optional_int(row.get("yc_result_count")),
+                            hn_result_count=_optional_int(row.get("hn_result_count")),
+                            rss_result_count=_optional_int(row.get("rss_result_count")),
+                            sources_queried=[str(s) for s in sources],
+                            source_health=_source_health_dict(row.get("source_health")),
+                        )
+                    )
+                return RunMetricsListResponse(runs=runs)
+    except Exception as exc:
+        logger.exception("Failed to list run metrics")
+        if "does not exist" in str(exc):
+            return RunMetricsListResponse(runs=[])
         raise HTTPException(status_code=500, detail=str(exc))
 
 
