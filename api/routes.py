@@ -25,14 +25,20 @@ from api.schemas import (
     BriefingListEntry,
     BriefingListResponse,
     BriefingResponse,
+    EpisodicMemoryEntry,
+    EpisodicMemoryResponse,
     FeedbackRequest,
     FeedbackResponse,
     HealthResponse,
+    ProceduralMemoryResponse,
     RunMetricsEntry,
     RunMetricsListResponse,
     RunRequest,
     RunResponse,
     RuntimeMetrics,
+    SemanticMemoryResponse,
+    UserConfigResponse,
+    UserConfigUpdateRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -729,6 +735,429 @@ def _resume_hitl(
     except Exception as exc:
         logger.exception("Failed to resume HITL")
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+_EMBEDDING_KEYS = frozenset(
+    {"embedding", "embeddings", "vector", "vectors", "embedding_vector"}
+)
+
+
+def _strip_embeddings(value: Any) -> Any:
+    """Recursively drop embedding / vector payloads from memory responses."""
+    if isinstance(value, dict):
+        return {
+            k: _strip_embeddings(v)
+            for k, v in value.items()
+            if k not in _EMBEDDING_KEYS
+        }
+    if isinstance(value, list):
+        return [_strip_embeddings(v) for v in value]
+    return value
+
+
+def _get_store():
+    """Reuse graph PostgresStore — never open a second store."""
+    from agent.graph import _postgres_store
+
+    if _postgres_store is None:
+        raise RuntimeError("PostgresStore unavailable")
+    return _postgres_store
+
+
+@router.get("/config", response_model=UserConfigResponse)
+def get_config(
+    user_id: str = Query("user_001", description="User namespace key"),
+) -> UserConfigResponse:
+    """Read existing user_configs (+ read-only graph_version / max findings)."""
+    try:
+        return _build_config_response(user_id)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Failed to load config")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+def _resolve_config_user_uuid(conn, user_id: str) -> Any:
+    """Map Phase-1 string user_id to auth.users UUID (same approach as metrics writer)."""
+    import uuid as uuid_mod
+
+    from agent.nodes.run_metrics_writer import _FALLBACK_AUTH_EMAIL
+
+    raw = (user_id or "").strip()
+    if raw:
+        try:
+            return uuid_mod.UUID(raw)
+        except ValueError:
+            pass
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT id FROM auth.users WHERE email = %s LIMIT 1",
+            (_FALLBACK_AUTH_EMAIL,),
+        )
+        row = cur.fetchone()
+    if row:
+        raw_id = row["id"] if isinstance(row, dict) else row[0]
+        if raw_id:
+            return (
+                raw_id
+                if isinstance(raw_id, uuid_mod.UUID)
+                else uuid_mod.UUID(str(raw_id))
+            )
+    raise HTTPException(
+        status_code=500,
+        detail=(
+            "Cannot resolve auth user for config write. "
+            f"Got user_id={raw!r}."
+        ),
+    )
+
+
+def _try_resolve_config_user_uuid(conn, user_id: str) -> Any | None:
+    """Soft resolve for GET — missing auth user means defaults, not a 500."""
+    try:
+        return _resolve_config_user_uuid(conn, user_id)
+    except HTTPException:
+        return None
+
+
+def _row_dict_to_config_response(
+    row: dict[str, Any] | None,
+    *,
+    display_user_id: str,
+    from_defaults: bool,
+) -> UserConfigResponse:
+    import os
+
+    from agent.nodes.config_loader import _DEFAULT_USER_CONFIG
+    from agent.state import MAX_FINDINGS_PER_RUN
+
+    if row is None:
+        cfg = {**_DEFAULT_USER_CONFIG, "user_id": display_user_id}
+        from_defaults = True
+    else:
+        cfg = {
+            "user_id": str(row["user_id"])
+            if row.get("user_id") is not None
+            else display_user_id,
+            "keywords": list(row["keywords"])
+            if row.get("keywords") is not None
+            else list(_DEFAULT_USER_CONFIG["keywords"]),
+            "verticals": list(row["verticals"])
+            if row.get("verticals") is not None
+            else list(_DEFAULT_USER_CONFIG["verticals"]),
+            "stage_filter": list(row["stage_filter"])
+            if row.get("stage_filter") is not None
+            else list(_DEFAULT_USER_CONFIG["stage_filter"]),
+            "delivery_email": row["delivery_email"]
+            if row.get("delivery_email") is not None
+            else _DEFAULT_USER_CONFIG["delivery_email"],
+            "schedule_freq": row["schedule_freq"]
+            if row.get("schedule_freq") is not None
+            else _DEFAULT_USER_CONFIG["schedule_freq"],
+        }
+
+    return UserConfigResponse(
+        user_id=str(cfg.get("user_id") or display_user_id),
+        keywords=list(cfg.get("keywords") or []),
+        verticals=list(cfg.get("verticals") or []),
+        stage_filter=list(cfg.get("stage_filter") or []),
+        schedule_freq=str(cfg.get("schedule_freq") or "weekly"),
+        delivery_email=str(cfg.get("delivery_email") or ""),
+        graph_version=os.getenv("GRAPH_VERSION", "1.0"),
+        max_findings_per_run=int(MAX_FINDINGS_PER_RUN),
+        from_defaults=from_defaults,
+    )
+
+
+def _fetch_user_config_row_db(conn, user_uuid: Any) -> dict[str, Any] | None:
+    """Read user_configs by auth UUID via the shared pool (not REST / user_001)."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT user_id, keywords, verticals, stage_filter,
+                   schedule_freq, delivery_email
+            FROM user_configs
+            WHERE user_id = %s
+            ORDER BY updated_at DESC NULLS LAST
+            LIMIT 1
+            """,
+            (str(user_uuid),),
+        )
+        row = cur.fetchone()
+    if not row:
+        return None
+    return dict(row) if not isinstance(row, dict) else row
+
+
+def _build_config_response(user_id: str) -> UserConfigResponse:
+    """Load config from Postgres using the same UUID key as PUT /config."""
+    with pool.connection() as conn:
+        user_uuid = _try_resolve_config_user_uuid(conn, user_id)
+        if user_uuid is None:
+            return _row_dict_to_config_response(
+                None, display_user_id=user_id, from_defaults=True
+            )
+        row = _fetch_user_config_row_db(conn, user_uuid)
+        return _row_dict_to_config_response(
+            row,
+            display_user_id=str(user_uuid),
+            from_defaults=row is None,
+        )
+
+
+def _normalize_delivery_email(value: str) -> str:
+    email = (value or "").strip()
+    if not email or "@" not in email or "." not in email.split("@")[-1]:
+        raise HTTPException(status_code=400, detail="Invalid delivery_email")
+    if len(email) > 320:
+        raise HTTPException(status_code=400, detail="Invalid delivery_email")
+    return email
+
+
+@router.put("/config", response_model=UserConfigResponse)
+def update_config(
+    body: UserConfigUpdateRequest,
+    user_id: str = Query("user_001", description="User namespace key"),
+) -> UserConfigResponse:
+    """Update delivery_email only. Creates user_configs row when missing."""
+    from agent.nodes.config_loader import _DEFAULT_USER_CONFIG
+
+    email = _normalize_delivery_email(body.delivery_email)
+
+    try:
+        with pool.connection() as conn:
+            user_uuid = _resolve_config_user_uuid(conn, user_id)
+            now = datetime.now(timezone.utc)
+            with conn.cursor() as cur:
+                # Prefer UPDATE … RETURNING so we never silently no-op.
+                cur.execute(
+                    """
+                    UPDATE user_configs
+                    SET delivery_email = %s,
+                        updated_at = %s
+                    WHERE user_id = %s
+                    RETURNING user_id, keywords, verticals, stage_filter,
+                              schedule_freq, delivery_email
+                    """,
+                    (email, now, str(user_uuid)),
+                )
+                updated = cur.fetchone()
+                if updated is None:
+                    cur.execute(
+                        """
+                        INSERT INTO user_configs (
+                            user_id, keywords, verticals, stage_filter,
+                            schedule_freq, delivery_email, created_at, updated_at
+                        ) VALUES (
+                            %s, %s, %s, %s, %s, %s, %s, %s
+                        )
+                        RETURNING user_id, keywords, verticals, stage_filter,
+                                  schedule_freq, delivery_email
+                        """,
+                        (
+                            str(user_uuid),
+                            list(_DEFAULT_USER_CONFIG["keywords"]),
+                            list(_DEFAULT_USER_CONFIG["verticals"]),
+                            list(_DEFAULT_USER_CONFIG["stage_filter"]),
+                            str(_DEFAULT_USER_CONFIG["schedule_freq"]),
+                            email,
+                            now,
+                            now,
+                        ),
+                    )
+                    updated = cur.fetchone()
+                if updated is None:
+                    raise RuntimeError(
+                        "user_configs write returned no row — delivery email not persisted"
+                    )
+                persisted = dict(updated) if not isinstance(updated, dict) else updated
+            conn.commit()
+
+        # Re-read from DB so response reflects persisted state (no client-side override).
+        return _build_config_response(user_id)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Failed to update config")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+def _episode_title(value: dict[str, Any], key: str) -> str:
+    titles = value.get("item_titles") or []
+    if isinstance(titles, list) and titles:
+        first = str(titles[0]).strip()
+        if first:
+            return first
+    run_id = str(value.get("run_id") or key or "").strip()
+    if run_id:
+        return f"Run {run_id[:8]}"
+    return "Untitled episode"
+
+
+def _episode_source(value: dict[str, Any]) -> Optional[str]:
+    urls = value.get("source_urls") or []
+    if not isinstance(urls, list) or not urls:
+        return "episodic"
+    # Derive a short source hint from the first URL host when present.
+    try:
+        from urllib.parse import urlparse
+
+        host = urlparse(str(urls[0])).netloc or ""
+        if host.startswith("www."):
+            host = host[4:]
+        if host:
+            extra = len(urls) - 1
+            return host if extra <= 0 else f"{host} (+{extra})"
+    except Exception:
+        pass
+    return "episodic"
+
+
+@router.get("/memory/semantic", response_model=SemanticMemoryResponse)
+def get_semantic_memory(
+    user_id: str = Query("user_001", description="User namespace key"),
+) -> SemanticMemoryResponse:
+    """Read-only semantic memory inspector (no embeddings)."""
+    from agent.nodes.config_loader import _SEMANTIC_KEY
+
+    try:
+        store = _get_store()
+        item = store.get(("user", user_id, "semantic"), _SEMANTIC_KEY)
+        if item is None or not isinstance(getattr(item, "value", None), dict):
+            return SemanticMemoryResponse(memory={}, updated_at=None, empty=True)
+
+        memory = _strip_embeddings(item.value)
+        if not isinstance(memory, dict):
+            memory = {}
+
+        updated_at_str = None
+        created = getattr(item, "created_at", None)
+        if created is not None:
+            updated_at_str = (
+                created.isoformat()
+                if hasattr(created, "isoformat")
+                else str(created)
+            )
+
+        # Empty when no meaningful list content
+        has_content = any(
+            isinstance(memory.get(k), list) and len(memory.get(k) or []) > 0
+            for k in ("seen_urls", "seen_titles", "seen_company_dates")
+        ) or any(
+            v not in (None, "", [], {})
+            for k, v in memory.items()
+            if k not in ("seen_urls", "seen_titles", "seen_company_dates")
+        )
+        return SemanticMemoryResponse(
+            memory=memory,
+            updated_at=updated_at_str,
+            empty=not has_content,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Failed to load semantic memory")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.get("/memory/episodic", response_model=EpisodicMemoryResponse)
+def get_episodic_memory(
+    user_id: str = Query("user_001", description="User namespace key"),
+    limit: int = Query(50, ge=1, le=200),
+) -> EpisodicMemoryResponse:
+    """Read-only episodic memory inspector (no embeddings)."""
+    try:
+        store = _get_store()
+        items = list(store.search(("user", user_id, "episodic"), limit=limit))
+        episodes: list[EpisodicMemoryEntry] = []
+        for item in items:
+            raw = item.value if isinstance(getattr(item, "value", None), dict) else {}
+            value = _strip_embeddings(raw)
+            if not isinstance(value, dict):
+                value = {}
+            key = str(getattr(item, "key", "") or value.get("run_id") or "")
+            titles = value.get("item_titles") or []
+            urls = value.get("source_urls") or []
+            companies = value.get("company_names_normalized") or []
+            episodes.append(
+                EpisodicMemoryEntry(
+                    key=key,
+                    run_id=str(value.get("run_id") or key),
+                    thread_id=str(value.get("thread_id") or ""),
+                    title=_episode_title(value, key),
+                    timestamp=(
+                        str(value["timestamp"])
+                        if value.get("timestamp") is not None
+                        else None
+                    ),
+                    source=_episode_source(value),
+                    confidence=None,
+                    summary=(
+                        str(value["briefing_summary"])
+                        if value.get("briefing_summary") is not None
+                        else None
+                    ),
+                    item_titles=[str(t) for t in titles] if isinstance(titles, list) else [],
+                    source_urls=[str(u) for u in urls] if isinstance(urls, list) else [],
+                    company_names_normalized=(
+                        [str(c) for c in companies] if isinstance(companies, list) else []
+                    ),
+                )
+            )
+        # Newest first when timestamps exist
+        episodes.sort(
+            key=lambda e: e.timestamp or "",
+            reverse=True,
+        )
+        return EpisodicMemoryResponse(episodes=episodes)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Failed to load episodic memory")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@router.get("/memory/procedural", response_model=ProceduralMemoryResponse)
+def get_procedural_memory(
+    user_id: str = Query("user_001", description="User namespace key"),
+) -> ProceduralMemoryResponse:
+    """Read-only procedural preference profile (no LLM, no embeddings)."""
+    from agent.nodes.config_loader import _PROCEDURAL_KEY
+
+    try:
+        store = _get_store()
+        item = store.get(("user", user_id, "procedural"), _PROCEDURAL_KEY)
+        if item is None or not isinstance(getattr(item, "value", None), dict):
+            return ProceduralMemoryResponse(preferences={}, updated_at=None, empty=True)
+
+        prefs = _strip_embeddings(item.value)
+        if not isinstance(prefs, dict):
+            prefs = {}
+        # Never expose wall-clock metadata invented for the API — only pass through
+        # if the stored profile already carries an updated_at (currently it does not).
+        updated_at = prefs.pop("last_updated", None) or prefs.pop("updated_at", None)
+        updated_at_str = str(updated_at) if updated_at is not None else None
+        # Prefer Store item created_at when available
+        created = getattr(item, "created_at", None)
+        if updated_at_str is None and created is not None:
+            updated_at_str = (
+                created.isoformat()
+                if hasattr(created, "isoformat")
+                else str(created)
+            )
+
+        empty = len(prefs) == 0
+        return ProceduralMemoryResponse(
+            preferences=prefs,
+            updated_at=updated_at_str,
+            empty=empty,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.exception("Failed to load procedural memory")
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @router.post("/run", response_model=RunResponse)

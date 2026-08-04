@@ -143,3 +143,59 @@ class RunResponse(BaseModel):
     delivery_status: Optional[str] = None
     runtime_metrics: Optional[RuntimeMetrics] = None
     error: Optional[dict[str, Any]] = None
+
+
+class UserConfigResponse(BaseModel):
+    """GET /config — existing user_configs fields + read-only runtime constants."""
+
+    user_id: str
+    keywords: list[str] = Field(default_factory=list)
+    verticals: list[str] = Field(default_factory=list)
+    stage_filter: list[str] = Field(default_factory=list)
+    schedule_freq: str = "weekly"
+    delivery_email: str = ""
+    graph_version: str = ""
+    max_findings_per_run: int = 50
+    from_defaults: bool = False
+
+
+class UserConfigUpdateRequest(BaseModel):
+    """PUT /config — only delivery_email is writable."""
+
+    delivery_email: str = Field(..., min_length=1, max_length=320)
+
+
+class EpisodicMemoryEntry(BaseModel):
+    """One episodic Store item — no embeddings / vectors."""
+
+    key: str
+    run_id: str = ""
+    thread_id: str = ""
+    title: str = ""
+    timestamp: Optional[str] = None
+    source: Optional[str] = None
+    confidence: Optional[float] = None
+    summary: Optional[str] = None
+    item_titles: list[str] = Field(default_factory=list)
+    source_urls: list[str] = Field(default_factory=list)
+    company_names_normalized: list[str] = Field(default_factory=list)
+
+
+class EpisodicMemoryResponse(BaseModel):
+    episodes: list[EpisodicMemoryEntry] = Field(default_factory=list)
+
+
+class SemanticMemoryResponse(BaseModel):
+    """Semantic memory from Store — read-only, no embeddings."""
+
+    memory: dict[str, Any] = Field(default_factory=dict)
+    updated_at: Optional[str] = None
+    empty: bool = False
+
+
+class ProceduralMemoryResponse(BaseModel):
+    """Procedural preference profile from Store — read-only."""
+
+    preferences: dict[str, Any] = Field(default_factory=dict)
+    updated_at: Optional[str] = None
+    empty: bool = False

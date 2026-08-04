@@ -2,11 +2,11 @@
 
 ## Active Slice
 
-Slice 5+ — Complete Run Metrics Screen (SIG-026A)
+Slice 5+ — Config Delivery Email Persistence Fix (SIG-027C)
 
 ## Active Tasks
 
-- SIG-026A: Complete Run Metrics Screen — PENDING VALIDATION
+- SIG-027C: Persist Delivery Email via aligned GET/PUT UUID path — PENDING VALIDATION
 
 ## Blocked Tasks
 
@@ -17,14 +17,15 @@ Slice 5+ — Complete Run Metrics Screen (SIG-026A)
 - frontend/index.html
 - api/routes.py
 - api/schemas.py
-- tests/test_metrics_api.py
+- tests/test_config_memory_api.py
 
 ## Slice Exit Criteria
 
-- source_health returned from GET /metrics/runs
-- source_health rendered on each metrics card
-- per-source counts round-trip when stored; NULL stays NULL
-- metrics tests pass
+- PUT updates or creates user_configs row under auth UUID
+- GET reads same UUID key via pool (not REST user_001)
+- Defaults only when no row exists
+- Frontend reloads config from GET after save
+- Persistence tests pass
 
 ## Last Updated
 

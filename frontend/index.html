@@ -68,7 +68,11 @@
                     <i class="ph ph-chart-line-up text-xl"></i>
                     <span class="font-medium">Run Metrics</span>
                 </button>
-                <button onclick="setView('config')" class="nav-item w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-all text-slate-400 cursor-not-allowed" disabled>
+                <button onclick="setView('memory')" class="nav-item w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-all" data-view="memory">
+                    <i class="ph ph-brain text-xl"></i>
+                    <span class="font-medium">Memory Inspector</span>
+                </button>
+                <button onclick="setView('config')" class="nav-item w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-all" data-view="config">
                     <i class="ph ph-gear text-xl"></i>
                     <span class="font-medium">Configuration</span>
                 </button>
@@ -282,6 +286,111 @@
                     </div>
                 </div>
 
+                <!-- Memory Inspector View -->
+                <div id="view-memory" class="view hidden space-y-6 md:space-y-8">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Memory Inspector</h2>
+                            <p class="text-slate-500 text-sm mt-1">Read-only view of what the agent has learned</p>
+                        </div>
+                        <button onclick="fetchMemory()" class="p-2 text-slate-500 hover:text-brand-600 transition-colors" aria-label="Refresh memory">
+                            <i class="ph ph-arrows-clockwise text-2xl"></i>
+                        </button>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 border-b border-slate-200 dark:border-slate-800 pb-3" role="tablist" aria-label="Memory types">
+                        <button id="memory-tab-semantic" onclick="setMemoryTab('semantic')" class="memory-tab px-3 py-1.5 rounded-lg text-sm font-medium transition-all bg-brand-50 text-brand-600 dark:bg-brand-900/20 dark:text-brand-400" data-tab="semantic" role="tab" aria-selected="true">
+                            Semantic Memory
+                        </button>
+                        <button id="memory-tab-episodic" onclick="setMemoryTab('episodic')" class="memory-tab px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" data-tab="episodic" role="tab" aria-selected="false">
+                            Episodic Memory
+                        </button>
+                        <button id="memory-tab-procedural" onclick="setMemoryTab('procedural')" class="memory-tab px-3 py-1.5 rounded-lg text-sm font-medium transition-all text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800" data-tab="procedural" role="tab" aria-selected="false">
+                            Procedural Memory
+                        </button>
+                    </div>
+
+                    <div id="memory-loading" class="hidden py-20 flex flex-col items-center justify-center gap-4">
+                        <div class="w-10 h-10 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
+                        <p class="text-slate-500 font-medium">Loading memory...</p>
+                    </div>
+
+                    <div id="memory-error" class="hidden py-12 flex flex-col items-center justify-center text-center space-y-3 px-4">
+                        <div class="w-16 h-16 bg-rose-50 dark:bg-rose-900/20 rounded-full flex items-center justify-center mx-auto">
+                            <i class="ph ph-warning-circle text-3xl text-rose-500"></i>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-300 font-medium">Couldn't load memory. Please try again.</p>
+                        <button onclick="fetchMemory()" class="text-brand-600 font-bold hover:underline text-sm">Retry</button>
+                    </div>
+
+                    <div id="memory-semantic-panel" class="memory-panel space-y-4 md:space-y-6">
+                        <div id="memory-semantic-empty" class="hidden py-20 flex flex-col items-center justify-center text-center space-y-4 px-4">
+                            <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
+                                <i class="ph ph-lightbulb text-3xl text-slate-400"></i>
+                            </div>
+                            <p class="text-slate-500">No semantic memory yet. Background knowledge accumulates as Signal researches.</p>
+                        </div>
+                        <div id="memory-semantic-content" class="space-y-4"></div>
+                    </div>
+
+                    <div id="memory-episodic-panel" class="memory-panel hidden space-y-4 md:space-y-6">
+                        <div id="memory-episodic-empty" class="hidden py-20 flex flex-col items-center justify-center text-center space-y-4 px-4">
+                            <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
+                                <i class="ph ph-books text-3xl text-slate-400"></i>
+                            </div>
+                            <p class="text-slate-500">No episodic memory yet. Approve a briefing to record a run.</p>
+                        </div>
+                        <div id="memory-episodic-list" class="space-y-4 md:space-y-6"></div>
+                    </div>
+
+                    <div id="memory-procedural-panel" class="memory-panel hidden space-y-4 md:space-y-6">
+                        <div id="memory-procedural-empty" class="hidden py-20 flex flex-col items-center justify-center text-center space-y-4 px-4">
+                            <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
+                                <i class="ph ph-sliders-horizontal text-3xl text-slate-400"></i>
+                            </div>
+                            <p class="text-slate-500">No learned preferences yet. As you review briefings, Signal will gradually learn your long-term preferences.</p>
+                        </div>
+                        <div id="memory-procedural-content" class="space-y-4"></div>
+                    </div>
+                </div>
+
+                <!-- Configuration View -->
+                <div id="view-config" class="view hidden space-y-6 md:space-y-8">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Configuration</h2>
+                            <p class="text-slate-500 text-sm mt-1">Delivery email is editable; other settings are read-only</p>
+                        </div>
+                        <button onclick="fetchConfig()" class="p-2 text-slate-500 hover:text-brand-600 transition-colors" aria-label="Refresh configuration">
+                            <i class="ph ph-arrows-clockwise text-2xl"></i>
+                        </button>
+                    </div>
+
+                    <div id="config-loading" class="hidden py-20 flex flex-col items-center justify-center gap-4">
+                        <div class="w-10 h-10 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
+                        <p class="text-slate-500 font-medium">Loading configuration...</p>
+                    </div>
+
+                    <div id="config-error" class="hidden py-12 flex flex-col items-center justify-center text-center space-y-3 px-4">
+                        <div class="w-16 h-16 bg-rose-50 dark:bg-rose-900/20 rounded-full flex items-center justify-center mx-auto">
+                            <i class="ph ph-warning-circle text-3xl text-rose-500"></i>
+                        </div>
+                        <p class="text-slate-600 dark:text-slate-300 font-medium">Couldn't load configuration. Please try again.</p>
+                        <button onclick="fetchConfig()" class="text-brand-600 font-bold hover:underline text-sm">Retry</button>
+                    </div>
+
+                    <div id="config-empty" class="hidden py-12 flex flex-col items-center justify-center text-center space-y-3 px-4">
+                        <div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto">
+                            <i class="ph ph-gear text-3xl text-slate-400"></i>
+                        </div>
+                        <p class="text-slate-500">Unable to display configuration.</p>
+                    </div>
+
+                    <div id="config-content" class="hidden space-y-4 md:space-y-6">
+                        <div id="config-cards" class="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6"></div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- Toast / Notifications -->
@@ -312,6 +421,12 @@
             lastRun: null,
             briefings: [],
             runMetrics: [],
+            userConfig: null,
+            semanticMemory: null,
+            episodicMemory: [],
+            proceduralMemory: null,
+            memoryTab: 'semantic',
+            editingDeliveryEmail: false,
             pendingBriefing: null,
             isDarkMode: false
         };
@@ -341,6 +456,22 @@
             metricsListLoading: document.getElementById('metrics-list-loading'),
             metricsListEmpty: document.getElementById('metrics-list-empty'),
             metricsListError: document.getElementById('metrics-list-error'),
+            memoryLoading: document.getElementById('memory-loading'),
+            memoryError: document.getElementById('memory-error'),
+            memorySemanticPanel: document.getElementById('memory-semantic-panel'),
+            memoryEpisodicPanel: document.getElementById('memory-episodic-panel'),
+            memoryProceduralPanel: document.getElementById('memory-procedural-panel'),
+            memorySemanticContent: document.getElementById('memory-semantic-content'),
+            memorySemanticEmpty: document.getElementById('memory-semantic-empty'),
+            memoryEpisodicList: document.getElementById('memory-episodic-list'),
+            memoryEpisodicEmpty: document.getElementById('memory-episodic-empty'),
+            memoryProceduralContent: document.getElementById('memory-procedural-content'),
+            memoryProceduralEmpty: document.getElementById('memory-procedural-empty'),
+            configLoading: document.getElementById('config-loading'),
+            configError: document.getElementById('config-error'),
+            configEmpty: document.getElementById('config-empty'),
+            configContent: document.getElementById('config-content'),
+            configCards: document.getElementById('config-cards'),
             detailMeta: document.getElementById('detail-meta'),
             detailStatusBadge: document.getElementById('detail-status-badge'),
             detailMetrics: document.getElementById('detail-metrics'),
@@ -383,6 +514,12 @@
             }
             if (viewName === 'metrics') {
                 fetchRunMetrics();
+            }
+            if (viewName === 'memory') {
+                fetchMemory();
+            }
+            if (viewName === 'config') {
+                fetchConfig();
             }
             if (viewName === 'dashboard') {
                 refreshDashboard();
@@ -584,6 +721,442 @@
                 return [];
             } finally {
                 elements.metricsListLoading.classList.add('hidden');
+            }
+        }
+
+        async function fetchConfig() {
+            elements.configLoading.classList.remove('hidden');
+            elements.configError.classList.add('hidden');
+            elements.configEmpty.classList.add('hidden');
+            elements.configContent.classList.add('hidden');
+
+            try {
+                const res = await fetch(`${API_BASE}/config`);
+                if (!res.ok) throw new Error('Failed to fetch configuration');
+                const data = await res.json();
+                state.userConfig = data;
+                renderConfig();
+                return data;
+            } catch (err) {
+                console.log('Fetch Config Failed:', err.message);
+                state.userConfig = null;
+                elements.configError.classList.remove('hidden');
+                showToast("Couldn't load configuration. Please try again.", 'error');
+                return null;
+            } finally {
+                elements.configLoading.classList.add('hidden');
+            }
+        }
+
+        function _configChip(label, valueHtml, { editable = false } = {}) {
+            const card = document.createElement('div');
+            card.className = 'p-4 md:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl min-w-0';
+            const title = document.createElement('p');
+            title.className = 'text-[10px] uppercase tracking-wider text-slate-500 font-medium flex items-center gap-2';
+            const badge = editable ? 'editable' : 'read-only';
+            title.innerHTML = `${label} <span class="normal-case tracking-normal text-slate-400 font-normal">${badge}</span>`;
+            card.appendChild(title);
+            const body = document.createElement('div');
+            body.className = 'mt-2 text-sm md:text-base font-medium break-words';
+            if (typeof valueHtml === 'string') {
+                body.textContent = valueHtml;
+            } else {
+                body.appendChild(valueHtml);
+            }
+            card.appendChild(body);
+            return card;
+        }
+
+        function _tagList(items) {
+            const wrap = document.createElement('div');
+            wrap.className = 'flex flex-wrap gap-2';
+            const list = Array.isArray(items) ? items : [];
+            if (!list.length) {
+                wrap.textContent = '—';
+                return wrap;
+            }
+            list.forEach(item => {
+                const tag = document.createElement('span');
+                tag.className = 'px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300';
+                tag.textContent = String(item);
+                wrap.appendChild(tag);
+            });
+            return wrap;
+        }
+
+        function _deliveryEmailEditor(cfg) {
+            const wrap = document.createElement('div');
+            wrap.className = 'space-y-3';
+
+            const input = document.createElement('input');
+            input.type = 'email';
+            input.id = 'config-delivery-email-input';
+            input.className = 'w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-70';
+            input.value = cfg.delivery_email || '';
+            input.disabled = !state.editingDeliveryEmail;
+            input.placeholder = 'you@example.com';
+            wrap.appendChild(input);
+
+            const actions = document.createElement('div');
+            actions.className = 'flex flex-wrap items-center gap-2';
+
+            if (!state.editingDeliveryEmail) {
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.className = 'px-3 py-1.5 text-sm font-bold rounded-lg bg-brand-600 hover:bg-brand-700 text-white transition-colors';
+                editBtn.textContent = 'Edit';
+                editBtn.onclick = () => {
+                    state.editingDeliveryEmail = true;
+                    renderConfig();
+                    const el = document.getElementById('config-delivery-email-input');
+                    if (el) el.focus();
+                };
+                actions.appendChild(editBtn);
+            } else {
+                const saveBtn = document.createElement('button');
+                saveBtn.type = 'button';
+                saveBtn.id = 'config-delivery-email-save';
+                saveBtn.className = 'px-3 py-1.5 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors disabled:opacity-50';
+                saveBtn.textContent = 'Save';
+                saveBtn.onclick = () => saveDeliveryEmail();
+                actions.appendChild(saveBtn);
+
+                const cancelBtn = document.createElement('button');
+                cancelBtn.type = 'button';
+                cancelBtn.className = 'px-3 py-1.5 text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors';
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.onclick = () => {
+                    state.editingDeliveryEmail = false;
+                    renderConfig();
+                };
+                actions.appendChild(cancelBtn);
+            }
+
+            wrap.appendChild(actions);
+            return wrap;
+        }
+
+        async function saveDeliveryEmail() {
+            const input = document.getElementById('config-delivery-email-input');
+            const saveBtn = document.getElementById('config-delivery-email-save');
+            if (!input) return;
+            const email = (input.value || '').trim();
+            if (!email || !email.includes('@')) {
+                showToast('Enter a valid delivery email', 'error');
+                return;
+            }
+            if (saveBtn) saveBtn.disabled = true;
+            try {
+                const res = await fetch(`${API_BASE}/config`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ delivery_email: email }),
+                });
+                if (!res.ok) {
+                    let detail = 'Failed to update delivery email';
+                    try {
+                        const errBody = await res.json();
+                        if (errBody && errBody.detail) detail = String(errBody.detail);
+                    } catch (_) {}
+                    throw new Error(detail);
+                }
+                state.editingDeliveryEmail = false;
+                // Reload from GET so UI shows the persisted DB value, not a local override.
+                const refreshed = await fetchConfig();
+                if (!refreshed || refreshed.delivery_email !== email) {
+                    showToast('Saved, but configuration reload looked stale. Retrying…', 'info');
+                    await fetchConfig();
+                }
+                showToast('Delivery email updated', 'success');
+            } catch (err) {
+                console.log('Save delivery email failed:', err.message);
+                showToast(err.message || "Couldn't save delivery email", 'error');
+                if (saveBtn) saveBtn.disabled = false;
+            }
+        }
+
+        function renderConfig() {
+            elements.configError.classList.add('hidden');
+            elements.configEmpty.classList.add('hidden');
+            elements.configContent.classList.add('hidden');
+            elements.configCards.innerHTML = '';
+
+            const cfg = state.userConfig;
+            if (!cfg) {
+                elements.configEmpty.classList.remove('hidden');
+                return;
+            }
+
+            elements.configContent.classList.remove('hidden');
+
+            const scheduleLabel = (cfg.schedule_freq || 'weekly') === 'daily' ? 'Daily' : 'Weekly';
+            elements.configCards.appendChild(
+                _configChip('Delivery email', _deliveryEmailEditor(cfg), { editable: true })
+            );
+            const readOnlyCards = [
+                ['Delivery schedule', scheduleLabel],
+                ['Maximum findings', String(cfg.max_findings_per_run ?? '—')],
+                ['Graph version', cfg.graph_version || '—'],
+                ['Keywords', _tagList(cfg.keywords)],
+                ['Verticals', _tagList(cfg.verticals)],
+                ['Stage filter', _tagList(cfg.stage_filter)],
+                ['User ID', cfg.user_id || '—'],
+            ];
+            readOnlyCards.forEach(([label, value]) => {
+                elements.configCards.appendChild(_configChip(label, value));
+            });
+        }
+
+        async function fetchMemory() {
+            elements.memoryLoading.classList.remove('hidden');
+            elements.memoryError.classList.add('hidden');
+            if (elements.memorySemanticContent) elements.memorySemanticContent.innerHTML = '';
+            elements.memoryEpisodicList.innerHTML = '';
+            elements.memoryProceduralContent.innerHTML = '';
+            if (elements.memorySemanticEmpty) elements.memorySemanticEmpty.classList.add('hidden');
+            elements.memoryEpisodicEmpty.classList.add('hidden');
+            elements.memoryProceduralEmpty.classList.add('hidden');
+
+            try {
+                const [semRes, epRes, prRes] = await Promise.all([
+                    fetch(`${API_BASE}/memory/semantic`),
+                    fetch(`${API_BASE}/memory/episodic?limit=50`),
+                    fetch(`${API_BASE}/memory/procedural`),
+                ]);
+                if (!semRes.ok || !epRes.ok || !prRes.ok) throw new Error('Failed to fetch memory');
+
+                const semData = await semRes.json();
+                const epData = await epRes.json();
+                const prData = await prRes.json();
+                state.semanticMemory = semData;
+                state.episodicMemory = epData.episodes || [];
+                state.proceduralMemory = prData;
+                setMemoryTab(state.memoryTab || 'semantic');
+                renderMemory();
+                return {
+                    semantic: state.semanticMemory,
+                    episodic: state.episodicMemory,
+                    procedural: state.proceduralMemory,
+                };
+            } catch (err) {
+                console.log('Fetch Memory Failed:', err.message);
+                state.semanticMemory = null;
+                state.episodicMemory = [];
+                state.proceduralMemory = null;
+                elements.memoryError.classList.remove('hidden');
+                showToast("Couldn't load memory. Please try again.", 'error');
+                return null;
+            } finally {
+                elements.memoryLoading.classList.add('hidden');
+            }
+        }
+
+        function setMemoryTab(tab) {
+            const allowed = ['semantic', 'episodic', 'procedural'];
+            state.memoryTab = allowed.includes(tab) ? tab : 'semantic';
+            document.querySelectorAll('.memory-tab').forEach(btn => {
+                const active = btn.getAttribute('data-tab') === state.memoryTab;
+                btn.setAttribute('aria-selected', active ? 'true' : 'false');
+                if (active) {
+                    btn.classList.add('bg-brand-50', 'text-brand-600', 'dark:bg-brand-900/20', 'dark:text-brand-400');
+                    btn.classList.remove('text-slate-600', 'dark:text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-800');
+                } else {
+                    btn.classList.remove('bg-brand-50', 'text-brand-600', 'dark:bg-brand-900/20', 'dark:text-brand-400');
+                    btn.classList.add('text-slate-600', 'dark:text-slate-400', 'hover:bg-slate-100', 'dark:hover:bg-slate-800');
+                }
+            });
+            if (elements.memorySemanticPanel) {
+                elements.memorySemanticPanel.classList.toggle('hidden', state.memoryTab !== 'semantic');
+            }
+            elements.memoryEpisodicPanel.classList.toggle('hidden', state.memoryTab !== 'episodic');
+            elements.memoryProceduralPanel.classList.toggle('hidden', state.memoryTab !== 'procedural');
+        }
+
+        function renderMemory() {
+            elements.memoryError.classList.add('hidden');
+            renderSemanticMemory();
+            renderEpisodicMemory();
+            renderProceduralMemory();
+        }
+
+        function renderSemanticMemory() {
+            if (!elements.memorySemanticContent || !elements.memorySemanticEmpty) return;
+            elements.memorySemanticContent.innerHTML = '';
+            elements.memorySemanticEmpty.classList.add('hidden');
+            const data = state.semanticMemory;
+            if (!data || data.empty || !data.memory || !Object.keys(data.memory).length) {
+                elements.memorySemanticEmpty.classList.remove('hidden');
+                return;
+            }
+
+            const memory = data.memory;
+            if (data.updated_at) {
+                const updated = document.createElement('p');
+                updated.className = 'text-xs text-slate-500';
+                updated.textContent = `Last updated: ${new Date(data.updated_at).toLocaleString()}`;
+                elements.memorySemanticContent.appendChild(updated);
+            }
+
+            const listFields = [
+                ['Seen URLs', memory.seen_urls],
+                ['Seen titles', memory.seen_titles],
+                ['Seen company + date keys', memory.seen_company_dates],
+            ];
+            listFields.forEach(([label, value]) => {
+                elements.memorySemanticContent.appendChild(_prefRow(label, _tagList(value)));
+            });
+
+            // Any extra non-list keys (excluding embeddings already stripped by API)
+            Object.keys(memory).forEach(key => {
+                if (['seen_urls', 'seen_titles', 'seen_company_dates'].includes(key)) return;
+                const val = memory[key];
+                if (val == null) return;
+                const node = document.createElement('p');
+                node.className = 'font-medium break-words';
+                node.textContent = typeof val === 'object' ? JSON.stringify(val) : String(val);
+                elements.memorySemanticContent.appendChild(_prefRow(key.replace(/_/g, ' '), node));
+            });
+        }
+
+        function renderEpisodicMemory() {
+            elements.memoryEpisodicList.innerHTML = '';
+            elements.memoryEpisodicEmpty.classList.add('hidden');
+            const episodes = state.episodicMemory || [];
+            if (!episodes.length) {
+                elements.memoryEpisodicEmpty.classList.remove('hidden');
+                return;
+            }
+
+            episodes.forEach(ep => {
+                const card = document.createElement('div');
+                card.className = 'p-4 md:p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl space-y-3 min-w-0';
+
+                const header = document.createElement('div');
+                header.className = 'flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2';
+                const title = document.createElement('h3');
+                title.className = 'font-bold text-sm md:text-base break-words';
+                title.textContent = ep.title || 'Untitled episode';
+                header.appendChild(title);
+
+                const when = document.createElement('p');
+                when.className = 'text-xs text-slate-500 shrink-0';
+                when.textContent = ep.timestamp
+                    ? new Date(ep.timestamp).toLocaleString(undefined, {
+                        month: 'short', day: 'numeric', year: 'numeric',
+                        hour: '2-digit', minute: '2-digit'
+                    })
+                    : 'No timestamp';
+                header.appendChild(when);
+                card.appendChild(header);
+
+                const meta = document.createElement('div');
+                meta.className = 'flex flex-wrap gap-2 text-[10px] uppercase tracking-wider font-medium';
+                const source = document.createElement('span');
+                source.className = 'px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 normal-case tracking-normal';
+                source.textContent = `Source: ${ep.source || 'episodic'}`;
+                meta.appendChild(source);
+                if (ep.confidence != null && ep.confidence !== undefined) {
+                    const conf = document.createElement('span');
+                    conf.className = 'px-2 py-0.5 rounded-md bg-brand-50 dark:bg-brand-900/20 text-brand-700 dark:text-brand-300 normal-case tracking-normal';
+                    conf.textContent = `Confidence: ${Math.round(Number(ep.confidence) * 100)}%`;
+                    meta.appendChild(conf);
+                }
+                card.appendChild(meta);
+
+                if (ep.summary) {
+                    const summary = document.createElement('p');
+                    summary.className = 'text-sm text-slate-600 dark:text-slate-300';
+                    summary.textContent = ep.summary;
+                    card.appendChild(summary);
+                }
+
+                const titles = ep.item_titles || [];
+                if (titles.length) {
+                    const listLabel = document.createElement('p');
+                    listLabel.className = 'text-[10px] uppercase tracking-wider text-slate-400 font-medium';
+                    listLabel.textContent = `Items (${titles.length})`;
+                    card.appendChild(listLabel);
+                    const ul = document.createElement('ul');
+                    ul.className = 'text-sm text-slate-600 dark:text-slate-300 space-y-1 list-disc list-inside';
+                    titles.slice(0, 8).forEach(t => {
+                        const li = document.createElement('li');
+                        li.className = 'truncate';
+                        li.textContent = t;
+                        ul.appendChild(li);
+                    });
+                    if (titles.length > 8) {
+                        const more = document.createElement('li');
+                        more.className = 'text-slate-400 list-none';
+                        more.textContent = `+${titles.length - 8} more`;
+                        ul.appendChild(more);
+                    }
+                    card.appendChild(ul);
+                }
+
+                elements.memoryEpisodicList.appendChild(card);
+            });
+        }
+
+        function _prefRow(label, valueNode) {
+            const row = document.createElement('div');
+            row.className = 'p-4 md:p-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl min-w-0';
+            const lab = document.createElement('p');
+            lab.className = 'text-[10px] uppercase tracking-wider text-slate-500 font-medium';
+            lab.textContent = label;
+            row.appendChild(lab);
+            const body = document.createElement('div');
+            body.className = 'mt-2 text-sm';
+            body.appendChild(valueNode);
+            row.appendChild(body);
+            return row;
+        }
+
+        function renderProceduralMemory() {
+            elements.memoryProceduralContent.innerHTML = '';
+            elements.memoryProceduralEmpty.classList.add('hidden');
+            const data = state.proceduralMemory;
+            if (!data || data.empty || !data.preferences || !Object.keys(data.preferences).length) {
+                elements.memoryProceduralEmpty.classList.remove('hidden');
+                return;
+            }
+
+            const prefs = data.preferences;
+            if (data.updated_at) {
+                const updated = document.createElement('p');
+                updated.className = 'text-xs text-slate-500';
+                updated.textContent = `Last updated: ${new Date(data.updated_at).toLocaleString()}`;
+                elements.memoryProceduralContent.appendChild(updated);
+            }
+
+            const listFields = [
+                ['High-signal categories', prefs.high_signal_categories],
+                ['Low-signal categories', prefs.low_signal_categories],
+                ['Trusted sources', prefs.trusted_sources],
+                ['Preferred stage', prefs.preferred_stage],
+                ['Query boost terms', prefs.query_boost_terms],
+                ['Query suppress terms', prefs.query_suppress_terms],
+            ];
+            listFields.forEach(([label, value]) => {
+                elements.memoryProceduralContent.appendChild(_prefRow(label, _tagList(value)));
+            });
+
+            if (prefs.source_weights && typeof prefs.source_weights === 'object') {
+                const wrap = document.createElement('div');
+                wrap.className = 'space-y-1';
+                Object.entries(prefs.source_weights).forEach(([src, w]) => {
+                    const line = document.createElement('p');
+                    line.className = 'text-sm text-slate-700 dark:text-slate-300 font-medium';
+                    line.textContent = `${src}: ${Number(w).toFixed(2)}`;
+                    wrap.appendChild(line);
+                });
+                elements.memoryProceduralContent.appendChild(_prefRow('Source weights', wrap));
+            }
+
+            if (prefs.min_confidence_threshold != null) {
+                const conf = document.createElement('p');
+                conf.className = 'font-bold';
+                conf.textContent = String(prefs.min_confidence_threshold);
+                elements.memoryProceduralContent.appendChild(_prefRow('Min confidence threshold', conf));
             }
         }
 

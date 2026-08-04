@@ -192,6 +192,5 @@ def test_source_health_rendered_in_frontend():
     assert "source_health" in html
     assert "✓ ${label}" in html or '`✓ ${label}`' in html or '"✓ "' in html or "'✓ '" in html
     assert "✗ ${label}" in html or '`✗ ${label}`' in html or '"✗ "' in html or "'✗ '" in html
-    # Null-aware per-source display (no fabricated zeros)
-    assert "count === null || count === undefined" in html
-    assert "Per-source counts" in html
+    # Per-source counts UI intentionally removed (SIG-027B)
+    assert "Per-source counts" not in html
