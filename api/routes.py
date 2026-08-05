@@ -1044,6 +1044,41 @@ def _normalize_delivery_email(value: str) -> str:
     return email
 
 
+# Signal scope ends at Series B — reject Series C and unknown stages.
+_ALLOWED_STAGE_FILTER = {
+    "seed": "Seed",
+    "series a": "Series A",
+    "series_a": "Series A",
+    "seriesa": "Series A",
+    "series b": "Series B",
+    "series_b": "Series B",
+    "seriesb": "Series B",
+}
+
+
+def _normalize_stage_filter(values: list[str]) -> list[str]:
+    if not values:
+        raise HTTPException(
+            status_code=400,
+            detail="stage_filter must include at least one of: Seed, Series A, Series B",
+        )
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for raw in values:
+        key = str(raw or "").strip().lower().replace("-", " ")
+        key = " ".join(key.split())
+        canonical = _ALLOWED_STAGE_FILTER.get(key)
+        if canonical is None:
+            raise HTTPException(
+                status_code=400,
+                detail="stage_filter supports only Seed, Series A, and Series B",
+            )
+        if canonical not in seen:
+            seen.add(canonical)
+            normalized.append(canonical)
+    return normalized
+
+
 @router.put("/config", response_model=UserConfigResponse)
 def update_config(
     body: UserConfigUpdateRequest,
@@ -1095,7 +1130,7 @@ def update_config(
                 )
             )
             stage_filter = (
-                list(body.stage_filter)
+                _normalize_stage_filter(list(body.stage_filter))
                 if body.stage_filter is not None
                 else (
                     list(existing["stage_filter"])

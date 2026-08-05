@@ -1,26 +1,25 @@
 ## Active Slice
-Slice 5-Auth — Supabase Auth Flow Completion
+Slice 5 — Production Scheduler & Config Integration (SIG-032)
 
 ## Active Tasks
-- Auth flow (signup/login/JWT/RLS/guards) — PENDING VALIDATION
+- SIG-032 Production Scheduler & User Configuration Integration — COMPLETE (pending Reviewer)
 
 ## Files In Scope This Slice
-- api/main.py
-- api/routes.py (and auth modules as needed)
-- frontend/index.html
-- frontend/config.js
-- supabase migrations / RLS policies
-- tests/test_auth*.py (and related)
+- api/scheduler.py
+- api/routes.py (stage_filter normalize only)
+- frontend/index.html (Configuration screen controls)
+- tests/test_scheduler.py
+- tests/test_config_memory_api.py
 
 ## Slice Exit Criteria
-- Signup → JWT → Onboarding (first-time) / Dashboard (returning)
-- JWT in memory only; Bearer on all protected calls
-- FastAPI JWT middleware; 401 without valid token
-- RLS audited on all custom tables
-- Auth + RLS tests pass
+- Multi-user scheduled runs via execute_pipeline()
+- Per-user daily/weekly schedule_freq respected
+- Config UI: editable schedule + stage filter (Seed/Series A/Series B)
+- One user failure does not stop remaining users
+- Existing Trigger Run / graph unchanged
 
 ## Last Updated
-2026-08-04
+2026-08-05
 
 ## Blocker / Human Action Required
-- Add `SUPABASE_JWT_SECRET` to `.env` (Supabase Dashboard → Project Settings → API → JWT Secret). Without it, protected routes fail closed (500), never open.
+- None for SIG-032. Auth JWT secret (SUPABASE_JWT_SECRET) still needed for protected routes in live env.

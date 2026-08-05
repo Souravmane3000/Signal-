@@ -37,13 +37,19 @@ class _FakeCursor:
         self._last_params = params
         self._shared["calls"].append((self._last_sql, params))
 
-        # Mutate in-memory row on write so subsequent GET sees persisted email.
+        # Mutate in-memory row on write so subsequent GET sees persisted values.
         if self._last_sql.startswith("UPDATE user_configs"):
-            email = params[0] if params else None
+            # params: delivery_email, keywords, verticals, stage_filter,
+            #         schedule_freq, updated_at, user_id
             row = self._shared.get("config_row")
-            if row is not None:
+            if row is not None and params:
                 row = dict(row)
-                row["delivery_email"] = email
+                row["delivery_email"] = params[0]
+                if len(params) >= 5:
+                    row["keywords"] = list(params[1])
+                    row["verticals"] = list(params[2])
+                    row["stage_filter"] = list(params[3])
+                    row["schedule_freq"] = params[4]
                 self._shared["config_row"] = row
                 self._shared["last_returning"] = row
             else:
@@ -282,6 +288,71 @@ def test_put_then_get_returns_persisted_email():
     assert get_res.json()["from_defaults"] is False
 
 
+def test_schedule_freq_persistence():
+    user_uuid = _AUTH_UUID
+    shared = {
+        "calls": [],
+        "auth_user": {"id": user_uuid},
+        "config_row": _base_config_row(user_uuid, email="sched@example.com"),
+        "committed": False,
+    }
+
+    with patch("api.routes.pool.connection", side_effect=_pool(shared)), patch.dict(
+        "os.environ", {"GRAPH_VERSION": "1.0"}, clear=False
+    ):
+        put_res = client.put("/config", json={"schedule_freq": "daily"})
+        get_res = client.get("/config")
+
+    assert put_res.status_code == 200
+    assert put_res.json()["schedule_freq"] == "daily"
+    assert get_res.status_code == 200
+    assert get_res.json()["schedule_freq"] == "daily"
+    assert shared["config_row"]["schedule_freq"] == "daily"
+
+
+def test_stage_filter_persistence():
+    user_uuid = _AUTH_UUID
+    shared = {
+        "calls": [],
+        "auth_user": {"id": user_uuid},
+        "config_row": _base_config_row(user_uuid, email="stage@example.com"),
+        "committed": False,
+    }
+
+    with patch("api.routes.pool.connection", side_effect=_pool(shared)), patch.dict(
+        "os.environ", {"GRAPH_VERSION": "1.0"}, clear=False
+    ):
+        put_res = client.put(
+            "/config",
+            json={"stage_filter": ["Seed", "Series B"]},
+        )
+        get_res = client.get("/config")
+
+    assert put_res.status_code == 200
+    assert put_res.json()["stage_filter"] == ["Seed", "Series B"]
+    assert get_res.status_code == 200
+    assert get_res.json()["stage_filter"] == ["Seed", "Series B"]
+    assert shared["config_row"]["stage_filter"] == ["Seed", "Series B"]
+
+
+def test_stage_filter_rejects_series_c():
+    user_uuid = _AUTH_UUID
+    shared = {
+        "calls": [],
+        "auth_user": {"id": user_uuid},
+        "config_row": _base_config_row(user_uuid),
+        "committed": False,
+    }
+
+    with patch("api.routes.pool.connection", side_effect=_pool(shared)):
+        response = client.put(
+            "/config",
+            json={"stage_filter": ["Seed", "Series C"]},
+        )
+
+    assert response.status_code == 400
+
+
 def test_get_does_not_always_return_defaults_when_row_exists():
     user_uuid = _AUTH_UUID
     shared = {
@@ -450,10 +521,17 @@ def test_frontend_config_and_memory_screens():
     assert "config-defaults-banner" not in html
 
     assert "saveDeliveryEmail" in html
+    assert "saveScheduleFreq" in html
+    assert "saveStageFilter" in html
+    assert "config-schedule-select" in html
+    assert "config-stage-filter" in html
     assert "method: 'PUT'" in html or 'method: "PUT"' in html
     assert "delivery_email" in html
+    assert "schedule_freq" in html
+    assert "stage_filter" in html
     # After save, frontend reloads from GET
     assert "await fetchConfig()" in html
+    assert "Series C" not in html.split("CONFIG_STAGE_OPTIONS")[1].split("];")[0]
 
     assert "Semantic Memory" in html
     assert "Episodic Memory" in html

@@ -1150,7 +1150,7 @@
                     <div class="flex items-center justify-between gap-3">
                         <div>
                             <h2 class="text-2xl md:text-3xl font-bold tracking-tight">Configuration</h2>
-                            <p class="text-slate-500 text-sm mt-1">Delivery email is editable; other settings are read-only</p>
+                            <p class="text-slate-500 text-sm mt-1">Delivery email, schedule, and stage filter are editable</p>
                         </div>
                         <button onclick="fetchConfig()" class="p-2 text-slate-500 hover:text-brand-600 transition-colors" aria-label="Refresh configuration">
                             <i class="ph ph-arrows-clockwise text-2xl"></i>
@@ -1223,6 +1223,8 @@
             proceduralMemory: null,
             memoryTab: 'semantic',
             editingDeliveryEmail: false,
+            editingSchedule: false,
+            editingStageFilter: false,
             pendingBriefing: null,
             isDarkMode: false,
             authReady: false,
@@ -2014,6 +2016,202 @@
             }
         }
 
+        const CONFIG_STAGE_OPTIONS = ['Seed', 'Series A', 'Series B'];
+
+        function _stageFilterIncludes(stages, label) {
+            const aliases = {
+                'Seed': ['Seed', 'seed'],
+                'Series A': ['Series A', 'series_a', 'SeriesA'],
+                'Series B': ['Series B', 'series_b', 'SeriesB'],
+            };
+            const set = new Set((Array.isArray(stages) ? stages : []).map(String));
+            return (aliases[label] || [label]).some(a => set.has(a));
+        }
+
+        function _scheduleEditor(cfg) {
+            const wrap = document.createElement('div');
+            wrap.className = 'space-y-3';
+
+            const select = document.createElement('select');
+            select.id = 'config-schedule-select';
+            select.className = 'w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-70';
+            select.disabled = !state.editingSchedule;
+            [['weekly', 'Weekly'], ['daily', 'Daily']].forEach(([value, label]) => {
+                const opt = document.createElement('option');
+                opt.value = value;
+                opt.textContent = label;
+                select.appendChild(opt);
+            });
+            select.value = (cfg.schedule_freq || 'weekly') === 'daily' ? 'daily' : 'weekly';
+            wrap.appendChild(select);
+
+            const actions = document.createElement('div');
+            actions.className = 'flex flex-wrap items-center gap-2';
+
+            if (!state.editingSchedule) {
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.className = 'px-3 py-1.5 text-sm font-bold rounded-lg bg-brand-600 hover:bg-brand-700 text-white transition-colors';
+                editBtn.textContent = 'Edit';
+                editBtn.onclick = () => {
+                    state.editingSchedule = true;
+                    renderConfig();
+                };
+                actions.appendChild(editBtn);
+            } else {
+                const saveBtn = document.createElement('button');
+                saveBtn.type = 'button';
+                saveBtn.id = 'config-schedule-save';
+                saveBtn.className = 'px-3 py-1.5 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors disabled:opacity-50';
+                saveBtn.textContent = 'Save';
+                saveBtn.onclick = () => saveScheduleFreq();
+                actions.appendChild(saveBtn);
+
+                const cancelBtn = document.createElement('button');
+                cancelBtn.type = 'button';
+                cancelBtn.className = 'px-3 py-1.5 text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors';
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.onclick = () => {
+                    state.editingSchedule = false;
+                    renderConfig();
+                };
+                actions.appendChild(cancelBtn);
+            }
+
+            wrap.appendChild(actions);
+            return wrap;
+        }
+
+        function _stageFilterEditor(cfg) {
+            const wrap = document.createElement('div');
+            wrap.className = 'space-y-3';
+
+            const list = document.createElement('div');
+            list.id = 'config-stage-filter';
+            list.className = 'flex flex-wrap gap-2';
+            CONFIG_STAGE_OPTIONS.forEach(label => {
+                const lab = document.createElement('label');
+                lab.className = 'inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300';
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.value = label;
+                input.className = 'config-stage-checkbox w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500';
+                input.checked = _stageFilterIncludes(cfg.stage_filter, label);
+                input.disabled = !state.editingStageFilter;
+                lab.appendChild(input);
+                lab.appendChild(document.createTextNode(' ' + label));
+                list.appendChild(lab);
+            });
+            wrap.appendChild(list);
+
+            const actions = document.createElement('div');
+            actions.className = 'flex flex-wrap items-center gap-2';
+
+            if (!state.editingStageFilter) {
+                const editBtn = document.createElement('button');
+                editBtn.type = 'button';
+                editBtn.className = 'px-3 py-1.5 text-sm font-bold rounded-lg bg-brand-600 hover:bg-brand-700 text-white transition-colors';
+                editBtn.textContent = 'Edit';
+                editBtn.onclick = () => {
+                    state.editingStageFilter = true;
+                    renderConfig();
+                };
+                actions.appendChild(editBtn);
+            } else {
+                const saveBtn = document.createElement('button');
+                saveBtn.type = 'button';
+                saveBtn.id = 'config-stage-filter-save';
+                saveBtn.className = 'px-3 py-1.5 text-sm font-bold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition-colors disabled:opacity-50';
+                saveBtn.textContent = 'Save';
+                saveBtn.onclick = () => saveStageFilter();
+                actions.appendChild(saveBtn);
+
+                const cancelBtn = document.createElement('button');
+                cancelBtn.type = 'button';
+                cancelBtn.className = 'px-3 py-1.5 text-sm font-medium rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors';
+                cancelBtn.textContent = 'Cancel';
+                cancelBtn.onclick = () => {
+                    state.editingStageFilter = false;
+                    renderConfig();
+                };
+                actions.appendChild(cancelBtn);
+            }
+
+            wrap.appendChild(actions);
+            return wrap;
+        }
+
+        async function saveScheduleFreq() {
+            const select = document.getElementById('config-schedule-select');
+            const saveBtn = document.getElementById('config-schedule-save');
+            if (!select) return;
+            const schedule_freq = select.value === 'daily' ? 'daily' : 'weekly';
+            if (saveBtn) saveBtn.disabled = true;
+            try {
+                const res = await apiFetch(`/config`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ schedule_freq }),
+                });
+                if (!res.ok) {
+                    let detail = 'Failed to update schedule';
+                    try {
+                        const errBody = await res.json();
+                        if (errBody && errBody.detail) detail = String(errBody.detail);
+                    } catch (_) {}
+                    throw new Error(detail);
+                }
+                state.editingSchedule = false;
+                const refreshed = await fetchConfig();
+                if (!refreshed || refreshed.schedule_freq !== schedule_freq) {
+                    showToast('Saved, but configuration reload looked stale. Retrying…', 'info');
+                    await fetchConfig();
+                }
+                showToast('Delivery schedule updated', 'success');
+            } catch (err) {
+                console.log('Save schedule failed:', err.message);
+                showToast(err.message || "Couldn't save schedule", 'error');
+                if (saveBtn) saveBtn.disabled = false;
+            }
+        }
+
+        async function saveStageFilter() {
+            const saveBtn = document.getElementById('config-stage-filter-save');
+            const checked = Array.from(document.querySelectorAll('.config-stage-checkbox:checked'))
+                .map(el => el.value);
+            if (!checked.length) {
+                showToast('Select at least one stage (Seed–Series B)', 'error');
+                return;
+            }
+            if (saveBtn) saveBtn.disabled = true;
+            try {
+                const res = await apiFetch(`/config`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stage_filter: checked }),
+                });
+                if (!res.ok) {
+                    let detail = 'Failed to update stage filter';
+                    try {
+                        const errBody = await res.json();
+                        if (errBody && errBody.detail) detail = String(errBody.detail);
+                    } catch (_) {}
+                    throw new Error(detail);
+                }
+                state.editingStageFilter = false;
+                const refreshed = await fetchConfig();
+                if (!refreshed) {
+                    showToast('Saved, but configuration reload looked stale. Retrying…', 'info');
+                    await fetchConfig();
+                }
+                showToast('Stage filter updated', 'success');
+            } catch (err) {
+                console.log('Save stage filter failed:', err.message);
+                showToast(err.message || "Couldn't save stage filter", 'error');
+                if (saveBtn) saveBtn.disabled = false;
+            }
+        }
+
         function renderConfig() {
             elements.configError.classList.add('hidden');
             elements.configEmpty.classList.add('hidden');
@@ -2028,17 +2226,20 @@
 
             elements.configContent.classList.remove('hidden');
 
-            const scheduleLabel = (cfg.schedule_freq || 'weekly') === 'daily' ? 'Daily' : 'Weekly';
             elements.configCards.appendChild(
                 _configChip('Delivery email', _deliveryEmailEditor(cfg), { editable: true })
             );
+            elements.configCards.appendChild(
+                _configChip('Delivery schedule', _scheduleEditor(cfg), { editable: true })
+            );
+            elements.configCards.appendChild(
+                _configChip('Stage filter', _stageFilterEditor(cfg), { editable: true })
+            );
             const readOnlyCards = [
-                ['Delivery schedule', scheduleLabel],
                 ['Maximum findings', String(cfg.max_findings_per_run ?? '—')],
                 ['Graph version', cfg.graph_version || '—'],
                 ['Keywords', _tagList(cfg.keywords)],
                 ['Verticals', _tagList(cfg.verticals)],
-                ['Stage filter', _tagList(cfg.stage_filter)],
                 ['User ID', cfg.user_id || '—'],
             ];
             readOnlyCards.forEach(([label, value]) => {
