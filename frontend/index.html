@@ -2762,11 +2762,10 @@
                 return;
             }
 
+            // Saved briefings: DB-only — omit thread_id so backend skips checkpoint probe.
             elements.loadingOverlay.classList.remove('hidden');
             try {
-                const tid = briefing && briefing.thread_id;
-                const qs = tid ? `?thread_id=${encodeURIComponent(tid)}` : '';
-                const res = await apiFetch(`/briefings/${runId}${qs}`);
+                const res = await apiFetch(`/briefings/${runId}`);
                 if (!res.ok) throw new Error('Failed to load briefing');
                 const data = await res.json();
                 renderBriefingDetail(data);

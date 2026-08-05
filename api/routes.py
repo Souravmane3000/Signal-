@@ -253,113 +253,148 @@ def _briefing_from_checkpoint(
 def _briefing_from_db(
     run_id: str, user_id: Optional[str] = None
 ) -> BriefingResponse:
-    """Serve completed/rejected briefing from briefing_runs + related tables."""
+    """Serve completed/rejected briefing from briefing_runs + related tables.
+
+    Single round-trip: run row + items (json_agg) + latest metrics (LATERAL).
+    """
     run_uuid = _as_uuid_or_none(run_id)
     if run_uuid is None:
         raise HTTPException(status_code=404, detail="Briefing not found")
 
+    uid = str(user_id) if user_id else None
+
     with pool.connection() as conn:
         with conn.cursor() as cur:
-            if user_id:
-                cur.execute(
-                    """
-                    SELECT id, thread_id, status, run_at, final_briefing, graph_version
-                    FROM briefing_runs
-                    WHERE id = %s AND user_id = %s
-                    """,
-                    (str(run_uuid), str(user_id)),
-                )
-            else:
-                cur.execute(
-                    """
-                    SELECT id, thread_id, status, run_at, final_briefing, graph_version
-                    FROM briefing_runs
-                    WHERE id = %s
-                    """,
-                    (str(run_uuid),),
-                )
-            run_row = cur.fetchone()
-            if not run_row:
-                raise HTTPException(status_code=404, detail="Briefing not found")
-
             cur.execute(
                 """
-                SELECT id, title, summary, source_url, source_name,
-                       category, confidence_score, entities,
-                       feedback, feedback_reason, feedback_at
-                FROM briefing_items
-                WHERE briefing_run_id = %s
-                  AND (%s::uuid IS NULL OR user_id = %s::uuid)
+                SELECT
+                    br.id,
+                    br.thread_id,
+                    br.status,
+                    br.run_at,
+                    br.final_briefing,
+                    br.graph_version,
+                    m.run_duration_seconds,
+                    m.tokens_used,
+                    m.estimated_cost_usd,
+                    m.findings_retrieved,
+                    m.findings_dropped_freshness,
+                    m.findings_dropped_scope,
+                    m.findings_dropped_dedup,
+                    m.graph_version AS metrics_graph_version,
+                    COALESCE(items.items_json, '[]'::json) AS items
+                FROM briefing_runs br
+                LEFT JOIN LATERAL (
+                    SELECT
+                        run_duration_seconds,
+                        tokens_used,
+                        estimated_cost_usd,
+                        findings_retrieved,
+                        findings_dropped_freshness,
+                        findings_dropped_scope,
+                        findings_dropped_dedup,
+                        graph_version
+                    FROM agent_run_metrics
+                    WHERE briefing_run_id = br.id
+                    ORDER BY run_at DESC
+                    LIMIT 1
+                ) m ON TRUE
+                LEFT JOIN LATERAL (
+                    SELECT json_agg(
+                        json_build_object(
+                            'id', bi.id::text,
+                            'title', COALESCE(bi.title, ''),
+                            'summary', COALESCE(bi.summary, ''),
+                            'source_url', COALESCE(bi.source_url, ''),
+                            'source_name', COALESCE(bi.source_name, ''),
+                            'category', COALESCE(bi.category, ''),
+                            'confidence_score', COALESCE(bi.confidence_score, 0),
+                            'entities', COALESCE(bi.entities, '{}'::jsonb),
+                            'feedback', bi.feedback,
+                            'feedback_reason', bi.feedback_reason,
+                            'feedback_at', bi.feedback_at
+                        )
+                        ORDER BY bi.confidence_score DESC NULLS LAST
+                    ) AS items_json
+                    FROM briefing_items bi
+                    WHERE bi.briefing_run_id = br.id
+                      AND (%s::uuid IS NULL OR bi.user_id = %s::uuid)
+                ) items ON TRUE
+                WHERE br.id = %s
+                  AND (%s::uuid IS NULL OR br.user_id = %s::uuid)
                 """,
-                (
-                    str(run_uuid),
-                    str(user_id) if user_id else None,
-                    str(user_id) if user_id else None,
-                ),
+                (uid, uid, str(run_uuid), uid, uid),
             )
-            item_rows = cur.fetchall()
+            row = cur.fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="Briefing not found")
 
-            items = []
-            for row in item_rows:
-                fb = row.get("feedback")
+            raw_items = row.get("items")
+            if isinstance(raw_items, str):
+                try:
+                    raw_items = json.loads(raw_items)
+                except json.JSONDecodeError:
+                    raw_items = []
+            if not isinstance(raw_items, list):
+                raw_items = []
+
+            items: list[BriefingItemSchema] = []
+            for item in raw_items:
+                if not isinstance(item, dict):
+                    continue
+                fb = item.get("feedback")
                 feedback_val = fb if fb in ("useful", "not_relevant") else None
+                entities = item.get("entities")
                 items.append(
                     BriefingItemSchema(
-                        id=str(row["id"]),
-                        title=row["title"] or "",
-                        summary=row["summary"] or "",
-                        source_url=row["source_url"] or "",
-                        source_name=row["source_name"] or "",
-                        category=row["category"] or "",
-                        confidence_score=float(row["confidence_score"] or 0.0),
-                        entities=(
-                            row["entities"]
-                            if isinstance(row["entities"], dict)
-                            else {}
-                        ),
+                        id=str(item.get("id") or ""),
+                        title=str(item.get("title") or ""),
+                        summary=str(item.get("summary") or ""),
+                        source_url=str(item.get("source_url") or ""),
+                        source_name=str(item.get("source_name") or ""),
+                        category=str(item.get("category") or ""),
+                        confidence_score=float(item.get("confidence_score") or 0.0),
+                        entities=entities if isinstance(entities, dict) else {},
                         feedback=feedback_val,
-                        feedback_reason=row.get("feedback_reason"),
-                        feedback_at=_feedback_at_str(row.get("feedback_at")),
+                        feedback_reason=item.get("feedback_reason"),
+                        feedback_at=_feedback_at_str(item.get("feedback_at")),
                     )
                 )
 
-            cur.execute(
-                """
-                SELECT run_duration_seconds, tokens_used, estimated_cost_usd,
-                       findings_retrieved, findings_dropped_freshness,
-                       findings_dropped_scope, findings_dropped_dedup,
-                       graph_version
-                FROM agent_run_metrics
-                WHERE briefing_run_id = %s
-                ORDER BY run_at DESC
-                LIMIT 1
-                """,
-                (str(run_uuid),),
-            )
-            metrics_row = cur.fetchone()
             metrics = None
-            if metrics_row:
+            has_metrics = any(
+                row.get(key) is not None
+                for key in (
+                    "run_duration_seconds",
+                    "tokens_used",
+                    "estimated_cost_usd",
+                    "findings_retrieved",
+                    "findings_dropped_freshness",
+                    "findings_dropped_scope",
+                    "findings_dropped_dedup",
+                    "metrics_graph_version",
+                )
+            )
+            if has_metrics:
                 metrics = RuntimeMetrics(
-                    run_duration_seconds=float(
-                        metrics_row["run_duration_seconds"] or 0.0
-                    ),
-                    tokens_used=int(metrics_row["tokens_used"] or 0),
-                    estimated_cost_usd=float(metrics_row["estimated_cost_usd"] or 0.0),
-                    findings_retrieved=int(metrics_row["findings_retrieved"] or 0),
+                    run_duration_seconds=float(row.get("run_duration_seconds") or 0.0),
+                    tokens_used=int(row.get("tokens_used") or 0),
+                    estimated_cost_usd=float(row.get("estimated_cost_usd") or 0.0),
+                    findings_retrieved=int(row.get("findings_retrieved") or 0),
                     findings_dropped_freshness=int(
-                        metrics_row["findings_dropped_freshness"] or 0
+                        row.get("findings_dropped_freshness") or 0
                     ),
-                    findings_dropped_scope=int(
-                        metrics_row["findings_dropped_scope"] or 0
+                    findings_dropped_scope=int(row.get("findings_dropped_scope") or 0),
+                    findings_dropped_dedup=int(row.get("findings_dropped_dedup") or 0),
+                    graph_version=str(
+                        row.get("metrics_graph_version")
+                        or row.get("graph_version")
+                        or ""
                     ),
-                    findings_dropped_dedup=int(
-                        metrics_row["findings_dropped_dedup"] or 0
-                    ),
-                    graph_version=str(metrics_row["graph_version"] or ""),
                 )
 
-            final_text = run_row.get("final_briefing") or ""
-            run_at = run_row.get("run_at")
+            final_text = row.get("final_briefing") or ""
+            run_at = row.get("run_at")
             created_at = (
                 run_at.isoformat()
                 if run_at is not None and hasattr(run_at, "isoformat")
@@ -367,9 +402,9 @@ def _briefing_from_db(
             )
 
             return BriefingResponse(
-                run_id=str(run_row["id"]),
-                thread_id=str(run_row.get("thread_id") or ""),
-                status=str(run_row.get("status") or ""),
+                run_id=str(row["id"]),
+                thread_id=str(row.get("thread_id") or ""),
+                status=str(row.get("status") or ""),
                 created_at=created_at,
                 briefing_draft=final_text,
                 briefing_final=final_text,
@@ -649,17 +684,25 @@ def get_briefing(
 ) -> BriefingResponse:
     """Get briefing detail.
 
-    pending_hitl → checkpointed LangGraph state via thread_id (no briefing_runs yet).
-    After HITL → briefing_runs + briefing_items + agent_run_metrics.
+    Saved (completed/rejected) → briefing_runs join (no checkpoint / graph).
+    pending_hitl → checkpointed LangGraph state via thread_id when no DB row.
     """
     try:
-        if thread_id:
-            pending = _briefing_from_checkpoint(
-                run_id, thread_id, user_id=user.user_id
-            )
-            if pending is not None:
-                return pending
-        return _briefing_from_db(run_id, user_id=user.user_id)
+        # DB-first: avoid PostgresSaver get_state on every saved open (was ~7–8s).
+        try:
+            return _briefing_from_db(run_id, user_id=user.user_id)
+        except HTTPException as db_exc:
+            if db_exc.status_code != 404:
+                raise
+            if not thread_id:
+                raise
+
+        pending = _briefing_from_checkpoint(
+            run_id, thread_id, user_id=user.user_id
+        )
+        if pending is not None:
+            return pending
+        raise HTTPException(status_code=404, detail="Briefing not found")
     except HTTPException:
         raise
     except Exception as exc:

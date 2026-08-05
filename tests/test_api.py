@@ -154,6 +154,8 @@ def test_list_briefings_graceful_degradation():
 
 def test_get_briefing_pending_hitl_from_checkpoint():
     """During pending_hitl, serve draft via thread_id → graph.get_state."""
+    from fastapi import HTTPException
+
     run_id = "11111111-1111-1111-1111-111111111111"
     thread_id = "run_pending_test"
 
@@ -193,7 +195,13 @@ def test_get_briefing_pending_hitl_from_checkpoint():
         },
     )()
 
-    with patch("api.routes.graph.get_state", return_value=mock_state) as get_state:
+    with (
+        patch(
+            "api.routes._briefing_from_db",
+            side_effect=HTTPException(status_code=404, detail="Briefing not found"),
+        ),
+        patch("api.routes.graph.get_state", return_value=mock_state) as get_state,
+    ):
         response = client.get(f"/briefings/{run_id}?thread_id={thread_id}")
 
     assert response.status_code == 200
@@ -226,34 +234,19 @@ def test_get_briefing_pending_hitl_without_thread_id_falls_back_to_db():
     get_state.assert_not_called()
 
 
-def test_get_briefing_from_db_uses_schema_columns():
-    """After HITL, load via briefing_runs.id / briefing_run_id — not run_id."""
+def test_get_saved_briefing_skips_checkpoint_even_with_thread_id():
+    """Completed briefings must not call graph.get_state (SIG-033)."""
     from datetime import datetime, timezone
 
     run_id = "22222222-2222-2222-2222-222222222222"
     run_at = datetime(2026, 7, 23, 12, 0, tzinfo=timezone.utc)
-
-    run_row = {
+    combined = {
         "id": run_id,
         "thread_id": "run_done",
         "status": "completed",
         "run_at": run_at,
         "final_briefing": "## Final persisted briefing",
         "graph_version": "1.0",
-    }
-    item_rows = [
-        {
-            "id": "item-db-1",
-            "title": "Persisted item",
-            "summary": "From DB",
-            "source_url": "https://example.com/b",
-            "source_name": "yc",
-            "category": "funding",
-            "confidence_score": 0.95,
-            "entities": {},
-        }
-    ]
-    metrics_row = {
         "run_duration_seconds": 9.0,
         "tokens_used": 100,
         "estimated_cost_usd": 0.05,
@@ -261,7 +254,105 @@ def test_get_briefing_from_db_uses_schema_columns():
         "findings_dropped_freshness": 1,
         "findings_dropped_scope": 0,
         "findings_dropped_dedup": 2,
+        "metrics_graph_version": "1.0",
+        "items": [
+            {
+                "id": "item-db-1",
+                "title": "Persisted item",
+                "summary": "From DB",
+                "source_url": "https://example.com/b",
+                "source_name": "yc",
+                "category": "funding",
+                "confidence_score": 0.95,
+                "entities": {},
+            }
+        ],
+    }
+
+    class FakeCursor:
+        def __init__(self, shared):
+            self._shared = shared
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def execute(self, sql, params=None):
+            self._shared["calls"] += 1
+            self._shared["sql"] = sql
+            assert "FROM briefing_runs" in sql
+            assert "json_agg" in sql or "LEFT JOIN LATERAL" in sql
+            assert "agent_run_metrics" in sql
+            assert "briefing_items" in sql
+
+        def fetchone(self):
+            return combined
+
+        def fetchall(self):
+            return []
+
+    class FakeConn:
+        def __enter__(self):
+            self._shared = {"calls": 0, "sql": ""}
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def cursor(self):
+            return FakeCursor(self._shared)
+
+    with (
+        patch("api.routes.pool.connection", return_value=FakeConn()),
+        patch("api.routes.graph.get_state") as get_state,
+    ):
+        response = client.get(
+            f"/briefings/{run_id}?thread_id=run_should_be_ignored"
+        )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "completed"
+    assert body["briefing_items"][0]["title"] == "Persisted item"
+    get_state.assert_not_called()
+
+
+def test_get_briefing_from_db_uses_schema_columns():
+    """After HITL, load via briefing_runs.id / briefing_run_id — not run_id."""
+    from datetime import datetime, timezone
+
+    run_id = "22222222-2222-2222-2222-222222222222"
+    run_at = datetime(2026, 7, 23, 12, 0, tzinfo=timezone.utc)
+
+    combined = {
+        "id": run_id,
+        "thread_id": "run_done",
+        "status": "completed",
+        "run_at": run_at,
+        "final_briefing": "## Final persisted briefing",
         "graph_version": "1.0",
+        "run_duration_seconds": 9.0,
+        "tokens_used": 100,
+        "estimated_cost_usd": 0.05,
+        "findings_retrieved": 8,
+        "findings_dropped_freshness": 1,
+        "findings_dropped_scope": 0,
+        "findings_dropped_dedup": 2,
+        "metrics_graph_version": "1.0",
+        "items": [
+            {
+                "id": "item-db-1",
+                "title": "Persisted item",
+                "summary": "From DB",
+                "source_url": "https://example.com/b",
+                "source_name": "yc",
+                "category": "funding",
+                "confidence_score": 0.95,
+                "entities": {},
+            }
+        ],
     }
 
     class FakeCursor:
@@ -282,23 +373,17 @@ def test_get_briefing_from_db_uses_schema_columns():
             assert "created_at" not in sql
             assert "briefing_draft" not in sql
             assert "briefing_final" not in sql
-            if "FROM briefing_runs" in sql:
-                assert "WHERE id" in sql
-            if "FROM briefing_items" in sql:
-                assert "briefing_run_id" in sql
-            if "FROM agent_run_metrics" in sql:
-                assert "briefing_run_id" in sql
+            assert "FROM briefing_runs" in sql
+            assert "br.id" in sql.replace(" ", "") or "WHERE id" in sql
+            assert "briefing_run_id" in sql
+            assert "agent_run_metrics" in sql
 
         def fetchone(self):
-            n = self._shared["calls"]
-            if n == 1:
-                return run_row
-            if n == 3:
-                return metrics_row
-            return None
+            assert self._shared["calls"] == 1
+            return combined
 
         def fetchall(self):
-            return item_rows
+            return []
 
     class FakeConn:
         def __enter__(self):
@@ -322,6 +407,21 @@ def test_get_briefing_from_db_uses_schema_columns():
     assert body["briefing_draft"] == "## Final persisted briefing"
     assert body["briefing_items"][0]["title"] == "Persisted item"
     assert body["runtime_metrics"]["tokens_used"] == 100
+
+
+def test_frontend_saved_briefing_omits_thread_id():
+    """Configuration of showBriefingDetail must not attach thread_id for saved opens."""
+    from pathlib import Path
+
+    html = Path("frontend/index.html").read_text(encoding="utf-8")
+    assert "async function showBriefingDetail" in html
+    # Extract the function body loosely
+    start = html.index("async function showBriefingDetail")
+    end = html.index("function renderBriefingDetail", start)
+    body = html[start:end]
+    assert "pending_hitl" in body
+    assert "apiFetch(`/briefings/${runId}`)" in body or 'apiFetch(`/briefings/${runId}`)' in body
+    assert "thread_id=${encodeURIComponent" not in body
 
 
 def test_resume_hitl_uses_thread_id_query_param():
