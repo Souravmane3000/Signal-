@@ -235,23 +235,6 @@ Key thresholds:
 
 ---
 
-## Build Approach
-
-Signal is built in vertical slices, not phases. Each slice delivers a testable end-to-end capability.
-
-| Slice | Goal | Status |
-|---|---|---|
-| 1 — Foundation | Repo scaffold, state schema, skeleton graph, test fixtures | In Progress |
-| 2 — Research Pipeline | All 4 research nodes returning real findings | TODO |
-| 3 — Processing + Phase 1 DOD | Full 15-node pipeline, end-to-end run, Golden Run passes | TODO |
-| 4 — Infrastructure + HITL | PostgresSaver, HITL interrupt, Gmail delivery, Supabase | TODO |
-| 5 — API + Frontend + Scheduler | Full product accessible via browser, weekly autonomy | TODO |
-
-Phase-based development defers integration risk to the end. Vertical slices mean a working, demonstrable system at the end of every slice.
-
-**Budget discipline:** Total Cursor build budget is $15 implementation + $5 debug reserve. Tier 1 tasks use the cheapest capable model. Tier 2 tasks use a mid-tier reasoning model. The most expensive model tier is never the default.
-
----
 
 ## Project Structure
 
