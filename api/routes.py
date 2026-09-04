@@ -15,7 +15,11 @@ from langgraph.types import Command
 from agent.graph import (
     _invoke_with_stale_conn_retry,
     execute_graph,
+    get_live_node,
     graph,
+    graph_invoke_config,
+    lookup_langsmith_pipeline_node,
+    pipeline_stage,
     pool,
 )
 from agent.nodes.run_metrics_writer import finalize_run_duration
@@ -94,6 +98,16 @@ def _is_pending_hitl(graph_state: Any) -> bool:
         if getattr(task, "interrupts", None):
             return True
     return False
+
+
+def _current_pipeline_node(graph_state: Any) -> Optional[str]:
+    """Live cursor: first checkpoint next node, or hitl_node when interrupted."""
+    next_nodes = tuple(graph_state.next or ())
+    if next_nodes:
+        return str(next_nodes[0])
+    if _is_pending_hitl(graph_state):
+        return "hitl_node"
+    return None
 
 
 def _feedback_at_str(value: Any) -> Optional[str]:
@@ -473,6 +487,23 @@ def auth_login(body: AuthCredentialsRequest) -> AuthResponse:
     return _auth_response_from_session(session)
 
 
+def _status_and_node_from_checkpoint(graph_state: Any) -> tuple[str, Optional[str]]:
+    status = "idle"
+    if graph_state.next:
+        if "hitl_node" in graph_state.next:
+            status = "pending_hitl"
+        else:
+            status = "running"
+    elif _is_pending_hitl(graph_state):
+        status = "pending_hitl"
+    node = _current_pipeline_node(graph_state) if status != "idle" else None
+    return status, node
+
+
+def _status_for_pipeline_node(node: str) -> str:
+    return "pending_hitl" if node == "hitl_node" else "running"
+
+
 @router.get("/agent/status", response_model=AgentStatusResponse)
 def get_agent_status(
     thread_id: str = "run_001",
@@ -483,23 +514,27 @@ def get_agent_status(
         config = {"configurable": {"thread_id": thread_id}}
         graph_state = graph.get_state(config)
 
-        status = "idle"
-        if graph_state.next:
-            if "hitl_node" in graph_state.next:
-                status = "pending_hitl"
+        live = get_live_node(thread_id)
+        if live:
+            status = _status_for_pipeline_node(live)
+            node = live
+        else:
+            ls_node = lookup_langsmith_pipeline_node(thread_id)
+            if ls_node:
+                status = _status_for_pipeline_node(ls_node)
+                node = ls_node
             else:
-                status = "running"
-        elif _is_pending_hitl(graph_state):
-            status = "pending_hitl"
+                status, node = _status_and_node_from_checkpoint(graph_state)
 
-        # Scope pending HITL status to the authenticated user's run when known.
+        # Scope non-idle status to the authenticated user's run when known.
         values = getattr(graph_state, "values", None)
         if isinstance(values, dict):
             owner = str(values.get("user_id") or "")
             if owner and owner != _user.user_id and status != "idle":
                 return AgentStatusResponse(status="idle", thread_id=thread_id)
 
-        return AgentStatusResponse(status=status, thread_id=thread_id)
+        stage = pipeline_stage(node)
+        return AgentStatusResponse(status=status, thread_id=thread_id, **stage)
     except Exception as exc:
         logger.exception("Failed to get agent status")
         raise HTTPException(status_code=500, detail=str(exc))
@@ -874,7 +909,7 @@ def _resume_hitl(
         if not tid:
             raise HTTPException(status_code=404, detail="Run not found")
 
-        config = {"configurable": {"thread_id": tid}}
+        config = graph_invoke_config(tid, user_id=user_id or "")
         if user_id:
             try:
                 graph_state = graph.get_state(config)

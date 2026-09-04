@@ -126,3 +126,18 @@ def test_stale_conn_retry_resends_command_only_while_interrupt_pending():
 
     assert result is final
     assert invoke.call_args_list[1].args[0] is cmd
+
+
+def test_invoke_clears_live_node_when_graph_returns():
+    from agent.graph import clear_live_node, get_live_node, set_live_node
+
+    config = {"configurable": {"thread_id": "t_live_clear"}}
+    set_live_node("t_live_clear", "tavily_search")
+    assert get_live_node("t_live_clear") == "tavily_search"
+    with (
+        patch("agent.graph._ensure_pool_healthy"),
+        patch("agent.graph.graph.invoke", return_value={"run_id": "r1"}),
+    ):
+        _invoke_with_stale_conn_retry(None, config)
+    assert get_live_node("t_live_clear") is None
+    clear_live_node("t_live_clear")

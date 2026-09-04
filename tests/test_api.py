@@ -126,21 +126,163 @@ def test_execute_pipeline_failed_status():
 
 
 def test_get_agent_status_idle():
-    with patch("api.routes.graph.get_state") as mock_get_state:
-        mock_get_state.return_value.next = ()
+    with (
+        patch("api.routes.get_live_node", return_value=None),
+        patch("api.routes.lookup_langsmith_pipeline_node", return_value=None),
+        patch("api.routes.graph.get_state") as mock_get_state,
+    ):
+        snap = mock_get_state.return_value
+        snap.next = ()
+        snap.tasks = ()
+        snap.values = {}
         response = client.get("/agent/status")
 
     assert response.status_code == 200
-    assert response.json()["status"] == "idle"
+    body = response.json()
+    assert body["status"] == "idle"
+    assert body["current_node"] is None
+    assert body["current_label"] is None
+    assert body["step_index"] is None
+    assert body["step_total"] is None
+
+
+def test_get_agent_status_running_current_node():
+    with (
+        patch("api.routes.get_live_node", return_value=None),
+        patch("api.routes.lookup_langsmith_pipeline_node", return_value=None),
+        patch("api.routes.graph.get_state") as mock_get_state,
+    ):
+        snap = mock_get_state.return_value
+        snap.next = ("tavily_search",)
+        snap.tasks = ()
+        snap.values = {}
+        response = client.get("/agent/status")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "running"
+    assert body["current_node"] == "tavily_search"
+    assert body["current_label"] == "Searching the web"
+    assert body["step_index"] == 3
+    assert body["step_total"] == 18
 
 
 def test_get_agent_status_pending_hitl():
-    with patch("api.routes.graph.get_state") as mock_get_state:
-        mock_get_state.return_value.next = ("hitl_node",)
+    with (
+        patch("api.routes.get_live_node", return_value=None),
+        patch("api.routes.lookup_langsmith_pipeline_node", return_value=None),
+        patch("api.routes.graph.get_state") as mock_get_state,
+    ):
+        snap = mock_get_state.return_value
+        snap.next = ("hitl_node",)
+        snap.tasks = ()
+        snap.values = {}
         response = client.get("/agent/status")
 
     assert response.status_code == 200
-    assert response.json()["status"] == "pending_hitl"
+    body = response.json()
+    assert body["status"] == "pending_hitl"
+    assert body["current_node"] == "hitl_node"
+    assert body["current_label"] == "Awaiting your review"
+    assert body["step_index"] == 14
+    assert body["step_total"] == 18
+
+
+def test_get_agent_status_live_map_overrides_empty_next():
+    with (
+        patch("api.routes.get_live_node", return_value="tavily_search"),
+        patch("api.routes.lookup_langsmith_pipeline_node", return_value=None),
+        patch("api.routes.graph.get_state") as mock_get_state,
+    ):
+        snap = mock_get_state.return_value
+        snap.next = ()
+        snap.tasks = ()
+        snap.values = {}
+        response = client.get("/agent/status")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "running"
+    assert body["current_node"] == "tavily_search"
+    assert body["current_label"] == "Searching the web"
+    assert body["step_index"] == 3
+    assert body["step_total"] == 18
+
+
+def test_get_agent_status_live_hitl_overrides_empty_next():
+    with (
+        patch("api.routes.get_live_node", return_value="hitl_node"),
+        patch("api.routes.lookup_langsmith_pipeline_node", return_value=None),
+        patch("api.routes.graph.get_state") as mock_get_state,
+    ):
+        snap = mock_get_state.return_value
+        snap.next = ()
+        snap.tasks = ()
+        snap.values = {}
+        response = client.get("/agent/status")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "pending_hitl"
+    assert body["current_node"] == "hitl_node"
+    assert body["current_label"] == "Awaiting your review"
+
+
+def test_get_agent_status_langsmith_child_overrides_empty_next():
+    with (
+        patch("api.routes.get_live_node", return_value=None),
+        patch(
+            "api.routes.lookup_langsmith_pipeline_node",
+            return_value="entity_extraction",
+        ),
+        patch("api.routes.graph.get_state") as mock_get_state,
+    ):
+        snap = mock_get_state.return_value
+        snap.next = ()
+        snap.tasks = ()
+        snap.values = {}
+        response = client.get("/agent/status")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "running"
+    assert body["current_node"] == "entity_extraction"
+    assert body["current_label"] == "Extracting entities"
+
+
+def test_pipeline_progress_handler_sets_live_node():
+    from agent.graph import (
+        PipelineProgressHandler,
+        clear_live_node,
+        get_live_node,
+    )
+
+    tid = "run_cursor_cb"
+    clear_live_node(tid)
+    handler = PipelineProgressHandler(tid)
+    handler.on_chain_start({}, {}, name="LangGraph")
+    assert get_live_node(tid) is None
+    handler.on_chain_start({}, {}, name="tavily_search")
+    assert get_live_node(tid) == "tavily_search"
+    handler.on_chain_start({}, {}, name="RunnableSequence")
+    assert get_live_node(tid) == "tavily_search"
+    clear_live_node(tid)
+    assert get_live_node(tid) is None
+
+
+def test_graph_invoke_config_includes_langsmith_metadata():
+    from agent.graph import PipelineProgressHandler, graph, graph_invoke_config
+
+    assert graph.name == "signal-pipeline"
+    cfg = graph_invoke_config("run_abc", run_type="manual", user_id="u1")
+    assert cfg["run_name"] == "signal-pipeline"
+    assert cfg["configurable"]["thread_id"] == "run_abc"
+    assert cfg["metadata"]["thread_id"] == "run_abc"
+    assert cfg["metadata"]["run_type"] == "manual"
+    assert cfg["metadata"]["user_id"] == "u1"
+    handlers = getattr(cfg["callbacks"], "handlers", None) or list(cfg["callbacks"])
+    assert any(isinstance(cb, PipelineProgressHandler) for cb in handlers)
+
 
 
 def test_list_briefings_graceful_degradation():
@@ -424,6 +566,30 @@ def test_frontend_saved_briefing_omits_thread_id():
     assert "thread_id=${encodeURIComponent" not in body
 
 
+def test_frontend_pipeline_stage_replaces_run_overlay():
+    from pathlib import Path
+
+    html = Path("frontend/index.html").read_text(encoding="utf-8")
+    assert 'id="pipeline-stage"' in html
+    start = html.index("function updateStatus")
+    end = html.index("async function triggerRun", start)
+    body = html[start:end]
+    assert "showPipelineStage" in body
+    assert "loadingOverlay.classList.remove" not in body
+    assert "config_loader" not in body
+    assert "Starting pipeline" not in body
+    assert "Step ${index} of" not in html
+    assert "http://localhost:8080" in html
+    assert 'id="api-host-chip"' in html
+    show_start = html.index("function showPipelineStage")
+    show_body = html[show_start:start]
+    assert "current_node" in show_body
+    trigger = html[html.index("async function triggerRun") : html.index("async function fetchBriefings")]
+    assert "thread_id: threadId" in trigger
+    assert "newRunThreadId" in trigger
+    assert "loadingOverlay.classList.remove" not in trigger
+
+
 def test_resume_hitl_uses_thread_id_query_param():
     """Approve must use thread_id from the runtime contract during pending_hitl."""
     from langgraph.types import Command
@@ -459,7 +625,11 @@ def test_resume_hitl_uses_thread_id_query_param():
     cmd = invoke.call_args[0][0]
     assert isinstance(cmd, Command)
     assert cmd.resume == "approve"
-    assert invoke.call_args[0][1] == {"configurable": {"thread_id": thread_id}}
+    cfg = invoke.call_args[0][1]
+    assert cfg["configurable"]["thread_id"] == thread_id
+    assert cfg["run_name"] == "signal-pipeline"
+    assert cfg["metadata"]["thread_id"] == thread_id
+    assert cfg["callbacks"]
 
 
 def test_resume_hitl_reject_uses_command_resume():
@@ -493,3 +663,7 @@ def test_resume_hitl_reject_uses_command_resume():
     cmd = invoke.call_args[0][0]
     assert isinstance(cmd, Command)
     assert cmd.resume == "reject"
+    cfg = invoke.call_args[0][1]
+    assert cfg["configurable"]["thread_id"] == thread_id
+    assert cfg["run_name"] == "signal-pipeline"
+    assert cfg["callbacks"]

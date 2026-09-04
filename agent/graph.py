@@ -1,12 +1,15 @@
 import os
 import re
+import threading
 import time
 from dataclasses import dataclass
-from typing import Optional
+from typing import Any, Optional
 from urllib.parse import quote
 from uuid import uuid4
 
 from dotenv import load_dotenv
+from langchain_core.callbacks import BaseCallbackHandler
+from langchain_core.callbacks.manager import CallbackManager
 from langgraph.checkpoint.postgres import PostgresSaver
 from langgraph.graph import END, START, StateGraph
 from langgraph.store.postgres import PostgresStore
@@ -132,6 +135,248 @@ builder.add_edge("delivery", "run_metrics_writer")
 builder.add_edge("discard_and_log", "run_metrics_writer")
 builder.add_edge("run_metrics_writer", END)
 
+# Frozen display order for live dashboard stage (matches node ids / LangSmith spans).
+PIPELINE_NODES: tuple[str, ...] = (
+    "config_loader",
+    "search_planner",
+    "tavily_search",
+    "yc_api_node",
+    "hn_algolia_node",
+    "google_news_rss_node",
+    "reducer",
+    "freshness_validation",
+    "entity_extraction",
+    "scope_filter",
+    "source_trust_scoring",
+    "hybrid_dedup",
+    "synthesis",
+    "hitl_node",
+    "discard_and_log",
+    "episodic_memory_writer",
+    "delivery",
+    "run_metrics_writer",
+)
+
+PIPELINE_LABELS: dict[str, str] = {
+    "config_loader": "Loading configuration",
+    "search_planner": "Planning searches",
+    "tavily_search": "Searching the web",
+    "yc_api_node": "Checking YC companies",
+    "hn_algolia_node": "Scanning Hacker News",
+    "google_news_rss_node": "Reading Google News",
+    "reducer": "Merging findings",
+    "freshness_validation": "Checking freshness",
+    "entity_extraction": "Extracting entities",
+    "scope_filter": "Filtering scope",
+    "source_trust_scoring": "Scoring sources",
+    "hybrid_dedup": "Removing duplicates",
+    "synthesis": "Writing briefing",
+    "hitl_node": "Awaiting your review",
+    "discard_and_log": "Discarding draft",
+    "episodic_memory_writer": "Saving memory",
+    "delivery": "Sending briefing",
+    "run_metrics_writer": "Recording metrics",
+}
+
+
+def pipeline_stage(node: Optional[str]) -> dict:
+    """Map a graph node id to live-status fields. Idle/unknown → nulls."""
+    if not node:
+        return {
+            "current_node": None,
+            "current_label": None,
+            "step_index": None,
+            "step_total": None,
+        }
+    label = PIPELINE_LABELS.get(node) or node.replace("_", " ")
+    try:
+        index = PIPELINE_NODES.index(node) + 1
+    except ValueError:
+        return {
+            "current_node": node,
+            "current_label": label,
+            "step_index": None,
+            "step_total": None,
+        }
+    return {
+        "current_node": node,
+        "current_label": label,
+        "step_index": index,
+        "step_total": len(PIPELINE_NODES),
+    }
+
+
+_PIPELINE_NODES_SET = frozenset(PIPELINE_NODES)
+_live_nodes: dict[str, str] = {}
+_live_lock = threading.Lock()
+_ls_lookup_cache: dict[str, tuple[float, Optional[str]]] = {}
+_LS_LOOKUP_TTL_SEC = 2.0
+_LS_LOOKUP_JOIN_SEC = 0.4
+
+
+def set_live_node(thread_id: str, node: str) -> None:
+    if not thread_id or node not in _PIPELINE_NODES_SET:
+        return
+    with _live_lock:
+        _live_nodes[thread_id] = node
+
+
+def get_live_node(thread_id: str) -> Optional[str]:
+    if not thread_id:
+        return None
+    with _live_lock:
+        return _live_nodes.get(thread_id)
+
+
+def clear_live_node(thread_id: str) -> None:
+    if not thread_id:
+        return
+    with _live_lock:
+        _live_nodes.pop(thread_id, None)
+
+
+def _callback_pipeline_node(serialized: Any, name: Optional[str], kwargs: dict) -> Optional[str]:
+    candidates = [
+        name,
+        kwargs.get("name"),
+        (serialized or {}).get("name") if isinstance(serialized, dict) else None,
+    ]
+    sid = (serialized or {}).get("id") if isinstance(serialized, dict) else None
+    if isinstance(sid, (list, tuple)) and sid:
+        candidates.append(sid[-1])
+    for candidate in candidates:
+        if isinstance(candidate, str) and candidate in _PIPELINE_NODES_SET:
+            return candidate
+    return None
+
+
+class PipelineProgressHandler(BaseCallbackHandler):
+    """Process-local cursor: last started PIPELINE_NODES name for a thread_id."""
+
+    def __init__(self, thread_id: str):
+        super().__init__()
+        self.thread_id = thread_id
+
+    def on_chain_start(
+        self,
+        serialized: Any,
+        inputs: Any,
+        *,
+        run_id: Any = None,
+        parent_run_id: Any = None,
+        tags: Any = None,
+        metadata: Any = None,
+        name: Optional[str] = None,
+        **kwargs: Any,
+    ) -> None:
+        node = _callback_pipeline_node(serialized, name, kwargs)
+        if node:
+            set_live_node(self.thread_id, node)
+
+
+def _langsmith_run_in_progress(run: Any) -> bool:
+    if getattr(run, "end_time", None):
+        return False
+    status = str(getattr(run, "status", "") or "").lower()
+    if status in ("success", "error", "completed"):
+        return False
+    return True
+
+
+def _langsmith_run_thread_id(run: Any) -> str:
+    extra = getattr(run, "extra", None) or {}
+    metadata = getattr(run, "metadata", None) or {}
+    if not isinstance(metadata, dict):
+        metadata = {}
+    if isinstance(extra, dict):
+        nested = extra.get("metadata") or {}
+        if isinstance(nested, dict):
+            metadata = {**nested, **metadata}
+    return str(metadata.get("thread_id") or "")
+
+
+def _lookup_langsmith_pipeline_node_uncached(thread_id: str) -> Optional[str]:
+    if os.getenv("PYTEST_CURRENT_TEST"):
+        return None
+    tracing = (
+        os.getenv("LANGCHAIN_TRACING_V2")
+        or os.getenv("LANGSMITH_TRACING")
+        or ""
+    ).lower()
+    if tracing not in ("true", "1"):
+        return None
+    if not (os.getenv("LANGCHAIN_API_KEY") or os.getenv("LANGSMITH_API_KEY")):
+        return None
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,64}", thread_id or ""):
+        return None
+    try:
+        from langsmith import Client
+
+        client = Client()
+        kwargs: dict[str, Any] = {
+            "limit": 20,
+            "is_root": False,
+            "filter": f'has(metadata, \'{{"thread_id": "{thread_id}"}}\')',
+        }
+        project = os.getenv("LANGCHAIN_PROJECT") or os.getenv("LANGSMITH_PROJECT")
+        if project:
+            kwargs["project_name"] = project.strip().strip('"').strip("'")
+        for run in client.list_runs(**kwargs):
+            if not _langsmith_run_in_progress(run):
+                continue
+            name = getattr(run, "name", None)
+            if name not in _PIPELINE_NODES_SET:
+                continue
+            if _langsmith_run_thread_id(run) == thread_id:
+                return str(name)
+    except Exception:
+        return None
+    return None
+
+
+def lookup_langsmith_pipeline_node(thread_id: str) -> Optional[str]:
+    """Best-effort in-progress child span. Fail open; never the primary clock."""
+    if not thread_id:
+        return None
+    now = time.monotonic()
+    cached = _ls_lookup_cache.get(thread_id)
+    if cached and now - cached[0] < _LS_LOOKUP_TTL_SEC:
+        return cached[1]
+
+    box: list[Optional[str]] = []
+
+    def _work() -> None:
+        try:
+            box.append(_lookup_langsmith_pipeline_node_uncached(thread_id))
+        except Exception:
+            box.append(None)
+
+    worker = threading.Thread(target=_work, daemon=True)
+    worker.start()
+    worker.join(_LS_LOOKUP_JOIN_SEC)
+    if worker.is_alive() or not box:
+        return None
+    node = box[0]
+    _ls_lookup_cache[thread_id] = (now, node)
+    return node
+
+
+def graph_invoke_config(thread_id: str, *, run_type: str = "manual", user_id: str = "") -> dict:
+    """LangGraph invoke config plus LangSmith run_name/metadata (same thread_id)."""
+    metadata: dict = {"thread_id": thread_id, "run_type": run_type}
+    if user_id:
+        metadata["user_id"] = user_id
+    handler = PipelineProgressHandler(thread_id)
+    # Merge into tracing (do not replace LANGCHAIN/LANGSMITH tracers).
+    callbacks = CallbackManager.configure(inheritable_callbacks=[handler])
+    return {
+        "configurable": {"thread_id": thread_id},
+        "run_name": "signal-pipeline",
+        "metadata": metadata,
+        "callbacks": callbacks,
+    }
+
+
 # Phase 2 persistence — PostgresSaver + PostgresStore.
 # Official LangGraph pattern for long-lived graphs: ConnectionPool (not a raw
 # Connection held via ExitStack/from_conn_string). A single Connection goes idle
@@ -211,6 +456,7 @@ _postgres_store.supports_pipeline = False
 _postgres_store.setup()
 
 graph = builder.compile(checkpointer=_postgres_saver, store=_postgres_store)
+graph.name = "signal-pipeline"
 
 
 def _ensure_pool_healthy() -> None:
@@ -275,24 +521,29 @@ def _recovery_input(original_input, config):
 
 def _invoke_with_stale_conn_retry(invoke_input, config):
     """Invoke once; on SSL/pool OperationalError refresh pool and resume checkpoint."""
-    _ensure_pool_healthy()
+    tid = str(((config or {}).get("configurable") or {}).get("thread_id") or "")
     try:
-        return graph.invoke(invoke_input, config)
-    except OperationalError:
-        import logging
-
-        recovery_input = _recovery_input(invoke_input, config)
-        logging.getLogger(__name__).warning(
-            "graph.invoke hit OperationalError (likely stale pooled conn); "
-            "refreshing pool and resuming from checkpoint "
-            "(recovery_input=%s, not replaying initial_state)",
-            type(recovery_input).__name__
-            if recovery_input is not None
-            else None,
-            exc_info=True,
-        )
         _ensure_pool_healthy()
-        return graph.invoke(recovery_input, config)
+        try:
+            return graph.invoke(invoke_input, config)
+        except OperationalError:
+            import logging
+
+            recovery_input = _recovery_input(invoke_input, config)
+            logging.getLogger(__name__).warning(
+                "graph.invoke hit OperationalError (likely stale pooled conn); "
+                "refreshing pool and resuming from checkpoint "
+                "(recovery_input=%s, not replaying initial_state)",
+                type(recovery_input).__name__
+                if recovery_input is not None
+                else None,
+                exc_info=True,
+            )
+            _ensure_pool_healthy()
+            return graph.invoke(recovery_input, config)
+    finally:
+        if tid:
+            clear_live_node(tid)
 
 
 def _get_state_with_stale_conn_retry(config):
@@ -379,7 +630,7 @@ def execute_graph(
 ) -> GraphRunResult:
     """Canonical pipeline execution entry point."""
     tid = thread_id or f"run_{uuid4().hex[:12]}"
-    config = {"configurable": {"thread_id": tid}}
+    config = graph_invoke_config(tid, run_type=run_type, user_id=user_id or "")
 
     if resume:
         invoke_input = None

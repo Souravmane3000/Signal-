@@ -901,6 +901,7 @@
                         <span class="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-slate-400"></span>
                         <span id="status-text" class="uppercase tracking-wider truncate max-w-[80px] md:max-w-none">Checking Status...</span>
                     </div>
+                    <span id="api-host-chip" class="hidden sm:inline text-[10px] md:text-xs font-mono text-slate-400 truncate max-w-[160px] md:max-w-[240px]" title="API host this page is calling"></span>
                 </div>
                 
                 <div class="flex items-center gap-2 md:gap-4">
@@ -940,6 +941,18 @@
                                     <span class="text-amber-800 dark:text-amber-200 font-medium">Attention: Briefing awaiting your review</span>
                                 </div>
                                 <button onclick="setView('hitl')" class="text-amber-600 dark:text-amber-400 font-bold hover:underline">Review Now →</button>
+                            </div>
+                            <div id="pipeline-stage" class="hidden border-b border-slate-200 dark:border-slate-800 px-4 md:px-8 py-4 md:py-5">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-5 h-5 border-2 border-brand-600 border-t-transparent rounded-full animate-spin shrink-0" aria-hidden="true"></div>
+                                    <div class="min-w-0 flex-1">
+                                        <p id="pipeline-stage-label" class="font-semibold text-slate-800 dark:text-slate-100 truncate">Loading configuration</p>
+                                        <p id="pipeline-stage-meta" class="text-xs text-slate-500 mt-0.5 font-mono">config_loader</p>
+                                        <div class="mt-2 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                                            <div id="pipeline-stage-bar" class="h-full rounded-full bg-brand-600 transition-all duration-500" style="width: 6%"></div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="p-4 md:p-8 prose prose-sm md:prose-base dark:prose-invert max-w-none" id="briefing-summary-content">
                                 <!-- Markdown content will be rendered here -->
@@ -1207,10 +1220,10 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="config.js"></script>
+    <script src="config.js?v=live2"></script>
     <script>
-        // Configuration
-        const API_BASE = window.API_BASE_URL || 'http://localhost:8000';
+        // Configuration — 8000 is this static server; API is 8080 locally.
+        const API_BASE = window.API_BASE_URL || 'http://localhost:8080';
 
         // JWT lives in memory only (PRD §20) — never localStorage / sessionStorage / cookies.
         let accessToken = null;
@@ -1236,7 +1249,9 @@
             pendingBriefing: null,
             isDarkMode: false,
             authReady: false,
-            needsOnboarding: false
+            needsOnboarding: false,
+            runInFlight: false,
+            lastPipelineStage: null
         };
 
         // DOM Elements
@@ -1244,12 +1259,17 @@
             app: document.getElementById('app'),
             statusText: document.getElementById('status-text'),
             statusIndicator: document.getElementById('status-indicator'),
+            apiHostChip: document.getElementById('api-host-chip'),
             runButton: document.getElementById('run-button'),
             viewContainer: document.getElementById('view-container'),
             toastContainer: document.getElementById('toast-container'),
             loadingOverlay: document.getElementById('loading-overlay'),
             briefingContent: document.getElementById('briefing-summary-content'),
             latestRunContainer: document.getElementById('latest-run-container'),
+            pipelineStage: document.getElementById('pipeline-stage'),
+            pipelineStageLabel: document.getElementById('pipeline-stage-label'),
+            pipelineStageMeta: document.getElementById('pipeline-stage-meta'),
+            pipelineStageBar: document.getElementById('pipeline-stage-bar'),
             emptyState: document.getElementById('empty-state'),
             hitlBriefingText: document.getElementById('hitl-briefing-text'),
             hitlItemsList: document.getElementById('hitl-items-list'),
@@ -1481,9 +1501,7 @@
             updateNav();
             await pollStatus();
             await refreshDashboard();
-            if (!window._signalStatusPoll) {
-                window._signalStatusPoll = setInterval(pollStatus, 5000);
-            }
+            setStatusPollInterval(POLL_IDLE_MS);
         }
 
         async function submitAuth(event) {
@@ -1600,9 +1618,12 @@
             state.lastRun = null;
             state.briefings = [];
             state.pendingBriefing = null;
+            state.runInFlight = false;
+            hidePipelineStage();
             if (window._signalStatusPoll) {
                 clearInterval(window._signalStatusPoll);
                 window._signalStatusPoll = null;
+                window._signalStatusPollMs = null;
             }
             showLandingScreen();
             setAuthMode('login');
@@ -1641,6 +1662,14 @@
 
         // Initialize — JWT is memory-only, so reload always requires login again.
         async function init() {
+            if (elements.apiHostChip) {
+                try {
+                    elements.apiHostChip.textContent = new URL(API_BASE).host;
+                    elements.apiHostChip.title = API_BASE;
+                } catch (_) {
+                    elements.apiHostChip.textContent = API_BASE;
+                }
+            }
             if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                 toggleDarkMode(true);
             }
@@ -1730,6 +1759,80 @@
             });
         }
 
+        const POLL_IDLE_MS = 5000;
+        const POLL_RUNNING_MS = 1000;
+        const PIPELINE_STAGE_TOTAL = 18;
+        const PIPELINE_LABELS = {
+            config_loader: 'Loading configuration',
+            search_planner: 'Planning searches',
+            tavily_search: 'Searching the web',
+            yc_api_node: 'Checking YC companies',
+            hn_algolia_node: 'Scanning Hacker News',
+            google_news_rss_node: 'Reading Google News',
+            reducer: 'Merging findings',
+            freshness_validation: 'Checking freshness',
+            entity_extraction: 'Extracting entities',
+            scope_filter: 'Filtering scope',
+            source_trust_scoring: 'Scoring sources',
+            hybrid_dedup: 'Removing duplicates',
+            synthesis: 'Writing briefing',
+            hitl_node: 'Awaiting your review',
+            discard_and_log: 'Discarding draft',
+            episodic_memory_writer: 'Saving memory',
+            delivery: 'Sending briefing',
+            run_metrics_writer: 'Recording metrics'
+        };
+
+        function newRunThreadId() {
+            const bytes = new Uint8Array(6);
+            crypto.getRandomValues(bytes);
+            const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+            return 'run_' + hex;
+        }
+
+        function setStatusPollInterval(ms) {
+            if (window._signalStatusPollMs === ms && window._signalStatusPoll) return;
+            window._signalStatusPollMs = ms;
+            if (window._signalStatusPoll) {
+                clearInterval(window._signalStatusPoll);
+            }
+            window._signalStatusPoll = setInterval(pollStatus, ms);
+        }
+
+        function hidePipelineStage() {
+            if (elements.pipelineStage) elements.pipelineStage.classList.add('hidden');
+        }
+
+        function showPipelineStage(stage) {
+            if (!elements.pipelineStage) return;
+            elements.emptyState.classList.add('hidden');
+            elements.latestRunContainer.classList.remove('hidden');
+            const node = stage && stage.current_node;
+            const label = (stage && stage.current_label)
+                || (node && PIPELINE_LABELS[node])
+                || 'Working…';
+            if (elements.pipelineStageLabel) elements.pipelineStageLabel.textContent = label;
+            if (elements.pipelineStageMeta) {
+                elements.pipelineStageMeta.textContent = node || '';
+                elements.pipelineStageMeta.classList.toggle('hidden', !node);
+            }
+            if (elements.pipelineStageBar) {
+                const total = (stage && stage.step_total) || PIPELINE_STAGE_TOTAL;
+                const index = (stage && stage.step_index) || 0;
+                const pct = index && total
+                    ? Math.max(4, Math.min(100, Math.round((index / total) * 100)))
+                    : 6;
+                elements.pipelineStageBar.style.width = pct + '%';
+            }
+            state.lastPipelineStage = {
+                current_node: node || null,
+                current_label: label,
+                step_index: stage && stage.step_index,
+                step_total: (stage && stage.step_total) || PIPELINE_STAGE_TOTAL
+            };
+            elements.pipelineStage.classList.remove('hidden');
+        }
+
         // API Calls
         async function pollStatus() {
             if (!state.activeThreadId) {
@@ -1742,11 +1845,11 @@
             }
             
             try {
-                const res = await apiFetch(`/agent/status?thread_id=${state.activeThreadId}`);
+                const res = await apiFetch(`/agent/status?thread_id=${encodeURIComponent(state.activeThreadId)}`);
                 if (!res.ok) throw new Error('Status endpoint unavailable');
                 
                 const data = await res.json();
-                updateStatus(data.status);
+                updateStatus(data.status, data);
                 
                 // If it reached pending_hitl and we haven't shown it yet
                 if (data.status === 'pending_hitl' && (!state.lastRun || state.lastRun.status !== 'pending_hitl')) {
@@ -1775,7 +1878,13 @@
             }
         }
 
-        function updateStatus(status) {
+        function updateStatus(status, extras) {
+            if (state.runInFlight && status === 'idle') {
+                status = 'running';
+                extras = extras && extras.current_node
+                    ? extras
+                    : (state.lastPipelineStage || { current_label: 'Working…', current_node: null });
+            }
             state.agentStatus = status;
             elements.statusText.textContent = status.replace('_', ' ');
             
@@ -1785,28 +1894,41 @@
             if (status === 'idle') {
                 indicator.classList.add('bg-slate-400');
                 elements.runButton.disabled = false;
-                elements.loadingOverlay.classList.add('hidden');
+                state.lastPipelineStage = null;
+                hidePipelineStage();
+                setStatusPollInterval(POLL_IDLE_MS);
             } else if (status === 'running') {
                 indicator.classList.add('bg-blue-500', 'status-pulse');
                 elements.runButton.disabled = true;
-                elements.loadingOverlay.classList.remove('hidden');
+                showPipelineStage(extras || state.lastPipelineStage || { current_label: 'Working…' });
+                setStatusPollInterval(POLL_RUNNING_MS);
             } else if (status === 'pending_hitl') {
                 indicator.classList.add('bg-amber-500', 'status-pulse');
                 elements.runButton.disabled = true;
                 elements.runPendingAlert.classList.remove('hidden');
-                elements.loadingOverlay.classList.add('hidden');
+                hidePipelineStage();
+                setStatusPollInterval(POLL_IDLE_MS);
             }
         }
 
         async function triggerRun() {
-            elements.loadingOverlay.classList.remove('hidden');
-            updateStatus('running');
+            const threadId = newRunThreadId();
+            state.activeThreadId = threadId;
+            state.runInFlight = true;
+            state.lastRun = null;
+            updateStatus('running', {
+                current_node: 'config_loader',
+                current_label: 'Loading configuration',
+                step_index: 1,
+                step_total: PIPELINE_STAGE_TOTAL
+            });
+            pollStatus();
             
             try {
                 const res = await apiFetch(`/run`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({})
+                    body: JSON.stringify({ thread_id: threadId })
                 });
                 
                 if (!res.ok) throw new Error('Run failed');
@@ -1818,19 +1940,21 @@
                 }
                 
                 if (data.status === 'pending_hitl') {
+                    state.runInFlight = false;
                     await showHITLById(data.run_id, data.thread_id);
                     showToast('Run reached HITL checkpoint', 'info');
                 } else if (data.status === 'completed') {
+                    state.runInFlight = false;
+                    updateStatus('idle');
                     await refreshDashboard();
                     showToast('Run completed successfully', 'success');
                 } else {
                     showToast('Run started in background', 'info');
                 }
             } catch (err) {
+                state.runInFlight = false;
                 showToast(err.message, 'error');
                 updateStatus('idle');
-            } finally {
-                elements.loadingOverlay.classList.add('hidden');
             }
         }
 
@@ -3448,11 +3572,21 @@
 
         async function submitHITL(action) {
             if (!state.pendingBriefing || !state.pendingBriefing.run_id) return;
-            
-            elements.loadingOverlay.classList.remove('hidden');
-            
+
+            const tid = state.pendingBriefing.thread_id || state.activeThreadId;
+            if (tid) state.activeThreadId = tid;
+            state.runInFlight = true;
+            setView('dashboard');
+            elements.runPendingAlert.classList.add('hidden');
+            updateStatus('running', {
+                current_node: action === 'reject' ? 'discard_and_log' : 'episodic_memory_writer',
+                current_label: action === 'reject' ? 'Discarding draft' : 'Saving memory',
+                step_index: action === 'reject' ? 15 : 16,
+                step_total: PIPELINE_STAGE_TOTAL
+            });
+            pollStatus();
+
             try {
-                const tid = state.pendingBriefing.thread_id || state.activeThreadId;
                 const qs = tid ? `?thread_id=${encodeURIComponent(tid)}` : '';
                 const res = await apiFetch(`/briefings/${state.pendingBriefing.run_id}/${action}${qs}`, {
                     method: 'POST',
@@ -3476,16 +3610,16 @@
                 } else if (action === 'reject') {
                     showToast('Briefing rejected. No email was sent.', 'info');
                 }
-                
-                setView('dashboard');
-                updateStatus('idle');
+
+                state.runInFlight = false;
                 state.pendingBriefing = null;
-                elements.runPendingAlert.classList.add('hidden');
+                updateStatus('idle');
                 await refreshDashboard();
             } catch (err) {
+                state.runInFlight = false;
+                hidePipelineStage();
+                setView('hitl');
                 showToast(err.message, 'error');
-            } finally {
-                elements.loadingOverlay.classList.add('hidden');
             }
         }
 

@@ -32,6 +32,10 @@ class AuthResponse(BaseModel):
 class AgentStatusResponse(BaseModel):
     status: Literal["idle", "running", "pending_hitl"]
     thread_id: Optional[str] = None
+    current_node: Optional[str] = None
+    current_label: Optional[str] = None
+    step_index: Optional[int] = None
+    step_total: Optional[int] = None
 
 
 class HITLActionRequest(BaseModel):
