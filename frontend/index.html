@@ -746,6 +746,14 @@
                         </button>
                     </form>
 
+                    <div class="mt-8 pt-6 border-t border-slate-800 space-y-3">
+                        <h3 class="text-sm font-bold text-brand-500 tracking-tight">Demo Access</h3>
+                        <p class="text-sm text-slate-500 leading-relaxed">Explore a populated workspace with sample briefings, research, and recommendations — no account to create.</p>
+                        <button type="button" id="auth-demo-autofill" onclick="autofillDemoCredentials()" class="auth-btn-outline w-full flex items-center justify-center">
+                            Autofill Demo Credentials
+                        </button>
+                    </div>
+
                     <p class="mt-8 text-center">
                         <button type="button" class="text-sm font-medium text-slate-500 hover:text-slate-300 transition-colors underline underline-offset-4 cursor-not-allowed opacity-60" disabled title="Password reset is not available yet">Forgot your password?</button>
                     </p>
@@ -1376,6 +1384,15 @@
                 label.textContent = 'Log in';
                 if (pwd) pwd.autocomplete = 'current-password';
             }
+            setAuthError('');
+        }
+
+        function autofillDemoCredentials() {
+            setAuthMode('login');
+            const email = document.getElementById('auth-email');
+            const password = document.getElementById('auth-password');
+            if (email) email.value = 'souravmane84@gmail.com';
+            if (password) password.value = '123456';
             setAuthError('');
         }
 

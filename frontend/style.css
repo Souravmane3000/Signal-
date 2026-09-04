@@ -478,6 +478,24 @@ html {
   box-shadow: 0 10px 15px -3px rgba(2, 132, 199, 0.3);
 }
 
+.auth-btn-outline {
+  height: 3.25rem;
+  background: transparent;
+  border: 1px solid var(--landing-brand);
+  color: var(--landing-brand-soft);
+  font-weight: 700;
+  font-size: 1rem;
+  border-radius: 0.75rem;
+  transition: all 200ms ease;
+}
+
+.auth-btn-outline:hover {
+  background: rgba(14, 165, 233, 0.08);
+  border-color: var(--landing-brand-soft);
+  color: #e0f2fe;
+  transform: translateY(-1px);
+}
+
 .auth-tab {
   padding: 0.75rem 1rem;
   font-weight: 700;
@@ -493,7 +511,7 @@ html {
 }
 
 @media (max-width: 640px) {
-  .auth-input, .auth-btn-primary {
+  .auth-input, .auth-btn-primary, .auth-btn-outline {
     height: 2.75rem;
   }
 }
