@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import traceback
@@ -71,7 +72,7 @@ async def jwt_auth_middleware(request: Request, call_next):
         )
 
     try:
-        claims = verify_supabase_jwt(token)
+        claims = await asyncio.to_thread(verify_supabase_jwt, token)
     except Exception as exc:
         # HTTPException from verify → preserve status/detail; others → 401.
         from fastapi import HTTPException as FastAPIHTTPException

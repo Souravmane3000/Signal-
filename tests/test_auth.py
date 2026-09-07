@@ -209,7 +209,8 @@ def test_briefings_query_scoped_to_jwt_user():
         response = client.get("/briefings", headers=auth_headers())
 
     assert response.status_code == 200
-    assert "WHERE br.user_id = %s" in captured["sql"]
+    assert "WHERE user_id = %s" in captured["sql"]
+    assert "FROM briefing_runs" in captured["sql"]
     assert captured["params"][0] == TEST_USER_ID
 
 
@@ -369,6 +370,8 @@ def test_rls_policies_present_in_schema():
         assert f"CREATE POLICY {policy}" in sql
         if table not in ("companies", "funding_rounds"):
             assert "auth.uid() = user_id" in sql
+    assert "idx_briefing_runs_user_id_run_at" in sql
+    assert "idx_agent_run_metrics_user_id_run_at" in sql
 
 
 def test_frontend_auth_contract():
@@ -389,3 +392,24 @@ def test_frontend_auth_contract():
     assert "password" in html.lower()
     assert "logout" in html.lower()
     assert "onboarding" in html.lower()
+
+
+def test_verify_supabase_jwt_reuses_jwks_client():
+    from api import auth as auth_mod
+
+    auth_mod._jwks_clients.clear()
+    mock_key = MagicMock()
+    mock_key.key = "public-key"
+    with (
+        patch("api.auth.jwt.get_unverified_header", return_value={"alg": "ES256"}),
+        patch(
+            "api.auth.jwt.decode",
+            return_value={"sub": TEST_USER_ID, "exp": 9999999999},
+        ),
+        patch("api.auth.jwt.PyJWKClient") as mock_cls,
+    ):
+        mock_cls.return_value.get_signing_key_from_jwt.return_value = mock_key
+        auth_mod.verify_supabase_jwt("token-a")
+        auth_mod.verify_supabase_jwt("token-b")
+    assert mock_cls.call_count == 1
+    auth_mod._jwks_clients.clear()

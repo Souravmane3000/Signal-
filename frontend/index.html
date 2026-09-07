@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Signal | Startup Intelligence</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="tailwind.built.css">
+    <script src="https://unpkg.com/@phosphor-icons/web" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js"></script>
     <link rel="stylesheet" href="style.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
         .dark .glass { background: rgba(15, 23, 42, 0.7); }
@@ -182,24 +184,6 @@
             .funding-amount { font-size: 0.95rem; }
         }
     </style>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            50: '#f0f9ff',
-                            100: '#e0f2fe',
-                            500: '#0ea5e9',
-                            600: '#0284c7',
-                            700: '#0369a1',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
 </head>
 <body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen transition-colors duration-300">
     <!-- Landing (public marketing) -->
@@ -1208,18 +1192,18 @@
             <!-- Toast / Notifications -->
             <div id="toast-container" class="fixed bottom-8 right-8 z-50 flex flex-col gap-2"></div>
             
-            <!-- Loading Overlay -->
+            <!-- Loading Overlay (reads only — pipeline progress uses #pipeline-stage) -->
             <div id="loading-overlay" class="hidden absolute inset-0 bg-slate-950/20 backdrop-blur-[2px] z-40 flex items-center justify-center">
                 <div class="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-2xl flex flex-col items-center gap-4 border border-slate-200 dark:border-slate-800">
                     <div class="w-12 h-12 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
-                    <p class="font-medium animate-pulse">Running Intelligence Pipeline...</p>
+                    <p id="loading-overlay-label" class="font-medium animate-pulse">Loading briefing…</p>
                 </div>
             </div>
         </main>
     </div>
 
     <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
     <script src="config.js?v=live2"></script>
     <script>
         // Configuration — 8000 is this static server; API is 8080 locally.
@@ -1251,7 +1235,9 @@
             authReady: false,
             needsOnboarding: false,
             runInFlight: false,
-            lastPipelineStage: null
+            lastPipelineStage: null,
+            memoryLoaded: false,
+            _warmPrefetched: false
         };
 
         // DOM Elements
@@ -1264,6 +1250,7 @@
             viewContainer: document.getElementById('view-container'),
             toastContainer: document.getElementById('toast-container'),
             loadingOverlay: document.getElementById('loading-overlay'),
+            loadingOverlayLabel: document.getElementById('loading-overlay-label'),
             briefingContent: document.getElementById('briefing-summary-content'),
             latestRunContainer: document.getElementById('latest-run-container'),
             pipelineStage: document.getElementById('pipeline-stage'),
@@ -1474,18 +1461,20 @@
             return res;
         }
 
-        async function routeAfterAuth(needsOnboardingHint) {
-            // Detect first-time users via existing configuration row (from_defaults / missing).
+        async function routeAfterAuth(needsOnboardingHint, options) {
+            const trustHint = !!(options && options.trustHint);
             let needsOnboarding = !!needsOnboardingHint;
-            try {
-                const res = await apiFetch('/config');
-                if (res.ok) {
-                    const cfg = await res.json();
-                    state.userConfig = cfg;
-                    needsOnboarding = cfg.from_defaults === true;
+            if (!trustHint) {
+                try {
+                    const res = await apiFetch('/config');
+                    if (res.ok) {
+                        const cfg = await res.json();
+                        state.userConfig = cfg;
+                        needsOnboarding = cfg.from_defaults === true;
+                    }
+                } catch (_) {
+                    // Keep signup hint if config probe fails.
                 }
-            } catch (_) {
-                // Keep signup hint if config probe fails.
             }
             state.needsOnboarding = needsOnboarding;
             if (needsOnboarding) {
@@ -1499,9 +1488,10 @@
             showAppShell();
             state.authReady = true;
             updateNav();
-            await pollStatus();
-            await refreshDashboard();
+            bindPollVisibility();
             setStatusPollInterval(POLL_IDLE_MS);
+            pollStatus();
+            refreshDashboard();
         }
 
         async function submitAuth(event) {
@@ -1544,7 +1534,8 @@
                     setAuthError('No session token returned. Please try again.');
                     return;
                 }
-                await routeAfterAuth(body.needs_onboarding === true);
+                setAuthLoading(false);
+                await routeAfterAuth(body.needs_onboarding === true, { trustHint: true });
             } catch (err) {
                 setAuthError(err.network ? err.message : 'Network error. Check your connection and try again.');
             } finally {
@@ -1617,14 +1608,16 @@
             state.userConfig = null;
             state.lastRun = null;
             state.briefings = [];
+            state.runMetrics = [];
+            state.semanticMemory = null;
+            state.episodicMemory = [];
+            state.proceduralMemory = null;
+            state.memoryLoaded = false;
+            state._warmPrefetched = false;
             state.pendingBriefing = null;
             state.runInFlight = false;
             hidePipelineStage();
-            if (window._signalStatusPoll) {
-                clearInterval(window._signalStatusPoll);
-                window._signalStatusPoll = null;
-                window._signalStatusPollMs = null;
-            }
+            stopStatusPoll();
             showLandingScreen();
             setAuthMode('login');
             showToast('Logged out', 'info');
@@ -1695,18 +1688,22 @@
                 toggleSidebar(false);
             }
             
-            // View specific logic
+            // View specific logic — paint cache immediately, revalidate in background.
             if (viewName === 'briefings') {
-                fetchBriefings();
+                if (state.briefings.length) renderBriefingsList();
+                fetchBriefings({ silent: state.briefings.length > 0 });
             }
             if (viewName === 'metrics') {
-                fetchRunMetrics();
+                if (state.runMetrics.length) renderRunMetrics();
+                fetchRunMetrics({ silent: state.runMetrics.length > 0 });
             }
             if (viewName === 'memory') {
-                fetchMemory();
+                if (state.memoryLoaded) renderMemory();
+                fetchMemory({ silent: state.memoryLoaded });
             }
             if (viewName === 'config') {
-                fetchConfig();
+                if (state.userConfig) renderConfig();
+                fetchConfig({ silent: !!state.userConfig });
             }
             if (viewName === 'dashboard') {
                 refreshDashboard();
@@ -1759,7 +1756,7 @@
             });
         }
 
-        const POLL_IDLE_MS = 5000;
+        const POLL_IDLE_MS = 20000;
         const POLL_RUNNING_MS = 1000;
         const PIPELINE_STAGE_TOTAL = 18;
         const PIPELINE_LABELS = {
@@ -1790,7 +1787,36 @@
             return 'run_' + hex;
         }
 
+        function stopStatusPoll() {
+            if (window._signalStatusPoll) {
+                clearInterval(window._signalStatusPoll);
+                window._signalStatusPoll = null;
+            }
+            window._signalStatusPollMs = null;
+        }
+
+        function bindPollVisibility() {
+            if (window._signalPollVisBound) return;
+            window._signalPollVisBound = true;
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') {
+                    stopStatusPoll();
+                    return;
+                }
+                if (!state.authReady) return;
+                const ms = window._signalDesiredPollMs || POLL_IDLE_MS;
+                window._signalStatusPollMs = null;
+                setStatusPollInterval(ms);
+                pollStatus();
+            });
+        }
+
         function setStatusPollInterval(ms) {
+            window._signalDesiredPollMs = ms;
+            if (document.visibilityState === 'hidden') {
+                stopStatusPoll();
+                return;
+            }
             if (window._signalStatusPollMs === ms && window._signalStatusPoll) return;
             window._signalStatusPollMs = ms;
             if (window._signalStatusPoll) {
@@ -1834,34 +1860,39 @@
         }
 
         // API Calls
+        let pollInFlight = false;
+
         async function pollStatus() {
+            if (pollInFlight) return;
+            if (document.visibilityState === 'hidden') return;
             if (!state.activeThreadId) {
-                // Try to find if there's a recent thread to monitor
                 if (state.briefings.length > 0) {
                     state.activeThreadId = state.briefings[0].thread_id;
                 } else {
-                    return; // Nothing to poll yet
+                    return;
                 }
             }
-            
+
+            pollInFlight = true;
             try {
                 const res = await apiFetch(`/agent/status?thread_id=${encodeURIComponent(state.activeThreadId)}`);
                 if (!res.ok) throw new Error('Status endpoint unavailable');
-                
+
                 const data = await res.json();
                 updateStatus(data.status, data);
-                
-                // If it reached pending_hitl and we haven't shown it yet
+
                 if (data.status === 'pending_hitl' && (!state.lastRun || state.lastRun.status !== 'pending_hitl')) {
-                    // Prefer run_id + thread_id from the last run response (runtime contract)
-                    if (state.lastRun && state.lastRun.run_id) {
-                        await showHITLById(state.lastRun.run_id, state.activeThreadId);
-                    } else {
-                        await fetchLatestBriefingForThread(state.activeThreadId);
-                    }
+                    const tid = state.activeThreadId;
+                    const runId = state.lastRun && state.lastRun.run_id;
+                    setTimeout(() => {
+                        if (runId) showHITLById(runId, tid);
+                        else fetchLatestBriefingForThread(tid);
+                    }, 0);
                 }
             } catch (err) {
                 console.log('Poll Status Failed:', err.message);
+            } finally {
+                pollInFlight = false;
             }
         }
 
@@ -1958,15 +1989,19 @@
             }
         }
 
-        async function fetchBriefings() {
-            elements.briefingsListLoading.classList.remove('hidden');
-            elements.briefingsListEmpty.classList.add('hidden');
-            elements.briefingsList.innerHTML = '';
-            
+        async function fetchBriefings(opts) {
+            const silent = !!(opts && opts.silent);
+            const hasCache = state.briefings.length > 0;
+            if (!silent || !hasCache) {
+                elements.briefingsListLoading.classList.remove('hidden');
+                elements.briefingsListEmpty.classList.add('hidden');
+                if (!hasCache) elements.briefingsList.innerHTML = '';
+            }
+
             try {
                 const res = await apiFetch(`/briefings`);
                 if (!res.ok) throw new Error('Failed to fetch briefings');
-                
+
                 const data = await res.json();
                 state.briefings = data.briefings || [];
                 renderBriefingsList();
@@ -1981,11 +2016,16 @@
             }
         }
 
-        async function fetchRunMetrics() {
-            elements.metricsListLoading.classList.remove('hidden');
-            elements.metricsListEmpty.classList.add('hidden');
-            elements.metricsListError.classList.add('hidden');
-            elements.metricsList.innerHTML = '';
+        async function fetchRunMetrics(opts) {
+            const silent = !!(opts && opts.silent);
+            const prefetch = !!(opts && opts.prefetch);
+            const hasCache = state.runMetrics.length > 0;
+            if (!prefetch && (!silent || !hasCache)) {
+                elements.metricsListLoading.classList.remove('hidden');
+                elements.metricsListEmpty.classList.add('hidden');
+                elements.metricsListError.classList.add('hidden');
+                if (!hasCache) elements.metricsList.innerHTML = '';
+            }
 
             try {
                 const res = await apiFetch(`/metrics/runs?limit=5`);
@@ -1993,38 +2033,52 @@
 
                 const data = await res.json();
                 state.runMetrics = data.runs || [];
-                renderRunMetrics();
+                if (!prefetch || state.currentView === 'metrics') {
+                    renderRunMetrics();
+                }
                 return state.runMetrics;
             } catch (err) {
                 console.log('Fetch Run Metrics Failed:', err.message);
-                state.runMetrics = [];
-                elements.metricsListError.classList.remove('hidden');
-                showToast("Couldn't load metrics. Please try again.", 'error');
-                return [];
+                if (!prefetch) {
+                    if (!hasCache) state.runMetrics = [];
+                    elements.metricsListError.classList.remove('hidden');
+                    showToast("Couldn't load metrics. Please try again.", 'error');
+                }
+                return state.runMetrics;
             } finally {
                 elements.metricsListLoading.classList.add('hidden');
             }
         }
 
-        async function fetchConfig() {
-            elements.configLoading.classList.remove('hidden');
-            elements.configError.classList.add('hidden');
-            elements.configEmpty.classList.add('hidden');
-            elements.configContent.classList.add('hidden');
+        async function fetchConfig(opts) {
+            const silent = !!(opts && opts.silent);
+            const prefetch = !!(opts && opts.prefetch);
+            const hasCache = !!state.userConfig;
+            const editing = state.editingDeliveryEmail || state.editingSchedule || state.editingStageFilter;
+            if (!prefetch && (!silent || !hasCache)) {
+                elements.configLoading.classList.remove('hidden');
+                elements.configError.classList.add('hidden');
+                elements.configEmpty.classList.add('hidden');
+                elements.configContent.classList.add('hidden');
+            }
 
             try {
                 const res = await apiFetch(`/config`);
                 if (!res.ok) throw new Error('Failed to fetch configuration');
                 const data = await res.json();
                 state.userConfig = data;
-                renderConfig();
+                if ((!prefetch || state.currentView === 'config') && !editing) {
+                    renderConfig();
+                }
                 return data;
             } catch (err) {
                 console.log('Fetch Config Failed:', err.message);
-                state.userConfig = null;
-                elements.configError.classList.remove('hidden');
-                showToast("Couldn't load configuration. Please try again.", 'error');
-                return null;
+                if (!prefetch) {
+                    if (!hasCache) state.userConfig = null;
+                    elements.configError.classList.remove('hidden');
+                    showToast("Couldn't load configuration. Please try again.", 'error');
+                }
+                return state.userConfig;
             } finally {
                 elements.configLoading.classList.add('hidden');
             }
@@ -2388,15 +2442,20 @@
             });
         }
 
-        async function fetchMemory() {
-            elements.memoryLoading.classList.remove('hidden');
-            elements.memoryError.classList.add('hidden');
-            if (elements.memorySemanticContent) elements.memorySemanticContent.innerHTML = '';
-            elements.memoryEpisodicList.innerHTML = '';
-            elements.memoryProceduralContent.innerHTML = '';
-            if (elements.memorySemanticEmpty) elements.memorySemanticEmpty.classList.add('hidden');
-            elements.memoryEpisodicEmpty.classList.add('hidden');
-            elements.memoryProceduralEmpty.classList.add('hidden');
+        async function fetchMemory(opts) {
+            const silent = !!(opts && opts.silent);
+            if (!silent || !state.memoryLoaded) {
+                elements.memoryLoading.classList.remove('hidden');
+                elements.memoryError.classList.add('hidden');
+                if (!state.memoryLoaded) {
+                    if (elements.memorySemanticContent) elements.memorySemanticContent.innerHTML = '';
+                    elements.memoryEpisodicList.innerHTML = '';
+                    elements.memoryProceduralContent.innerHTML = '';
+                    if (elements.memorySemanticEmpty) elements.memorySemanticEmpty.classList.add('hidden');
+                    elements.memoryEpisodicEmpty.classList.add('hidden');
+                    elements.memoryProceduralEmpty.classList.add('hidden');
+                }
+            }
 
             try {
                 const [semRes, epRes, prRes] = await Promise.all([
@@ -2412,6 +2471,7 @@
                 state.semanticMemory = semData;
                 state.episodicMemory = epData.episodes || [];
                 state.proceduralMemory = prData;
+                state.memoryLoaded = true;
                 setMemoryTab(state.memoryTab || 'semantic');
                 renderMemory();
                 return {
@@ -2421,10 +2481,12 @@
                 };
             } catch (err) {
                 console.log('Fetch Memory Failed:', err.message);
-                state.semanticMemory = null;
-                state.episodicMemory = [];
-                state.proceduralMemory = null;
-                elements.memoryError.classList.remove('hidden');
+                if (!state.memoryLoaded) {
+                    state.semanticMemory = null;
+                    state.episodicMemory = [];
+                    state.proceduralMemory = null;
+                    elements.memoryError.classList.remove('hidden');
+                }
                 showToast("Couldn't load memory. Please try again.", 'error');
                 return null;
             } finally {
@@ -2807,26 +2869,45 @@
             }
         }
 
+        function scheduleWarmPrefetch() {
+            if (state._warmPrefetched) return;
+            state._warmPrefetched = true;
+            const run = () => {
+                if (!accessToken || !state.authReady) return;
+                if (!state.runMetrics.length) fetchRunMetrics({ silent: true, prefetch: true });
+                if (!state.userConfig) fetchConfig({ silent: true, prefetch: true });
+            };
+            if (typeof requestIdleCallback === 'function') {
+                requestIdleCallback(run, { timeout: 2000 });
+            } else {
+                setTimeout(run, 1);
+            }
+        }
+
         async function refreshDashboard() {
-            const briefings = await fetchBriefings();
+            const hasList = state.briefings.length > 0;
+            const briefings = await fetchBriefings({ silent: hasList });
+            scheduleWarmPrefetch();
             if (!briefings.length) return;
 
             const latest = briefings[0];
             if (latest.status === 'pending_hitl') {
-                // Keep pending alert; do not overwrite with completed markdown
                 return;
             }
 
+            loadDashboardMarkdown(latest.run_id);
+        }
+
+        async function loadDashboardMarkdown(runId) {
             try {
-                const res = await apiFetch(`/briefings/${latest.run_id}`);
+                const res = await apiFetch(`/briefings/${runId}`);
                 if (!res.ok) return;
                 const detail = await res.json();
                 const markdown = detail.briefing_final || detail.briefing_draft || '';
                 const rawHtml = marked.parse(markdown || '_No briefing text stored for this run._');
                 elements.briefingContent.innerHTML = DOMPurify.sanitize(rawHtml);
                 if (detail.runtime_metrics && typeof detail.runtime_metrics.findings_retrieved === 'number') {
-                    // Prefer item_count from list for "Recent Findings"; keep retrieved as fallback only if list empty
-                    if (!briefings.some(b => b.item_count > 0)) {
+                    if (!state.briefings.some(b => b.item_count > 0)) {
                         elements.statCount.textContent = String(detail.runtime_metrics.findings_retrieved);
                     }
                 }
@@ -2836,10 +2917,12 @@
         }
 
         function renderBriefingsList() {
+            elements.briefingsList.innerHTML = '';
             if (state.briefings.length === 0) {
                 elements.briefingsListEmpty.classList.remove('hidden');
                 return;
             }
+            elements.briefingsListEmpty.classList.add('hidden');
             
             state.briefings.forEach(briefing => {
                 const card = document.createElement('div');
@@ -2879,8 +2962,16 @@
             });
         }
 
+        function setReadOverlayVisible(visible) {
+            if (!elements.loadingOverlay) return;
+            if (elements.loadingOverlayLabel) {
+                elements.loadingOverlayLabel.textContent = 'Loading briefing…';
+            }
+            elements.loadingOverlay.classList.toggle('hidden', !visible);
+        }
+
         async function showHITLById(runId, threadId) {
-            elements.loadingOverlay.classList.remove('hidden');
+            setReadOverlayVisible(true);
             try {
                 const tid = threadId || state.activeThreadId;
                 const qs = tid ? `?thread_id=${encodeURIComponent(tid)}` : '';
@@ -2892,7 +2983,7 @@
                 showToast(err.message, 'error');
                 setView('dashboard');
             } finally {
-                elements.loadingOverlay.classList.add('hidden');
+                setReadOverlayVisible(false);
             }
         }
 
@@ -2904,7 +2995,7 @@
             }
 
             // Saved briefings: DB-only — omit thread_id so backend skips checkpoint probe.
-            elements.loadingOverlay.classList.remove('hidden');
+            setReadOverlayVisible(true);
             try {
                 const res = await apiFetch(`/briefings/${runId}`);
                 if (!res.ok) throw new Error('Failed to load briefing');
@@ -2914,7 +3005,7 @@
             } catch (err) {
                 showToast(err.message, 'error');
             } finally {
-                elements.loadingOverlay.classList.add('hidden');
+                setReadOverlayVisible(false);
             }
         }
 

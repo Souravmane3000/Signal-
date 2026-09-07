@@ -129,6 +129,7 @@ def test_get_agent_status_idle():
     with (
         patch("api.routes.get_live_node", return_value=None),
         patch("api.routes.lookup_langsmith_pipeline_node", return_value=None),
+        patch("api.routes._briefing_run_row_for_thread", return_value=None),
         patch("api.routes.graph.get_state") as mock_get_state,
     ):
         snap = mock_get_state.return_value
@@ -150,6 +151,7 @@ def test_get_agent_status_running_current_node():
     with (
         patch("api.routes.get_live_node", return_value=None),
         patch("api.routes.lookup_langsmith_pipeline_node", return_value=None),
+        patch("api.routes._briefing_run_row_for_thread", return_value=None),
         patch("api.routes.graph.get_state") as mock_get_state,
     ):
         snap = mock_get_state.return_value
@@ -171,6 +173,7 @@ def test_get_agent_status_pending_hitl():
     with (
         patch("api.routes.get_live_node", return_value=None),
         patch("api.routes.lookup_langsmith_pipeline_node", return_value=None),
+        patch("api.routes._briefing_run_row_for_thread", return_value=None),
         patch("api.routes.graph.get_state") as mock_get_state,
     ):
         snap = mock_get_state.return_value
@@ -192,6 +195,7 @@ def test_get_agent_status_live_map_overrides_empty_next():
     with (
         patch("api.routes.get_live_node", return_value="tavily_search"),
         patch("api.routes.lookup_langsmith_pipeline_node", return_value=None),
+        patch("api.routes._briefing_run_row_for_thread", return_value=None),
         patch("api.routes.graph.get_state") as mock_get_state,
     ):
         snap = mock_get_state.return_value
@@ -199,6 +203,8 @@ def test_get_agent_status_live_map_overrides_empty_next():
         snap.tasks = ()
         snap.values = {}
         response = client.get("/agent/status")
+
+    mock_get_state.assert_not_called()
 
     assert response.status_code == 200
     body = response.json()
@@ -213,6 +219,7 @@ def test_get_agent_status_live_hitl_overrides_empty_next():
     with (
         patch("api.routes.get_live_node", return_value="hitl_node"),
         patch("api.routes.lookup_langsmith_pipeline_node", return_value=None),
+        patch("api.routes._briefing_run_row_for_thread", return_value=None),
         patch("api.routes.graph.get_state") as mock_get_state,
     ):
         snap = mock_get_state.return_value
@@ -220,6 +227,8 @@ def test_get_agent_status_live_hitl_overrides_empty_next():
         snap.tasks = ()
         snap.values = {}
         response = client.get("/agent/status")
+
+    mock_get_state.assert_not_called()
 
     assert response.status_code == 200
     body = response.json()
@@ -235,6 +244,7 @@ def test_get_agent_status_langsmith_child_overrides_empty_next():
             "api.routes.lookup_langsmith_pipeline_node",
             return_value="entity_extraction",
         ),
+        patch("api.routes._briefing_run_row_for_thread", return_value=None),
         patch("api.routes.graph.get_state") as mock_get_state,
     ):
         snap = mock_get_state.return_value
@@ -243,11 +253,50 @@ def test_get_agent_status_langsmith_child_overrides_empty_next():
         snap.values = {}
         response = client.get("/agent/status")
 
+    mock_get_state.assert_not_called()
+
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "running"
     assert body["current_node"] == "entity_extraction"
     assert body["current_label"] == "Extracting entities"
+
+
+def test_get_agent_status_completed_db_row_skips_checkpoint():
+    from tests.conftest import TEST_USER_ID
+
+    with (
+        patch("api.routes.get_live_node", return_value=None),
+        patch("api.routes.lookup_langsmith_pipeline_node", return_value=None),
+        patch(
+            "api.routes._briefing_run_row_for_thread",
+            return_value={"user_id": TEST_USER_ID, "status": "completed"},
+        ),
+        patch("api.routes.graph.get_state") as mock_get_state,
+    ):
+        response = client.get("/agent/status?thread_id=run_done")
+
+    mock_get_state.assert_not_called()
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "idle"
+    assert body["current_node"] is None
+
+
+def test_get_agent_status_other_user_thread_idle():
+    with (
+        patch("api.routes.get_live_node", return_value="entity_extraction"),
+        patch(
+            "api.routes._briefing_run_row_for_thread",
+            return_value={"user_id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb", "status": "running"},
+        ),
+        patch("api.routes.graph.get_state") as mock_get_state,
+    ):
+        response = client.get("/agent/status?thread_id=run_other")
+
+    mock_get_state.assert_not_called()
+    assert response.status_code == 200
+    assert response.json()["status"] == "idle"
 
 
 def test_pipeline_progress_handler_sets_live_node():
@@ -283,6 +332,18 @@ def test_graph_invoke_config_includes_langsmith_metadata():
     handlers = getattr(cfg["callbacks"], "handlers", None) or list(cfg["callbacks"])
     assert any(isinstance(cb, PipelineProgressHandler) for cb in handlers)
 
+
+
+def test_list_briefings_grouped_count_query():
+    from pathlib import Path
+
+    src = Path("api/routes.py").read_text(encoding="utf-8")
+    start = src.index("def list_briefings")
+    end = src.index("\n@router.", start + 1)
+    body = src[start:end]
+    assert "WITH recent AS" in body
+    assert "GROUP BY r.id" in body
+    assert "SELECT count(*)" not in body
 
 
 def test_list_briefings_graceful_degradation():
@@ -588,6 +649,46 @@ def test_frontend_pipeline_stage_replaces_run_overlay():
     assert "thread_id: threadId" in trigger
     assert "newRunThreadId" in trigger
     assert "loadingOverlay.classList.remove" not in trigger
+
+
+def test_frontend_responsiveness_shell_and_swr():
+    from pathlib import Path
+
+    html = Path("frontend/index.html").read_text(encoding="utf-8")
+    assert "Running Intelligence Pipeline" not in html
+    assert 'id="loading-overlay-label"' in html
+    assert "Loading briefing…" in html
+    assert "const POLL_IDLE_MS = 20000" in html
+    assert "pollInFlight" in html
+    assert "visibilitychange" in html
+    assert "document.visibilityState" in html
+    assert "scheduleWarmPrefetch" in html
+    assert "requestIdleCallback" in html
+    assert "loadDashboardMarkdown" in html
+    assert "trustHint: true" in html
+    assert "setAuthLoading(false)" in html
+    route = html[html.index("async function routeAfterAuth") : html.index("async function enterAuthenticatedApp")]
+    assert "if (!trustHint)" in route
+    enter = html[html.index("async function enterAuthenticatedApp") : html.index("async function submitAuth")]
+    assert "await pollStatus()" not in enter
+    assert "await refreshDashboard()" not in enter
+    assert "bindPollVisibility()" in enter
+    set_view = html[html.index("function setView") : html.index("function toggleSidebar")]
+    assert "silent: state.briefings.length > 0" in set_view
+    assert "silent: state.runMetrics.length > 0" in set_view
+    assert "silent: !!state.userConfig" in set_view
+    poll = html[html.index("async function pollStatus") : html.index("async function fetchLatestBriefingForThread")]
+    assert "await showHITLById" not in poll
+    assert "setTimeout" in poll
+    assert "function setReadOverlayVisible" in html
+    show_detail = html[html.index("async function showBriefingDetail") : html.index("function renderBriefingDetail")]
+    assert "setReadOverlayVisible(true)" in show_detail
+    assert "Running Intelligence Pipeline" not in show_detail
+    assert "cdn.tailwindcss.com" not in html
+    assert 'href="tailwind.built.css"' in html
+    assert "@phosphor-icons/web" in html and "defer" in html
+    assert "fonts.googleapis.com/css2?family=Inter" in html
+    assert "@import url('https://fonts.googleapis.com" not in html
 
 
 def test_resume_hitl_uses_thread_id_query_param():

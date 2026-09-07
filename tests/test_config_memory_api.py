@@ -235,6 +235,7 @@ def test_put_config_updates_delivery_email():
     sqls = [c[0] for c in shared["calls"]]
     assert any("UPDATE user_configs" in s for s in sqls)
     assert any("SET delivery_email" in s for s in sqls)
+    assert sum(1 for s in sqls if "FROM user_configs" in s) == 1
 
 
 def test_put_config_creates_row_when_missing():

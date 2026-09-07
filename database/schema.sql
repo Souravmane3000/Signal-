@@ -50,6 +50,7 @@ ALTER TABLE briefing_runs ADD COLUMN IF NOT EXISTS run_config jsonb;
 
 CREATE INDEX IF NOT EXISTS idx_briefing_runs_user_id ON briefing_runs (user_id);
 CREATE INDEX IF NOT EXISTS idx_briefing_runs_thread_id ON briefing_runs (thread_id);
+CREATE INDEX IF NOT EXISTS idx_briefing_runs_user_id_run_at ON briefing_runs (user_id, run_at DESC);
 
 ALTER TABLE briefing_runs ENABLE ROW LEVEL SECURITY;
 
@@ -202,6 +203,7 @@ ALTER TABLE agent_run_metrics ADD COLUMN IF NOT EXISTS source_health jsonb;
 
 CREATE INDEX IF NOT EXISTS idx_agent_run_metrics_briefing_run_id ON agent_run_metrics (briefing_run_id);
 CREATE INDEX IF NOT EXISTS idx_agent_run_metrics_user_id ON agent_run_metrics (user_id);
+CREATE INDEX IF NOT EXISTS idx_agent_run_metrics_user_id_run_at ON agent_run_metrics (user_id, run_at DESC);
 
 ALTER TABLE agent_run_metrics ENABLE ROW LEVEL SECURITY;
 

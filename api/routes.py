@@ -504,6 +504,49 @@ def _status_for_pipeline_node(node: str) -> str:
     return "pending_hitl" if node == "hitl_node" else "running"
 
 
+_TERMINAL_BRIEFING_STATUSES = frozenset({"completed", "failed", "rejected"})
+
+
+def _briefing_run_row_for_thread(thread_id: str) -> Optional[dict]:
+    """Latest briefing_runs row for a thread_id. Fail open (None) on DB errors."""
+    if not thread_id:
+        return None
+    try:
+        with pool.connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT user_id, status
+                    FROM briefing_runs
+                    WHERE thread_id = %s
+                    ORDER BY run_at DESC NULLS LAST
+                    LIMIT 1
+                    """,
+                    (thread_id,),
+                )
+                row = cur.fetchone()
+        if not row:
+            return None
+        return dict(row) if not isinstance(row, dict) else row
+    except Exception:
+        logger.exception(
+            "Failed to load briefing_runs status for thread_id=%s", thread_id
+        )
+        return None
+
+
+def _status_from_checkpoint(thread_id: str, user_id: str) -> tuple[str, Optional[str]]:
+    config = {"configurable": {"thread_id": thread_id}}
+    graph_state = graph.get_state(config)
+    status, node = _status_and_node_from_checkpoint(graph_state)
+    values = getattr(graph_state, "values", None)
+    if isinstance(values, dict):
+        owner = str(values.get("user_id") or "")
+        if owner and owner != user_id and status != "idle":
+            return "idle", None
+    return status, node
+
+
 @router.get("/agent/status", response_model=AgentStatusResponse)
 def get_agent_status(
     thread_id: str = "run_001",
@@ -511,27 +554,32 @@ def get_agent_status(
 ) -> AgentStatusResponse:
     """Check the current status of the agent for a given thread."""
     try:
-        config = {"configurable": {"thread_id": thread_id}}
-        graph_state = graph.get_state(config)
-
         live = get_live_node(thread_id)
+        row = _briefing_run_row_for_thread(thread_id)
+
+        if row:
+            owner = str(row.get("user_id") or "")
+            if owner and owner != _user.user_id:
+                return AgentStatusResponse(status="idle", thread_id=thread_id)
+
         if live:
             status = _status_for_pipeline_node(live)
             node = live
         else:
-            ls_node = lookup_langsmith_pipeline_node(thread_id)
-            if ls_node:
-                status = _status_for_pipeline_node(ls_node)
-                node = ls_node
+            db_status = str((row or {}).get("status") or "")
+            if db_status == "pending_hitl":
+                status, node = "pending_hitl", "hitl_node"
+            elif db_status in _TERMINAL_BRIEFING_STATUSES:
+                status, node = "idle", None
             else:
-                status, node = _status_and_node_from_checkpoint(graph_state)
-
-        # Scope non-idle status to the authenticated user's run when known.
-        values = getattr(graph_state, "values", None)
-        if isinstance(values, dict):
-            owner = str(values.get("user_id") or "")
-            if owner and owner != _user.user_id and status != "idle":
-                return AgentStatusResponse(status="idle", thread_id=thread_id)
+                ls_node = lookup_langsmith_pipeline_node(thread_id)
+                if ls_node:
+                    status = _status_for_pipeline_node(ls_node)
+                    node = ls_node
+                elif db_status == "running" or not row:
+                    status, node = _status_from_checkpoint(thread_id, _user.user_id)
+                else:
+                    status, node = "idle", None
 
         stage = pipeline_stage(node)
         return AgentStatusResponse(status=status, thread_id=thread_id, **stage)
@@ -551,20 +599,24 @@ def list_briefings(
             with conn.cursor() as cur:
                 cur.execute(
                     """
-                    SELECT br.id,
-                           br.thread_id,
-                           br.status,
-                           br.run_at,
-                           (
-                               SELECT count(*)
-                               FROM briefing_items bi
-                               WHERE bi.briefing_run_id = br.id
-                                 AND bi.user_id = br.user_id
-                           ) AS item_count
-                    FROM briefing_runs br
-                    WHERE br.user_id = %s
-                    ORDER BY br.run_at DESC
-                    LIMIT %s
+                    WITH recent AS (
+                        SELECT id, thread_id, status, run_at, user_id
+                        FROM briefing_runs
+                        WHERE user_id = %s
+                        ORDER BY run_at DESC
+                        LIMIT %s
+                    )
+                    SELECT r.id,
+                           r.thread_id,
+                           r.status,
+                           r.run_at,
+                           COALESCE(count(bi.id), 0)::int AS item_count
+                    FROM recent r
+                    LEFT JOIN briefing_items bi
+                      ON bi.briefing_run_id = r.id
+                     AND bi.user_id = r.user_id
+                    GROUP BY r.id, r.thread_id, r.status, r.run_at
+                    ORDER BY r.run_at DESC
                     """,
                     (user.user_id, limit),
                 )
@@ -1295,7 +1347,12 @@ def update_config(
                     )
             conn.commit()
 
-        return _build_config_response(user.user_id)
+        updated_row = dict(updated) if not isinstance(updated, dict) else updated
+        return _row_dict_to_config_response(
+            updated_row,
+            display_user_id=str(user_uuid),
+            from_defaults=False,
+        )
     except HTTPException:
         raise
     except Exception as exc:

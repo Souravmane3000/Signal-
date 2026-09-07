@@ -215,7 +215,10 @@ def test_frontend_uses_correct_feedback_endpoint():
     )
     assert "buildReasonDropdown" in html
     assert "feedback-reason-trigger" in html
-    assert "createElement('select')" not in html
+    reason_start = html.index("function buildReasonDropdown")
+    feedback_end = html.index("function showHITL", reason_start)
+    feedback_js = html[reason_start:feedback_end]
+    assert "createElement('select')" not in feedback_js
     assert "Already knew this" in html
     assert "Wrong funding stage" in html
     assert "Wrong sector" in html

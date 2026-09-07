@@ -58,6 +58,18 @@ def jwt_secret() -> str:
     return os.getenv("SUPABASE_JWT_SECRET") or ""
 
 
+_jwks_clients: dict[str, jwt.PyJWKClient] = {}
+
+
+def _jwks_client_for(jwks_url: str) -> jwt.PyJWKClient:
+    """Reuse one PyJWKClient per JWKS URL so key fetches are cached in-process."""
+    client = _jwks_clients.get(jwks_url)
+    if client is None:
+        client = jwt.PyJWKClient(jwks_url)
+        _jwks_clients[jwks_url] = client
+    return client
+
+
 def is_public_path(path: str) -> bool:
     if path in PUBLIC_PATH_EXACT:
         return True
@@ -81,7 +93,7 @@ def verify_supabase_jwt(token: str) -> dict[str, Any]:
         if alg in ("ES256", "RS256"):
             # Current Supabase signing keys are asymmetric (JWKS).
             jwks_url = f"{_supabase_url()}/auth/v1/.well-known/jwks.json"
-            signing_key = jwt.PyJWKClient(jwks_url).get_signing_key_from_jwt(token)
+            signing_key = _jwks_client_for(jwks_url).get_signing_key_from_jwt(token)
             claims = jwt.decode(
                 token,
                 signing_key.key,
