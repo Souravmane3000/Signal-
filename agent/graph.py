@@ -128,10 +128,10 @@ builder.add_conditional_edges(
         "discard_and_log": "discard_and_log",
     },
 )
-# Approve/Edit: episodic → delivery → metrics (DEC-004 ordering)
+# Approve/Edit: episodic → delivery → metrics 
 builder.add_edge("episodic_memory_writer", "delivery")
 builder.add_edge("delivery", "run_metrics_writer")
-# Reject: discard → metrics (DEC-004: no episodic write, no delivery)
+# Reject: discard → metrics 
 builder.add_edge("discard_and_log", "run_metrics_writer")
 builder.add_edge("run_metrics_writer", END)
 
@@ -419,14 +419,10 @@ def _log_pool_reconnect_failed(p: ConnectionPool) -> None:
 pool = ConnectionPool(
     conninfo=_DB_URL,
     # min_size=0 so max_idle can close *all* idle sockets (max_idle only
-    # shrinks above min_size). A sticky min_size=1 conn survives HITL/LLM
-    # waits and is the classic Supabase SSL EOF victim.
-    min_size=0,
+    # shrinks above min_size).
     max_size=5,
     open=True,
     timeout=30.0,
-    # Close idle pooled connections before Supabase/PgBouncer drops them
-    # (~5–10 min typical). Default max_idle=600 is too long for cloud proxies.
     max_idle=180.0,
     max_lifetime=1800.0,
     reconnect_timeout=60.0,
@@ -493,6 +489,56 @@ def _pending_interrupt(config) -> bool:
         if getattr(task, "interrupts", None):
             return True
     return False
+
+
+def _checkpoint_paused(config) -> bool:
+    """True when update_state would fork away an in-progress interrupt().
+
+    LangGraph 0.2 writes a new checkpoint and drops interrupt metadata while
+    ``next`` can still be ``hitl_node``. Duration must not be patched until
+    the thread has left the pause.
+    """
+    snap = graph.get_state(config)
+    if tuple(getattr(snap, "next", ()) or ()):
+        return True
+    return _pending_interrupt(config)
+
+
+# First-segment compute time, kept off the checkpoint while HITL is paused.
+_paused_segment_seconds: dict[str, float] = {}
+
+
+def _paused_duration(thread_id: str) -> float:
+    return float(_paused_segment_seconds.get(thread_id) or 0.0)
+
+
+def accumulated_duration(
+    thread_id: str, checkpoint_seconds: float, segment_seconds: float
+) -> float:
+    """Add this invoke's elapsed time to any segment saved across a HITL pause."""
+    prev = max(float(checkpoint_seconds or 0.0), _paused_duration(thread_id))
+    if prev <= 0.0:
+        return float(segment_seconds)
+    return prev + float(segment_seconds)
+
+
+def record_run_duration(config, thread_id: str, total_seconds: float) -> None:
+    """Persist compute time without forking a paused HITL checkpoint.
+
+    While the thread is paused, remember the total in-process and leave the
+    checkpoint alone. Once ``next`` is empty and no interrupt remains, write
+    the total onto the checkpoint.
+    """
+    if _checkpoint_paused(config):
+        if thread_id:
+            _paused_segment_seconds[thread_id] = float(total_seconds)
+        return
+    if thread_id:
+        _paused_segment_seconds.pop(thread_id, None)
+    try:
+        graph.update_state(config, {"run_duration_seconds": float(total_seconds)})
+    except Exception:
+        pass
 
 
 def _recovery_input(original_input, config):
@@ -652,15 +698,12 @@ def execute_graph(
     # finalize_run_duration patches agent_run_metrics after the outer timer.
     from agent.nodes.run_metrics_writer import finalize_run_duration
 
-    prev = float(final_state.get("run_duration_seconds") or 0.0)
-    # On the first segment, state still has 0.0 — use measured elapsed.
-    # On resume, checkpoint holds prior segment time; add this segment.
-    total_duration = elapsed if prev <= 0.0 else prev + elapsed
-
-    try:
-        graph.update_state(config, {"run_duration_seconds": total_duration})
-    except Exception:
-        pass
+    # While paused at HITL, do not update_state — that forks the checkpoint
+    # and drops interrupt(). The segment is remembered until the resume.
+    total_duration = accumulated_duration(
+        tid, float(final_state.get("run_duration_seconds") or 0.0), elapsed
+    )
+    record_run_duration(config, tid, total_duration)
 
     finalize_run_duration(final_state.get("run_id"), total_duration)
     final_state = {**final_state, "run_duration_seconds": total_duration}

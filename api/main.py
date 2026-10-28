@@ -4,10 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
-import traceback
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -24,21 +21,10 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     """Start APScheduler on startup; shut down cleanly on exit."""
-    # TEMP DEBUG SIG-024C — process lifecycle (detect --reload / worker death)
-    logger.warning(
-        "[SIG-024C DEBUG] lifespan START pid=%s ts=%s",
-        os.getpid(),
-        datetime.now(timezone.utc).isoformat(),
-    )
     start_scheduler()
     try:
         yield
     finally:
-        logger.warning(
-            "[SIG-024C DEBUG] lifespan STOP pid=%s ts=%s",
-            os.getpid(),
-            datetime.now(timezone.utc).isoformat(),
-        )
         stop_scheduler(wait=False)
 
 
@@ -93,43 +79,6 @@ async def jwt_auth_middleware(request: Request, call_next):
     return await call_next(request)
 
 
-@app.middleware("http")
-async def sig024c_request_lifecycle(request: Request, call_next):
-    """TEMP DEBUG SIG-024C — log request enter/exit; do not alter responses."""
-    path = request.url.path
-    is_resume = "/briefings/" in path and (
-        path.endswith("/approve") or path.endswith("/reject")
-    )
-    if is_resume:
-        logger.warning(
-            "[SIG-024C DEBUG] HTTP middleware ENTER method=%s path=%s "
-            "query=%s pid=%s ts=%s",
-            request.method,
-            path,
-            str(request.url.query),
-            os.getpid(),
-            datetime.now(timezone.utc).isoformat(),
-        )
-    try:
-        response = await call_next(request)
-    except Exception:
-        logger.error(
-            "[SIG-024C DEBUG] HTTP middleware UNCAUGHT path=%s pid=%s traceback:\n%s",
-            path,
-            os.getpid(),
-            traceback.format_exc(),
-        )
-        raise
-    if is_resume:
-        logger.warning(
-            "[SIG-024C DEBUG] HTTP middleware EXIT path=%s status=%s pid=%s",
-            path,
-            getattr(response, "status_code", None),
-            os.getpid(),
-        )
-    return response
-
-
 # CORS must be outermost so auth middleware JSONResponses still get ACAO headers.
 app.add_middleware(
     CORSMiddleware,
@@ -158,16 +107,7 @@ async def validation_exception_handler(
 
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
-    # TEMP DEBUG SIG-024C — capture before generic 500 response (same client body)
-    logger.error(
-        "[SIG-024C DEBUG] FastAPI unhandled Exception path=%s type=%s "
-        "message=%s pid=%s traceback:\n%s",
-        request.url.path,
-        type(exc).__name__,
-        str(exc),
-        os.getpid(),
-        traceback.format_exc(),
-    )
+    logger.exception("Unhandled exception on %s", request.url.path)
     return JSONResponse(
         status_code=500,
         content={"detail": "An unexpected error occurred."},

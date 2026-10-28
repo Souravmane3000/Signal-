@@ -14,6 +14,7 @@ from langgraph.types import Command
 
 from agent.graph import (
     _invoke_with_stale_conn_retry,
+    accumulated_duration,
     execute_graph,
     get_live_node,
     graph,
@@ -21,6 +22,7 @@ from agent.graph import (
     lookup_langsmith_pipeline_node,
     pipeline_stage,
     pool,
+    record_run_duration,
 )
 from agent.nodes.run_metrics_writer import finalize_run_duration
 from api.auth import (
@@ -988,13 +990,11 @@ def _resume_hitl(
         )
         elapsed = time.perf_counter() - start
 
-        # Accumulate prior segment duration (saved at HITL pause) + this resume.
-        prev = float(final_state.get("run_duration_seconds") or 0.0)
-        total_duration = elapsed if prev <= 0.0 else prev + elapsed
-        try:
-            graph.update_state(config, {"run_duration_seconds": total_duration})
-        except Exception:
-            pass
+        # Add the pre-pause segment without update_state while interrupt() is open.
+        total_duration = accumulated_duration(
+            tid, float(final_state.get("run_duration_seconds") or 0.0), elapsed
+        )
+        record_run_duration(config, tid, total_duration)
         finalize_run_duration(final_state.get("run_id") or run_id, total_duration)
         final_state = {**final_state, "run_duration_seconds": total_duration}
 
@@ -1543,7 +1543,7 @@ def run_pipeline(
     user: AuthUser = Depends(get_current_user),
 ) -> RunResponse:
     body = request or RunRequest()
-    # Identity always comes from the validated JWT — never from the request body.
+    # Identity always comes from the validated JWT ever from the request body.
     body = body.model_copy(update={"user_id": user.user_id})
     try:
         return execute_pipeline(body)

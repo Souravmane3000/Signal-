@@ -52,7 +52,7 @@ def hitl_node(state: SignalState) -> dict:
 
 
 def route_after_hitl(state: SignalState) -> str:
-    """DEC-004: Approve/Edit → episodic memory; Reject → discard (no episodic write)."""
+    """ Approve/Edit → episodic memory; Reject → discard (no episodic write)."""
     decision = state.get("hitl_decision")
     if decision in ("approve", "edit"):
         return "episodic_memory_writer"

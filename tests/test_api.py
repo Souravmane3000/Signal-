@@ -169,6 +169,106 @@ def test_get_agent_status_running_current_node():
     assert body["step_total"] == 18
 
 
+def test_status_after_completed_resume_is_idle_while_pause_stays_pending():
+    """A finished approve is idle. A checkpoint still on hitl_node stays pending.
+
+    The Review Now flash is a stale poll, not a second interrupt. These two
+    snapshots must not be collapsed into the same status.
+    """
+    from tests.conftest import TEST_USER_ID
+
+    with (
+        patch("api.routes.get_live_node", return_value=None),
+        patch("api.routes.lookup_langsmith_pipeline_node", return_value=None),
+        patch(
+            "api.routes._briefing_run_row_for_thread",
+            return_value={"user_id": TEST_USER_ID, "status": "completed"},
+        ),
+        patch("api.routes.graph.get_state") as mock_get_state,
+    ):
+        snap = mock_get_state.return_value
+        snap.next = ()
+        snap.tasks = ()
+        snap.values = {}
+        done = client.get("/agent/status?thread_id=run_approved")
+
+    assert done.status_code == 200
+    assert done.json()["status"] == "idle"
+    assert done.json()["current_node"] is None
+    mock_get_state.assert_not_called()
+
+    with (
+        patch("api.routes.get_live_node", return_value=None),
+        patch("api.routes.lookup_langsmith_pipeline_node", return_value=None),
+        patch("api.routes._briefing_run_row_for_thread", return_value=None),
+        patch("api.routes.graph.get_state") as mock_paused,
+    ):
+        snap = mock_paused.return_value
+        snap.next = ("hitl_node",)
+        snap.tasks = ()
+        snap.values = {}
+        paused = client.get("/agent/status?thread_id=run_waiting")
+
+    assert paused.status_code == 200
+    assert paused.json()["status"] == "pending_hitl"
+    assert paused.json()["current_node"] == "hitl_node"
+
+
+def test_review_now_opens_approval_shell_before_checkpoint_fetch():
+    """Review Now must not bounce to the dashboard report while the draft loads.
+
+    Trace: the button called setView('hitl'); with no pendingBriefing that
+    function called setView('dashboard') and left the previous report on
+    screen until GET /briefing returned 2–5s later.
+    """
+    from pathlib import Path
+
+    html = Path("frontend/index.html").read_text(encoding="utf-8")
+    assert 'onclick="openPendingReview()"' in html
+    fn = html.split("function openPendingReview()")[1].split("function toggleSidebar")[0]
+    assert "setView('dashboard')" not in fn
+    assert "showViewShell('hitl')" in fn
+    assert "showHITLById" in fn
+    assert fn.index("showViewShell('hitl')") < fn.index("showHITLById")
+
+
+def test_idle_status_hides_review_now_banner():
+    from pathlib import Path
+
+    html = Path("frontend/index.html").read_text(encoding="utf-8")
+    idle = html.split("if (status === 'idle')")[1].split("} else if (status === 'running')")[0]
+    assert "runPendingAlert" in idle
+    assert "classList.add('hidden')" in idle
+
+
+def test_stale_pending_hitl_poll_cannot_restore_review_banner():
+    """A status response that started during the pause must not paint Review Now
+    after Approve has already been handled.
+    """
+    from pathlib import Path
+
+    html = Path("frontend/index.html").read_text(encoding="utf-8")
+    poll = html.split("async function pollStatus()")[1].split(
+        "async function fetchLatestBriefingForThread"
+    )[0]
+    assert "statusPollGen" in poll
+    assert "hitlDecisionSettled" in poll
+    assert poll.index("gen !== statusPollGen") < poll.index("updateStatus")
+
+
+def test_submit_hitl_refreshes_dashboard_only_after_approve_body():
+    from pathlib import Path
+
+    html = Path("frontend/index.html").read_text(encoding="utf-8")
+    fn = html.split("async function submitHITL(action)")[1].split("function showDashboard")[0]
+    pre, post = fn.split("const result = await res.json()", 1)
+    assert "refreshDashboard()" not in pre
+    assert "skipDashboardRefresh" in pre
+    assert "refreshDashboard()" in post
+    assert "statusPollGen" in post
+    assert "hitlDecisionSettled = true" in post
+
+
 def test_get_agent_status_pending_hitl():
     with (
         patch("api.routes.get_live_node", return_value=None),
